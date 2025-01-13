@@ -1,7 +1,7 @@
 import requests
 import json
 
-api_key = "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"
+api_key = "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"
 endpoint = "https://openrouter.ai/api/v1/chat/completions"
 headers = {
     "Authorization": f"Bearer {api_key}",
@@ -18,7 +18,7 @@ def send_message(message):
         url=endpoint,
         headers=headers,
         data=json.dumps({
-            "model": "meta-llama/llama-3.2-1b-instruct",
+            "model": "meta-llama/llama-3.2-3b-instruct",
             "messages": chat_history
         })
     )
