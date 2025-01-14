@@ -1,7 +1,7 @@
-import os
+#import os
 from mistralai import Mistral
 
-api_key = os.environ["MISTRAL_API_KEY"]
+api_key = "3PSD6r6khsS2Ar77OTgSf3Ccr2DDJvFG" #os.environ["MISTRAL_API_KEY"]
 model = "pixtral-12b-2409"
 
 client = Mistral(api_key=api_key)
@@ -11,7 +11,7 @@ chat_response = client.chat.complete(
     messages = [
         {
             "role": "user",
-            "content": "What is the best French cheese?",
+            "content": "Can you write an email as advertisement for the college 'Neumont College of Computer Science' ",
         },
     ]
 )
