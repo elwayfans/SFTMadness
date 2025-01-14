@@ -1,7 +1,7 @@
 import requests
 import json
 
-api_key = "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"
+api_key = ""
 endpoint = "https://openrouter.ai/api/v1/chat/completions"
 headers = {
     "Authorization": f"Bearer {api_key}",
