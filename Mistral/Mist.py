@@ -1,7 +1,7 @@
 #import os
 from mistralai import Mistral
 
-api_key = "3PSD6r6khsS2Ar77OTgSf3Ccr2DDJvFG" #os.environ["MISTRAL_API_KEY"]
+api_key = "" #os.environ["MISTRAL_API_KEY"]
 model = "pixtral-12b-2409"
 
 client = Mistral(api_key=api_key)
