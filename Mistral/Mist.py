@@ -51,7 +51,7 @@ class AIModelClass:
         self.message_history.append(message)
         
     def add_assistant_prompt(self, msg):
-        message = self.create_message("system", msg)
+        message = self.create_message("assistant", msg)
         self.message_history.append(message)
 
     def get_chat_response(self, msg):
