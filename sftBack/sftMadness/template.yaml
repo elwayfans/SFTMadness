@@ -7,13 +7,14 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 15
 
     LoggingConfig:
       LogFormat: JSON
 Resources:
   HelloWorldFunction:
-    Type: AWS::Serverless::Function
+    Type: AWS::Serverless::Function 
+    Properties:
       CodeUri: hello_world/
       Handler: app.lambda_handler
       Runtime: python3.13
@@ -21,10 +22,284 @@ Resources:
       - x86_64
       Events:
         HelloWorld:
-          Type: Api
+          Type: Api 
           Properties:
             Path: /hello
             Method: get
+
+  logIn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: login/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        logIn:
+          Type: Api
+          Properties:
+            Path: /login
+            Method: post
+
+  logOut:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: logout/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        logOut:
+          Type: Api
+          Properties:
+            Path: /logout
+            Method: post
+
+  users:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: users/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        registerUser:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: post
+        getUser:
+          Type: Api
+          Properties:
+            Path: /users/{userId}
+            Method: get
+        updateUser:
+          Type: Api
+          Properties:
+            Path: /users/{userId}
+            Method: put
+        deleteUser:
+          Type: Api
+          Properties:
+            Path: /users/{userId}
+            Method: delete
+
+  AICustoms:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ai_customs/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        setCustoms:
+          Type: Api
+          Properties:
+            Path: /customs/{userId}
+            Method: post
+        getCustoms:
+          Type: Api
+          Properties:
+            Path: /customs/{userId}
+            Method: get
+        updateCustoms:
+          Type: Api
+          Properties:
+            Path: /customs/{userId}
+            Method: put
+        deleteCustoms:
+          Type: Api
+          Properties:
+            Path: /customs/{userId}
+            Method: delete
+
+  files:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: files/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        uploadFile:
+          Type: Api
+          Properties:
+            Path: /files/{userId}
+            Method: post
+        getFile:
+          Type: Api
+          Properties:
+            Path: /files/{fileId}
+            Method: get
+        deleteFile:
+          Type: Api
+          Properties:
+            Path: /files/{fileId}
+            Method: delete
+
+  schoolContact:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: school_contact/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        createContact:
+          Type: Api
+          Properties:
+            Path: /contact
+            Method: post
+        getContact:
+          Type: Api
+          Properties:
+            Path: /contact/{contactId}
+            Method: get
+        updateContact:
+          Type: Api
+          Properties:
+            Path: /contact/{contactId}
+            Method: put
+        deleteContact:
+          Type: Api
+          Properties:
+            Path: /contact/{contactId}
+            Method: delete
+
+  events:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: sftEvents/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        scheduleEvent:
+          Type: Api
+          Properties:
+            Path: /sftEvents
+            Method: post
+        getEventById:
+          Type: Api
+          Properties:
+            Path: /sftEvents/{eventId}
+            Method: get
+        getEvents:
+          Type: Api
+          Properties:
+            Path: /sftEvents
+            Method: get
+        updateEvent:
+          Type: Api
+          Properties:
+            Path: /sftEvents/{eventId}
+            Method: put
+        deleteEvent:
+          Type: Api
+          Properties:
+            Path: /sftEvents/{eventId}
+            Method: delete
+
+  conversationLogs:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: conversation_logs/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        logConversation:
+          Type: Api
+          Properties:
+            Path: /conversation_logs
+            Method: post
+        getConversationLogs:
+          Type: Api
+          Properties:
+            Path: /conversation_logs/{userId}
+            Method: get
+
+  analytics:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: analytics/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        logMetric:
+          Type: Api
+          Properties:
+            Path: /analytics
+            Method: post
+        getAnalytics:
+          Type: Api
+          Properties:
+            Path: /analytics/{metricId}
+            Method: get
+
+  admins:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: admins/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+      - x86_64
+      Events:
+        createAdmin:
+          Type: Api
+          Properties:
+            Path: /admins
+            Method: post
+        getUserById:
+          Type: Api
+          Properties:
+            Path: /admins/{userId}
+            Method: get
+        getUsers:
+          Type: Api
+          Properties:
+            Path: /admins
+            Method: get
+        deleteUser:
+          Type: Api
+          Properties:
+            Path: /admins/{userId}
+            Method: delete
+        logAction:
+          Type: Api
+          Properties:
+            Path: /admins
+            Method: post
+        getLogs:
+          Type: Api
+          Properties:
+            Path: /admins/{userId}
+            Method: get
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: 'true'
 
 Outputs:
   HelloWorldApi:
