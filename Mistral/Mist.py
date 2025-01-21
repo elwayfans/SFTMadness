@@ -6,7 +6,7 @@ from mistralai import Mistral
 
 api_key = os.environ.get('MISTRAL_API_KEY')
                          
-model = "pixtral-12b-2409"
+model = "ministral-8b-latest"
 
 client = Mistral(api_key=api_key)
 
@@ -72,7 +72,7 @@ Let me know if you'd like more details on specific opportunities!""")
     def load_message_history(self, json_file_name):
         with open(json_file_name, 'r') as openfile:
             json_object = json.load(openfile)
-            print(json_object)
+            self.message_history = json_object
     
     
 if __name__ == "__main__":
@@ -92,6 +92,7 @@ Keep the email short and engaging.""")
             messages=AIModel.message_history
         )
     print(chat_response.choices[0].message.content)
+    
 
     #proper user loop
     while True:
