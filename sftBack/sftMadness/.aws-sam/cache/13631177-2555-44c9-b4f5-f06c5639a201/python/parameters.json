@@ -1,0 +1,9 @@
+{
+    "Parameters": {
+        "SubnetIds": [
+            "subnet-063f8345eae6ee1fb",
+            "subnet-0080e532897fb818c",
+            "subnet-07bd535080d84df96"
+        ]
+    }
+}
