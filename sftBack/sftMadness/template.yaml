@@ -7,7 +7,8 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 15
+    Timeout: 60
+    MemorySize: 512
     Runtime: python3.12
     Architectures:
       - x86_64
@@ -21,6 +22,8 @@ Globals:
         DB_USER: !Ref DBUser
         DB_PASSWORD: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!cluster-0aeebdc5-c3e2-4954-8002-4b8fbaa2cd96-Cxeg0w:SecretString:password}}'
         DB_PORT: !Ref DBPort
+        COGNITO_USER_POOL_ID: !Ref UserPool
+        COGNITO_CLIENT_ID: !Ref UserPoolClient
 
     Layers:
       - !Ref DependenciesLayer
@@ -30,9 +33,9 @@ Globals:
         # - sg-09a88e3572f96553e
         - !Ref LambdaSecurityGroup
       SubnetIds:
-        - !Select [0, !Split [",", !Ref SubnetIds]]
-        - !Select [1, !Split [",", !Ref SubnetIds]]
-        - !Select [2, !Split [",", !Ref SubnetIds]]
+        - !Select [0, !Split [",", !Ref PrivateSubnetIds]]
+        - !Select [1, !Split [",", !Ref PrivateSubnetIds]]
+        - !Select [2, !Split [",", !Ref PrivateSubnetIds]]
     
 
 Parameters:
@@ -52,11 +55,35 @@ Parameters:
   DBPort:
     Type: Number
     Description: Database Port
-  SubnetIds:
+  InternetGatewayId:
     Type: String
-    Description: Subnet Ids
+    Description: Existing Internet Gateway Id
+  PublicSubnetIds:
+    Type: String
+    Description: Public Subnet Ids
+  PrivateSubnetIds:
+    Type: String
+    Description: Private Subnet Ids
 
 Resources:
+  sft:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: "'POST, GET, OPTIONS, PUT, DELETE'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Accept'"
+        AllowOrigin: "'*'"
+        MaxAge: "'7200'"
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+            Identity:
+              Header: Authorization
+            Type: COGNITO_USER_POOLS
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -71,15 +98,15 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-      #   - PolicyName: SecretsAccess
-      #     PolicyDocument:
-      #       Version: '2012-10-17'
-      #       Statement:
-      #         - Effect: Allow
-      #           Action:
-      #             - secretsmanager:GetSecretValue
-      #           Resource: 
-      #             - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/gearswap/${ENV}/*'
+        - PolicyName: SecretsAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: 
+                  - 'arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!cluster-0aeebdc5-c3e2-4954-8002-4b8fbaa2cd96-Cxeg0w'
       #   - PolicyName: SSMAccess
       #     PolicyDocument:
       #       Version: '2012-10-17'
@@ -90,6 +117,24 @@ Resources:
       #             - ssm:GetParameters
       #             - ssm:GetParametersByPath
       #           Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/gearswap/${ENV}/*'
+        - PolicyName: CognitoAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement: 
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminInitiateAuth
+                  - cognito-idp:AdminSetUserPassword
+                  - cognito-idp:AdminDeleteUser
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:AdminUpdateUserAttributes
+                  - cognito-idp:DescribeUserPool
+                  - cognito-idp:DescribeUserPoolClient
+                  - cognito-idp:ListUsers
+                Resource: 
+                  - !GetAtt UserPool.Arn
+                  - !Sub ${UserPool.Arn}/client/*
         - PolicyName: RDSAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -98,6 +143,90 @@ Resources:
                 Action:
                   - rds-db:connect
                 Resource: '*'
+        - PolicyName: NetworkAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:AttachNetworkInterface
+                  - ec2:DescribeInstances
+                  - ec2:ModifyNetworkInterfaceAttribute
+                Resource: '*'
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Select [0, !Split [",", !Ref PublicSubnetIds]]
+
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: vpc-0e7cfddc215e8fab1
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGatewayId
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Select [0, !Split [",", !Ref PublicSubnetIds]]
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Select [1, !Split [",", !Ref PublicSubnetIds]]
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Select [2, !Split [",", !Ref PublicSubnetIds]]
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: vpc-0e7cfddc215e8fab1
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Select [0, !Split [",", !Ref PrivateSubnetIds]]
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Select [1, !Split [",", !Ref PrivateSubnetIds]]
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Select [2, !Split [",", !Ref PrivateSubnetIds]]
+      RouteTableId: !Ref PrivateRouteTable
 
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -119,235 +248,479 @@ Resources:
     Metadata:
       BuildMethod: python3.12
 
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: sftMadnessUserPool
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+          AttributeDataType: String
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: sftMadnessUserPoolClient
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+
+######################################################
+# Functions
+######################################################
   logIn:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: login/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logIn:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /login
             Method: post
+            Auth:
+              Authorizer: NONE
+        logInOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /login
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   logOut:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: logout/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logOut:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /logout
             Method: post
+        logOutOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /logout
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   users:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: users/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         registerUser:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /users
             Method: post
+            Auth:
+              Authorizer: NONE
+        registerUserOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users
+            Method: options
+            Auth:
+              Authorizer: NONE
         getUser:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /users/{userId}
             Method: get
         updateUser:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /users/{userId}
             Method: put
         deleteUser:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /users/{userId}
             Method: delete
+        userOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   AICustoms:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ai_customs/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         setCustoms:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /customs/{userId}
             Method: post
         getCustoms:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /customs/{userId}
             Method: get
         updateCustoms:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /customs/{userId}
             Method: put
         deleteCustoms:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /customs/{userId}
             Method: delete
+        customsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /customs/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   files:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: files/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         uploadFile:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /files
             Method: post
+        uploadFileOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /files
+            Method: options
+            Auth:
+              Authorizer: NONE
         getFile:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /files/{fileId}
             Method: get
         deleteFile:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /files/{fileId}
             Method: delete
+        fileOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /files/{fileId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   schoolContact:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: school_contact/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         createContact:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /contact
             Method: post
+        createContactOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /contact
+            Method: options
+            Auth:
+              Authorizer: NONE
         getContact:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /contact/{contactId}
             Method: get
         updateContact:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /contact/{contactId}
             Method: put
         deleteContact:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /contact/{contactId}
             Method: delete
+        contactOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /contact/{contactId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   events:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: sftEvents/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         scheduleEvent:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /sftEvents
             Method: post
+        scheduleEventOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /sftEvents
+            Method: options
+            Auth:
+              Authorizer: NONE
         getEventById:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /sftEvents/{eventId}
             Method: get
         getEvents:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /sftEvents
             Method: get
         updateEvent:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /sftEvents/{eventId}
             Method: put
         deleteEvent:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /sftEvents/{eventId}
             Method: delete
+        eventOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /sftEvents/{eventId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   conversationLogs:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: conversation_logs/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logConversation:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /conversation_logs
             Method: post
+        logConversationOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /conversation_logs
+            Method: options
+            Auth:
+              Authorizer: NONE
         getConversationLogs:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /conversation_logs/{userId}
             Method: get
+        conversationLogsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /conversation_logs/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   analytics:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: analytics/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logMetric:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /analytics
             Method: post
+        logMetricOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /analytics
+            Method: options
+            Auth:
+              Authorizer: NONE
         getAnalytics:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /analytics/{metricId}
             Method: get
+        analyticsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /analytics/{metricId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   admins:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: admins/
       Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         createAdmin:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /admins
             Method: post
+        createAdminOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /admins
+            Method: options
+            Auth:
+              Authorizer: NONE
         getUserById:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /admins/{userId}
             Method: get
         getUsers:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /admins
             Method: get
         deleteUser:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /admins/{userId}
             Method: delete
+        adminOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /admins/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
         logAction:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /admins/log
             Method: post
+        logActionOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /admins/log
+            Method: options
+            Auth:
+              Authorizer: NONE
         getLogs:
           Type: Api
           Properties:
+            RestApiId: !Ref sft
             Path: /admins/log/{userId}
             Method: get
+        logOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /admins/log/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
@@ -364,21 +737,49 @@ Resources:
       AutoConfigurationEnabled: 'true'
 
 Outputs:
-  SftApi:
+  sftMadnessApi:
     Description: "API Gateway endpoint URL for Prod stage for sftMadness functions"
     Value: 
-      Fn::Sub: "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+      Fn::Sub: "https://${sft}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
     Export:
       Name: !Sub "${AWS::StackName}-ApiEndpoint"
-  
   ServerlessRestApiId:
     Description: "API Gateway REST API ID"
-    Value: !Ref ServerlessRestApi
+    Value: !Ref sft
     Export:
       Name: !Sub "${AWS::StackName}-RestApiId"
-
   ServerlessRestApiRootResourceId:
     Description: "API Gateway REST API root resource ID"
-    Value: !GetAtt ServerlessRestApi.RootResourceId
+    Value: !GetAtt sft.RootResourceId
     Export:
       Name: !Sub "${AWS::StackName}-RootResourceId"
+  logInFunctionArn:
+    Description: "logIn Lambda Function ARN"
+    Value: !GetAtt logIn.Arn
+  logOutFunctionArn:
+    Description: "logOut Lambda Function ARN"
+    Value: !GetAtt logOut.Arn
+  usersFunctionArn:
+    Description: "users Lambda Function ARN"
+    Value: !GetAtt users.Arn
+  AICustomsFunctionArn:
+    Description: "AICustoms Lambda Function ARN"
+    Value: !GetAtt AICustoms.Arn
+  filesFunctionArn:
+    Description: "files Lambda Function ARN"
+    Value: !GetAtt files.Arn
+  schoolContactFunctionArn:
+    Description: "schoolContact Lambda Function ARN"
+    Value: !GetAtt schoolContact.Arn
+  eventsFunctionArn:
+    Description: "events Lambda Function ARN"
+    Value: !GetAtt events.Arn
+  conversationLogsFunctionArn:
+    Description: "conversationLogs Lambda Function ARN"
+    Value: !GetAtt conversationLogs.Arn
+  analyticsFunctionArn:
+    Description: "analytics Lambda Function ARN"
+    Value: !GetAtt analytics.Arn
+  adminsFunctionArn:
+    Description: "admins Lambda Function ARN"
+    Value: !GetAtt admins.Arn

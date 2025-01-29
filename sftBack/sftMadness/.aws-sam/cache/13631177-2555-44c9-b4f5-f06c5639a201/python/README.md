@@ -1,5 +1,19 @@
 # sftMadness
 
+--sam stack delete describe deploy
+sam validate
+sam build --use-container
+sam deploy  | sam deploy --guided (disable rollback => n)
+
+aws cloudformation delete-stack --stack-name sftMadness
+aws cloudformation describe-stacks --stack-name sftMadness --query 'Stacks[0].StackStatus'
+
+--if delete fails => find out why
+aws cloudformation describe-stack-events --stack-name sftMadness --query 'StackEvents[?ResourceStatus==`DELETE_FAILED`].[LogicalResourceId,ResourceStatusReason]'
+
+--if delete fails => retain security group and delete again
+aws cloudformation delete-stack --stack-name sftMadness --retain-resources LambdaSecurityGroup
+
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
 - hello_world - Code for the application's Lambda function.
