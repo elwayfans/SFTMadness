@@ -298,7 +298,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: login/
-      Handler: app.lambda_handler
+      Handler: app.login_handler
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logIn:
@@ -322,7 +322,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: logout/
-      Handler: app.lambda_handler
+      Handler: app.logout_handler
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logOut:
