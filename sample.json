@@ -9,6 +9,6 @@
     },
     {
         "role": "assistant",
-        "content": "Great question!\nNeumont College of Computer Science offers a variety of scholarships, including merit-based awards for academic excellence, need-based assistance, and special grants for extracurricular achievements. \nOur admissions team is happy to guide you through the application process.\nLet me know if you'd like more details on specific opportunities!"
+        "content": "Great question! {college_name} offers a variety of scholarships, including merit-based awards for academic excellence, need-based assistance, and special grants for extracurricular achievements. Our admissions team is happy to guide you through the application process. Let me know if you'd like more details on specific opportunities!"
     }
 ]

@@ -6,11 +6,9 @@ from mistralai import Mistral
 
 api_key = os.environ.get('MISTRAL_API_KEY')
                          
-model = "ministral-8b-latest"
+model = "mistral-small-latest"
 
 client = Mistral(api_key=api_key)
-
-
 
 class AIModelClass:
     college_name = ""
@@ -27,7 +25,10 @@ class AIModelClass:
         self.college_name = college_name
         self.bot_name = bot_name
         
-        self.load_message_history('sample.json')
+        self.add_system_prompt(f"You are a helpful assistant tasked with promoting Neumont College of Computer Science. \nEnsure all responses focus solely on {college_name}, its programs, values, achievements, and unique offerings. \nAvoid mentioning other institutions or making comparisons unless specifically asked to do so by the user.\ntry to keep things concise as possible, while still keeping the conversational/professional tone.\nEnsure that responses to prospective student questions use varied sentence structures and tones to keep the conversation engaging. \nAvoid reusing exact phrasing from the initial email.\nPrompt a few questions the user can ask you the assistant about the school. Questions like 'What degrees does {college_name} offer?'\nDo not suggest questions that have either already been answered or have been asked before.")
+        self.training_data()
+        
+        #self.load_message_history('sample.json')
         
     def create_message(self, role: str, message: str):
         return {"role": role, "content":message}
@@ -64,6 +65,13 @@ class AIModelClass:
 Our admissions team is happy to guide you through the application process.
 Let me know if you'd like more details on specific opportunities!""")
         
+        self.add_user_prompt("How do I apply for financial aid?")
+        self.add_assistant_prompt(f"""Applying for financial aid at {college_name} is straightforward! 
+You'll need to fill out the FAFSA form to determine your eligibility for federal aid. 
+We also have institutional grants and work-study opportunities available. 
+Feel free to reach out if you need guidance with the application process!""")
+
+        
     def save_message_history(self):
         json_object = json.dumps(self.message_history, indent=4)
         with open("sample.json", "w") as outfile:
@@ -80,6 +88,8 @@ if __name__ == "__main__":
     bot_name = "Billy"
     
     AIModel = AIModelClass(college_name, bot_name)
+    
+    print(AIModel.message_history)
 
     AIModel.add_user_prompt(f"""Write a casual and inviting email to promote {college_name} to prospective students and their families. 
 Use a friendly and personal tone. Highlight the school's unique features, such as academic programs, campus life, and opportunities for growth, in a concise manner. 
@@ -91,6 +101,7 @@ Keep the email short and engaging.""")
             model=model,
             messages=AIModel.message_history
         )
+    AIModel.add_assistant_prompt(chat_response.choices[0].message.content)
     print(chat_response.choices[0].message.content)
     
 
