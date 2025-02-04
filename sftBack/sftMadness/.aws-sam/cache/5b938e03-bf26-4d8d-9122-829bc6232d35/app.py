@@ -35,6 +35,8 @@ def lambda_handler(event, context):
     if event['httpMethod'] == 'OPTIONS':
         return cors_response(200, "ok")
     
+    print(f"Event received: {json.dumps(event)}")
+    
     http_method = event['httpMethod']
     resource_path = event['resource']
 
@@ -45,11 +47,20 @@ def lambda_handler(event, context):
     try:
         #verify token
         auth_header = event.get('headers', {}).get('Authorization')
+        print(f"Auth header: {auth_header}")
         if not auth_header:
             return cors_response(401, "Unauthorized")
+        if not auth_header.startswith('Bearer '):
+            return cors_response(401, "Invalid Authorization header format. Must start with 'Bearer '")
         
         token = auth_header.split(' ')[-1]
-        verify_token(token)
+        try:
+            # verify_token(token)
+            token_payload = verify_token(token)
+            print(f"Token verified successfully: {json.dumps(token_payload)}")
+        except Exception as e:
+            print(f"Token verification failed: {str(e)}")
+            return cors_response(401, f"Authentication failed: {str(e)}")
 
     except Exception as e:
         return cors_response(401, "Authentication failed")
@@ -87,45 +98,72 @@ def get_db_connection():
     
 #AUTH
 def verify_token(token):
-    # Get the JWT token from the Authorization header
-    if not token:
-        raise Exception('No token provided')
-
-    region = boto3.session.Session().region_name
-    
-    # Get the JWT kid (key ID)
-    headers = jwt.get_unverified_header(token)
-    kid = headers['kid']
-
-    # Get the public keys from Cognito
-    url = f'https://cognito-idp.{region}.amazonaws.com/{os.environ["COGNITO_USER_POOL_ID"]}/.well-known/jwks.json'
-    response = requests.get(url)
-    keys = response.json()['keys']
-
-    # Find the correct public key
-    public_key = None
-    for key in keys:
-        if key['kid'] == kid:
-            public_key = algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
-            break
-
-    if not public_key:
-        raise Exception('Public key not found')
-
-    # Verify the token
     try:
-        payload = jwt.decode(
-            token,
-            public_key,
-            algorithms=['RS256'],
-            audience=os.environ['COGNITO_CLIENT_ID'],
-            options={"verify_exp": True}
-        )
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise Exception('Token has expired')
-    except jwt.InvalidTokenError:
-        raise Exception('Invalid token')
+        # Get the JWT token from the Authorization header
+        if not token:
+            raise Exception('No token provided')
+
+        region = boto3.session.Session().region_name
+
+        # Get the JWT kid (key ID)
+        try:
+            headers = jwt.get_unverified_header(token)
+            kid = headers['kid']
+        except Exception as e:
+                print(f"Error getting token header: {str(e)}")
+                raise Exception(f'Invalid token header: {str(e)}')
+
+        # Get the public keys from Cognito
+        try:
+            url = f'https://cognito-idp.{region}.amazonaws.com/{os.environ["COGNITO_USER_POOL_ID"]}/.well-known/jwks.json'
+            response = requests.get(url)
+            response.raise_for_status()
+            keys = response.json()['keys']
+            print(f"Retrieved keys: {json.dumps(keys)}")
+        except Exception as e:
+                print(f"Error fetching keys: {str(e)}")
+                raise Exception(f'Error fetching public keys: {str(e)}')
+
+        # Find the correct public key
+        public_key = None
+        for key in keys:
+            if key['kid'] == kid:
+                try:
+                    public_key = algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
+                    break
+                except Exception as e:
+                        raise Exception(f'Error parsing public key: {str(e)}')
+
+        if not public_key:
+            raise Exception('Public key not found')
+
+        # Verify the token
+        try:
+            payload = jwt.decode(
+                token,
+                public_key,
+                algorithms=['RS256'],
+                options={
+                    'verify_signature': True,
+                    'verify_exp': True,
+                    'verify_aud': True,
+                    'verify_iss': True
+                },
+                audience=os.environ['COGNITO_CLIENT_ID'],
+                issuer=f'https://cognito-idp.us-east-2.amazonaws.com/{os.environ["COGNITO_USER_POOL_ID"]}'
+            )
+            print(f"Token verification successful. Payload: {json.dumps(payload)}")
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise Exception('Token has expired')
+        except jwt.InvalidTokenError:
+            raise Exception('Invalid token')
+        except Exception as e:
+            raise Exception(f'Token verification error: {str(e)}')
+
+    except Exception as e:
+        print(f"Token verification failed: {str(e)}")  # Add logging
+        raise    
 
 ####################
 #user functions
@@ -255,6 +293,9 @@ def updateUser(event, context):
 
         if not update_fields:
             return cors_response(400, "No valid fields to update")
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
 
         # Get the token payload to check the requester's role
         auth_header = event.get('headers', {}).get('Authorization')
@@ -289,9 +330,6 @@ def updateUser(event, context):
             # If target user is trying to update their own role, prevent it
             if str(user_id) == str(token_payload.get('sub')):
                 return cors_response(403, "Users cannot update their own role")
-
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
 
         # Construct UPDATE query dynamically
         set_clause = ", ".join([f"{k} = %s" for k in update_fields.keys()])

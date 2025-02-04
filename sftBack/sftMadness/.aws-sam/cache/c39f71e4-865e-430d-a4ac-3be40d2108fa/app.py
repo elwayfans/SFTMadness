@@ -135,20 +135,40 @@ def uploadFile(event, context):
         # Parse multipart form data
         try:
             content_type = event['headers'].get('Content-Type', '')
-            if 'multipart/form-data' not in content_type:
-                return cors_response(400, "Content-Type must be multipart/form-data")
+            # if 'multipart/form-data' not in content_type:
+            #     return cors_response(400, "Content-Type must be multipart/form-data")
+            boundary = content_type.split('boundary=')[1]
 
-            # Decode base64 body if it's encoded
             body = event.get('body', '')
+            # Decode base64 body if it's encoded
             if event.get('isBase64Encoded', False):
                 body = base64.b64decode(body)
 
-            # Extract file content and metadata from multipart form
-            # Note: In practice, you'd need to properly parse multipart form data
-            # This is a simplified version
-            file_content = body
-            filename = event['headers'].get('filename', '')
-            filetype = event['headers'].get('filetype', '')
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+
+            # Split the body by boundary
+            parts = body.split('--' + boundary)
+            
+            # Initialize variables
+            file_content = None
+            filename = None
+            filetype = None
+
+            # Parse each part
+            for part in parts:
+                if 'name="file"' in part:
+                    # Extract file content
+                    file_content = part.split('\r\n\r\n')[1].strip()
+                elif 'name="filename"' in part:
+                    # Extract filename
+                    filename = part.split('\r\n\r\n')[1].strip()
+                elif 'name="filetype"' in part:
+                    # Extract filetype
+                    filetype = part.split('\r\n\r\n')[1].strip()
+
+            if not filename or not filetype:
+                return cors_response(400, "filename and filetype are required")
 
         except Exception as e:
             return cors_response(400, f"Error processing file upload: {str(e)}")
@@ -186,7 +206,8 @@ def uploadFile(event, context):
 
             return cors_response(201, {
                 "message": "File uploaded successfully",
-                "file": file_record
+                "file": file_record,
+                "s3Response": s3_response
             })
 
         except ClientError as e:
