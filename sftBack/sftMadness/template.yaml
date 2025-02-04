@@ -29,10 +29,10 @@ Globals:
 
         S3_BUCKET_NAME: !Ref FileStorageBucket
 
-        # SES_SENDER_EMAIL: !Ref SESSenderEmail
-        # SES_DOMAIN: !Ref SESDomain
-        # SES_REGION: !Ref SESRegion
-        # SES_CONFIGURATION_SET: !Ref SESConfigurationSet
+        SES_SENDER_EMAIL: !Ref SESSenderEmail
+        SES_DOMAIN: !Ref SESDomain
+        SES_REGION: !Ref SESRegion
+        SES_CONFIGURATION_SET: !Ref SESConfigurationSet
 
     Layers:
       - !Ref DependenciesLayer
@@ -72,22 +72,30 @@ Parameters:
   PrivateSubnetIds:
     Type: String
     Description: Private Subnet Ids
-  # SESSenderEmail:
-  #   Type: String
-  #   Description: SES Sender Email
-  # SESDomain:
-  #   Type: String
-  #   Description: SES Domain
-  # SESRegion:
-  #   Type: String
-  #   Description: SES Region
-  # SESConfigurationSet:
-  #   Type: String
-  #   Description: SES Configuration Set
+  SESSenderEmail:
+    Type: String
+    Description: SES Sender Email
+  SESDomain:
+    Type: String
+    Description: SES Domain
+  SESRegion:
+    Type: String
+    Description: SES Region
+  SESConfigurationSet:
+    Type: String
+    Description: SES Configuration Set
+  CreateEmailIdentity:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Whether to create email identity
 
-# Conditions:
-#   CreateConfigSet: !Not [!Equals [!Ref SESConfigurationSet, ""]]
-#   VerifyDomain: !Not [!Equals [!Ref SESDomain, ""]]
+Conditions:
+  CreateConfigSet: !Not [!Equals [!Ref SESConfigurationSet, ""]]
+  VerifyDomain: !Not [!Equals [!Ref SESDomain, ""]]
+  CreateEmailIdentity: !Equals [!Ref CreateEmailIdentity, "true"]
 
 Resources:
   sft:
@@ -131,16 +139,6 @@ Resources:
                   - secretsmanager:GetSecretValue
                 Resource: 
                   - 'arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!cluster-0aeebdc5-c3e2-4954-8002-4b8fbaa2cd96-Cxeg0w'
-      #   - PolicyName: SSMAccess
-      #     PolicyDocument:
-      #       Version: '2012-10-17'
-      #       Statement:
-      #         - Effect: Allow
-      #           Action:
-      #             - ssm:GetParameter
-      #             - ssm:GetParameters
-      #             - ssm:GetParametersByPath
-      #           Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/gearswap/${ENV}/*'
         - PolicyName: CognitoAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -194,24 +192,24 @@ Resources:
                 Action:
                   - s3:ListBucket
                 Resource: !Sub 'arn:aws:s3:::${FileStorageBucket}'
-        # - PolicyName: SESAccess
-        #   PolicyDocument:
-        #     Version: '2012-10-17'
-        #     Statement:
-        #       - Effect: Allow
-        #         Action:
-        #           - ses:SendEmail
-        #           - ses:SendRawEmail
-        #           - ses:GetSendQuota
-        #           - ses:GetSendStatistics
-        #         Resource: 
-        #           - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
-        #           - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${SESConfigurationSet}'
-        #       - Effect: Allow
-        #         Action:
-        #           - ses:GetSendQuota
-        #           - ses:GetSendStatistics
-        #         Resource: "*"
+        - PolicyName: SESAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                  - ses:GetSendQuota
+                  - ses:GetSendStatistics
+                Resource: 
+                  - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+                  - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${SESConfigurationSet}'
+              - Effect: Allow
+                Action:
+                  - ses:GetSendQuota
+                  - ses:GetSendStatistics
+                Resource: "*"
 
   NatGateway:
     Type: AWS::EC2::NatGateway
@@ -393,77 +391,102 @@ Resources:
               StringEquals:
                 aws:PrincipalArn: !Ref AWS::AccountId
 
-  # EmailLoggingGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     LogGroupName: !Sub "/aws/ses/${AWS::StackName}"
-  #     RetentionInDays: 14
+  EmailLoggingGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/ses/${AWS::StackName}"
+      RetentionInDays: 14
 
-  # EmailMetricsRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: '2012-10-17'
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service: ses.amazonaws.com
-  #           Action: sts:AssumeRole
-  #     Policies:
-  #       - PolicyName: CloudWatchLogging
-  #         PolicyDocument:
-  #           Version: '2012-10-17'
-  #           Statement:
-  #             - Effect: Allow
-  #               Action:
-  #                 - logs:CreateLogStream
-  #                 - logs:PutLogEvents
-  #               Resource: !GetAtt EmailLoggingGroup.Arn
+  EmailMetricsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ses.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchLogging
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt EmailLoggingGroup.Arn
 
-  # SESDomainIdentity:
-  #   Type: AWS::SES::EmailIdentity
-  #   Properties:
-  #     EmailIdentity: !Ref SESSenderEmail
-  #     ConfigurationSetAttributes:
-  #       ConfigurationSetName: !Ref SESConfigurationSet
-  #     DkimAttributes:
-  #       SigningEnabled: true
+  SESDomainIdentity:
+    Condition: CreateEmailIdentity
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref SESSenderEmail
+      ConfigurationSetAttributes:
+        ConfigurationSetName: !If [CreateConfigSet, !Ref SESConfigurationSet, !Ref "AWS::NoValue"]
+      DkimAttributes:
+        SigningEnabled: true
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
 
-  # SESConfigurationSetResource:
-  #   Type: AWS::SES::ConfigurationSet
-  #   Properties:
-  #     Name: !Ref SESConfigurationSet
-  #     DeliveryOptions:
-  #       TlsPolicy: REQUIRE
-  #     ReputationOptions:
-  #       ReputationMetricsEnabled: true
-  #     SendingOptions:
-  #       SendingEnabled: true
+  SESConfigurationSetResource:
+    Type: AWS::SES::ConfigurationSet
+    Properties:
+      Name: !Ref SESConfigurationSet
+      DeliveryOptions:
+        TlsPolicy: REQUIRE
+      ReputationOptions:
+        ReputationMetricsEnabled: true
+      SendingOptions:
+        SendingEnabled: true
       
-  # SESEventDestination:
-  #   Type: AWS::SES::ConfigurationSetEventDestination
-  #   DependsOn: SESConfigurationSetResource
-  #   Properties:
-  #     ConfigurationSetName: !Ref SESConfigurationSet
-  #     EventDestination:
-  #       Name: "EmailEventLogging"
-  #       Enabled: true
-  #       MatchingEventTypes:
-  #         - "send"
-  #         - "reject"
-  #         - "bounce"
-  #         - "complaint"
-  #         - "delivery"
-  #       CloudWatchDestination:
-  #         DimensionConfigurations:
-  #           - DimensionName: "Source"
-  #             DimensionValueSource: "messageTag"
-  #             DefaultDimensionValue: "Unknown"
+  SESEventDestination:
+    Type: AWS::SES::ConfigurationSetEventDestination
+    DependsOn: SESConfigurationSetResource
+    Properties:
+      ConfigurationSetName: !Ref SESConfigurationSet
+      EventDestination:
+        Name: "EmailEventLogging"
+        Enabled: true
+        MatchingEventTypes:
+          - "send"
+          - "reject"
+          - "bounce"
+          - "complaint"
+          - "delivery"
+        CloudWatchDestination:
+          DimensionConfigurations:
+            - DimensionName: "Source"
+              DimensionValueSource: "messageTag"
+              DefaultDimensionValue: "Unknown"
 
 ######################################################
 # Functions
 ######################################################
   # Email Verification Function
+
+  email:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: email/
+      Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
+      Events:
+        testEmail:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /testEmail
+            Method: post
+        testEmailOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /testEmail
+            Method: options
+            Auth:
+              Authorizer: NONE
 
 ##########################################
 
@@ -931,20 +954,20 @@ Outputs:
     Value: !Ref FileStorageBucket
     Export:
       Name: !Sub "${AWS::StackName}-BucketName"
-  # EmailLogGroupName:
-  #   Description: CloudWatch Log Group for Email Events
-  #   Value: !Ref EmailLoggingGroup
-  # EmailMetricsRoleArn:
-  #   Description: IAM Role ARN for Email Metrics
-  #   Value: !GetAtt EmailMetricsRole.Arn
-  # SESConfigurationSetName:
-  #   Description: SES Configuration Set Name
-  #   Condition: CreateConfigSet
-  #   Value: !Ref SESConfigurationSet
-  # SESDomainIdentityName:
-  #   Description: SES Domain Identity
-  #   Condition: VerifyDomain
-  #   Value: !Ref SESDomain
+  EmailLogGroupName:
+    Description: CloudWatch Log Group for Email Events
+    Value: !Ref EmailLoggingGroup
+  EmailMetricsRoleArn:
+    Description: IAM Role ARN for Email Metrics
+    Value: !GetAtt EmailMetricsRole.Arn
+  SESConfigurationSetName:
+    Description: SES Configuration Set Name
+    Condition: CreateConfigSet
+    Value: !Ref SESConfigurationSet
+  SESDomainIdentityName:
+    Description: SES Domain Identity
+    Condition: VerifyDomain
+    Value: !Ref SESDomain
   logInFunctionArn:
     Description: "logIn Lambda Function ARN"
     Value: !GetAtt logIn.Arn
