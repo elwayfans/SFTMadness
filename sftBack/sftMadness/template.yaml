@@ -21,7 +21,7 @@ Globals:
 
         DB_HOST: !Ref DBHost
         DB_USER: !Ref DBUser
-        DB_PASSWORD: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!cluster-0aeebdc5-c3e2-4954-8002-4b8fbaa2cd96-Cxeg0w:SecretString:password}}'
+        DB_PASSWORD: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg:SecretString:password}}'
         DB_PORT: !Ref DBPort
 
         COGNITO_USER_POOL_ID: !Ref UserPool
@@ -63,6 +63,9 @@ Parameters:
   DBPort:
     Type: Number
     Description: Database Port
+  VpcId:
+    Type: String
+    Description: VPC Id
   InternetGatewayId:
     Type: String
     Description: Existing Internet Gateway Id
@@ -138,7 +141,7 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource: 
-                  - 'arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!cluster-0aeebdc5-c3e2-4954-8002-4b8fbaa2cd96-Cxeg0w'
+                  - !Sub 'arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg'
         - PolicyName: CognitoAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -225,7 +228,7 @@ Resources:
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: vpc-0e7cfddc215e8fab1
+      VpcId: !Ref VpcId
 
   PublicRoute:
     Type: AWS::EC2::Route
@@ -255,7 +258,7 @@ Resources:
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: vpc-0e7cfddc215e8fab1
+      VpcId: !Ref VpcId
 
   PrivateRoute:
     Type: AWS::EC2::Route
@@ -286,7 +289,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for Lambda functions
-      VpcId: vpc-0e7cfddc215e8fab1
+      VpcId: !Ref VpcId
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
