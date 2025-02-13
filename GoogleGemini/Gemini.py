@@ -28,5 +28,6 @@ file.close()
 
 class GeminiTrainingData:
     
-    
-    pass
+    def Load_Scrapped_Information():
+        
+        pass

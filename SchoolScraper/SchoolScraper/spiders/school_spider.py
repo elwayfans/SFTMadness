@@ -21,6 +21,11 @@ class SchoolSpider(scrapy.Spider):
             yield scrapy.Request(url=url, callback=self.parse)
         
     def parse(self, response):
+        # print what the spider is doing
+        print(response.url)
+
+        a_selectors = response.xpath("//a")
+
         page = response.url.rstrip("/").split("/")[-1]  # Extracts the last part of the URL
         if not page or "." in page:  # Handle cases where last part is empty or has a file extension
             page = "home"

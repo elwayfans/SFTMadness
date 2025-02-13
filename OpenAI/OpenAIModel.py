@@ -66,7 +66,6 @@ Let me know if you'd like more details on specific opportunities!""")
 You'll need to fill out the FAFSA form to determine your eligibility for federal aid. 
 We also have institutional grants and work-study opportunities available. 
 Feel free to reach out if you need guidance with the application process!""")
-
         
     def save_message_history(self):
         json_object = json.dumps(self.message_history, indent=4)

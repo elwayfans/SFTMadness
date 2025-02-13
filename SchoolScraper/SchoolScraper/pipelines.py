@@ -10,4 +10,8 @@ from itemadapter import ItemAdapter
 
 class SchoolscraperPipeline:
     def process_item(self, item, spider):
-        return item
+    #    adapter = ItemAdapter(item)
+    #    if adapter.get()
+    #    
+    #    return item
+        pass
