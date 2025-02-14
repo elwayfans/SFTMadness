@@ -27,9 +27,31 @@ class AIModelClass:
         #self.load_message_history('sample.json')
         
     def create_message(self, role: str, message: str):
+        """
+            This function is to reduce redundancy within other functions in the class
+
+            Args:
+                arg1: string, pass in the role name of what type of message you are creating
+                arg2: string, pass in the text of the message you want to play.
+
+            Returns:
+                function returns a dictionary with two key-value pairs:
+                    "role" mapped to the role argument (a string).
+                    "content" mapped to the message argument (a string).
+        """
         return {"role": role, "content":message}
 
     def add_system_prompt(self, msg):
+        """
+            This function creates and appends a system prompt message to message history for use from the AI model
+
+            Args:
+                arg1:
+                arg2:
+
+            Returns:
+                this function does not return anything, instead it appends to the class variable "message_history"
+        """
         message = self.create_message("system", msg)
         self.message_history.append(message)
 
