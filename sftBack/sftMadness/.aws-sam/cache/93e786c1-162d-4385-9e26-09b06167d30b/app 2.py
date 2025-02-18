@@ -3,13 +3,13 @@ import os
 import psycopg2
 from datetime import datetime, date
 import boto3
+# import base64
 import jwt
 from botocore.exceptions import ClientError
 from psycopg2.extras import RealDictCursor
 import requests
 from jwt import algorithms
 
-# cors_response function to return API Gateway response with CORS headers
 def cors_response(status_code, body, content_type="application/json"):
     headers = {
         'Content-Type': content_type,
@@ -20,14 +20,17 @@ def cors_response(status_code, body, content_type="application/json"):
 
     if content_type == "application/json":
         body = json.dumps(body, default=str)
+        # is_base64_encoded = False
+    # else:
+        # is_base64_encoded = True
 
     return {
         'statusCode': status_code,
         'body': body,
         'headers': headers,
+        # 'isBase64Encoded': is_base64_encoded, #base64 for images if used
     }
 
-# lambda_handler function to handle incoming API Gateway requests
 def lambda_handler(event, context):
     if event['httpMethod'] == 'OPTIONS':
         return cors_response(200, "ok")
@@ -37,11 +40,10 @@ def lambda_handler(event, context):
     http_method = event['httpMethod']
     resource_path = event['resource']
 
-    #for route with no authentication
+    #for no authentication
     if resource_path == '/users' and http_method == 'POST':
         return registerUser(event, context)
     
-    # Authenticate the request
     try:
         #verify token
         auth_header = event.get('headers', {}).get('Authorization')
@@ -52,8 +54,8 @@ def lambda_handler(event, context):
             return cors_response(401, "Invalid Authorization header format. Must start with 'Bearer '")
         
         token = auth_header.split(' ')[-1]
-
         try:
+            # verify_token(token)
             token_payload = verify_token(token)
             print(f"Token verified successfully: {json.dumps(token_payload)}")
         except Exception as e:
@@ -80,16 +82,13 @@ def lambda_handler(event, context):
 ###################
 #helper functions
 
-# Custom JSON serializer for datetime objects
 def json_serial(obj):
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
     raise TypeError ("Type %s not serializable" % type(obj))
 
-# Database connection function
 def get_db_connection():
     return psycopg2.connect(
-        dbname=os.environ['DB_NAME'],
         host=os.environ['DB_HOST'],
         user=os.environ['DB_USER'],
         password=os.environ['DB_PASSWORD'],
@@ -98,26 +97,6 @@ def get_db_connection():
         connect_timeout=5)
     
 #AUTH
-# check if token is invalidated in db
-def is_token_invalidated(token_payload):
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            jti = token_payload.get('jti')
-            
-            if not jti:
-                raise Exception("Token missing jti claim")
-            
-            cur.execute("""
-                SELECT EXISTS(
-                    SELECT 1 
-                    FROM invalidated_tokens 
-                    WHERE jti = %s
-                )
-            """, (jti,))
-            
-            return cur.fetchone()[0]
-        
-# Verify JWT token
 def verify_token(token):
     try:
         # Get the JWT token from the Authorization header
@@ -173,12 +152,8 @@ def verify_token(token):
                 audience=os.environ['COGNITO_CLIENT_ID'],
                 issuer=f'https://cognito-idp.us-east-2.amazonaws.com/{os.environ["COGNITO_USER_POOL_ID"]}'
             )
-            if is_token_invalidated(payload):
-                raise Exception('Token has been invalidated')
-            
             print(f"Token verification successful. Payload: {json.dumps(payload)}")
             return payload
-        
         except jwt.ExpiredSignatureError:
             raise Exception('Token has expired')
         except jwt.InvalidTokenError:
