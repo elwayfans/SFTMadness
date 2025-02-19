@@ -46,7 +46,7 @@ class AIModelClass:
             This function creates and appends a system prompt message to message history for use from the AI model
 
             Args:
-                arg1:
+                arg1: self, this allows for the call of variables that are instantiated within the class.
                 arg2:
 
             Returns:
@@ -98,7 +98,6 @@ Feel free to reach out if you need guidance with the application process!""")
         with open(json_file_name, 'r') as openfile:
             json_object = json.load(openfile)
             self.message_history = json_object
-
 
 
 
