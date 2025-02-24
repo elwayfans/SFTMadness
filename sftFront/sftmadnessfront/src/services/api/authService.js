@@ -33,47 +33,67 @@ export const authService = {
   register: async (userData) => {
     try {
       const { email, password, ...rest } = userData;
-      
-      // First register with Cognito
-      const { isSignUpComplete, userId, nextStep } = await signUp({
-        username: email,
-        password,
-        options: {
-          userAttributes: {
-            email
-          }
+    console.log('Starting registration with data:', userData);
+    
+    // First register with Cognito
+    const signUpResult = await signUp({
+      username: email,
+      password,
+      options: {
+        userAttributes: {
+          email
         }
-      });
+      }
+    });
+    
+    console.log('Cognito signup result:', signUpResult);
 
-      if (isSignUpComplete) {
-        // Then create user record in your database
+    if (signUpResult.isSignUpComplete) {
+      // Make API call to your backend
+      try {
         const response = await post({
-          apiName: 'sftMadnessApi',
+          apiName: 'sft',
           path: '/users',
           options: {
             body: {
               email,
               password,
-              ...rest
+              role: 'customer',
+              companyName: rest.companyName || '',
+              phoneNumber: rest.phoneNumber || ''
             }
           }
         });
-
+        
+        console.log('Backend API response:', response);
+        
         return {
           success: true,
-          user: response.data
+          user: response.body
         };
+      } catch (apiError) {
+        console.error('Backend API Error:', apiError);
+        // Clean up Cognito user if DB creation fails
+        await signOut();
+        throw new Error(apiError.message || 'Failed to create user in database');
       }
-
-      return {
-        success: false,
-        nextStep
-      };
-    } catch (error) {
-      console.error('Error registering user:', error);
-      throw error;
     }
-  },
+  
+    return {
+      success: false,
+      nextStep: signUpResult.nextStep
+    };
+  } catch (error) {
+    console.error("Registration error:", error);
+    // Attempt to clean up if there's an error
+    try {
+      await signOut();
+    } catch (e) {
+      console.error('Error during cleanup:', e);
+    }
+    throw error;
+  }
+},
 
   // Sign out user
   logout: async () => {

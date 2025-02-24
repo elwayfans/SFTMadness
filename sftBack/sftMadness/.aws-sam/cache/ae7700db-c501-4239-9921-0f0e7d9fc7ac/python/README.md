@@ -23,6 +23,11 @@ aws s3 rb s3://sftmadness-files-us-east-2-908027415563 --force
 -download dependencies from requirement.txt to layers folder
 pip3 install -r requirements.txt -t layers/dependencies/python
 
+--deploy with admin IAM Role:
+aws configure --profile admin
+sam deploy --profile admin
+
+
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
 - hello_world - Code for the application's Lambda function.

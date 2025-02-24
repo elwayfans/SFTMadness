@@ -1,69 +1,73 @@
 import React, { useState } from 'react';
-import { authService } from '../services/api/authService';
+import { userService } from '../services/api/userService';
 
-const Login = () => {
+export const LoginForm = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    console.log('Environment Variables Check:', {
-        userPoolId: process.env.REACT_APP_COGNITO_USER_POOL_ID,
-        clientId: process.env.REACT_APP_COGNITO_CLIENT_ID,
-        apiEndpoint: process.env.REACT_APP_API_ENDPOINT
-      });
+    setLoading(true);
 
     try {
-      const result = await authService.login(email, password);
+      const result = await userService.login(email, password);
       if (result.success) {
-        // Handle successful login
-        console.log('Logged in successfully');
-        // Navigate to dashboard or home page
+        onSuccess?.(result);
       } else {
-        setError('Login failed');
+        setError('Login failed. Please try again.');
       }
-    } catch (error) {
-      setError(error.message || 'An error occurred during login');
+    } catch (err) {
+      setError(err.message || 'An error occurred during login');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleLogin} className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow">
-      {error && <div className="text-red-600 mb-4">{error}</div>}
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Login</h2>
       
-      <div className="mb-4">
-        <label className="block text-gray-700 mb-2">Email</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 border rounded"
-          required
-        />
-      </div>
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+          {error}
+        </div>
+      )}
 
-      <div className="mb-6">
-        <label className="block text-gray-700 mb-2">Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-3 py-2 border rounded"
-          required
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-gray-700 mb-2">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
 
-      <button 
-        type="submit"
-        className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-      >
-        Log In
-      </button>
-    </form>
+        <div>
+          <label className="block text-gray-700 mb-2">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full py-2 px-4 rounded text-white font-semibold
+            ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+        >
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
+    </div>
   );
 };
-
-export default Login;
