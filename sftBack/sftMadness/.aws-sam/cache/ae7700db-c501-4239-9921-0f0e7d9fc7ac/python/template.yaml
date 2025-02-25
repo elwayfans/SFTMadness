@@ -582,6 +582,35 @@ Resources:
 
 ##########################################
 
+  usersByCognito:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - PrivateSubnet1RouteTableAssociation
+      - PrivateSubnet2RouteTableAssociation
+      - PrivateSubnet3RouteTableAssociation
+      - NatGateway
+    Properties:
+      CodeUri: users_by_cognito/
+      Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        # get user by cognito id
+        getUserByCognitoId:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/cognito/{cognitoId}
+            Method: get
+        # options method for get user by cognito id
+        cognitoIdOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/cognito/{cognitoId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+
   logIn:
     Type: AWS::Serverless::Function
     DependsOn:

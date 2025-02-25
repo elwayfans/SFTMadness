@@ -120,12 +120,22 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["admins"]
 
+[function_build_definitions.ca6e6379-9a21-4dbd-ac38-a54920070be8]
+codeuri = "/Users/kylierhodus/Documents/GitHub/SFTMadness/sftBack/sftMadness/users_by_cognito"
+runtime = "python3.12"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+source_hash = "927b24be0243daf823f4f65bce7f6b3c8df926b87b97778c22eeb4c835aff30e"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["usersByCognito"]
+
 [layer_build_definitions.ae7700db-c501-4239-9921-0f0e7d9fc7ac]
 layer_name = "DependenciesLayer"
 codeuri = "/Users/kylierhodus/Documents/GitHub/SFTMadness/sftBack/sftMadness"
 build_method = "python3.12"
 compatible_runtimes = ["python3.12"]
 architecture = "x86_64"
-source_hash = "fed2ebb9f48fef22403b03bead6b619dd59a17b95fa3ce4c55e81c6cdaf781b0"
+source_hash = "bc38ba54cff9e0dfb6af7f26603d7461866295cb0a847f2e62c31d47ac8c297c"
 manifest_hash = ""
 layer = "DependenciesLayer"
