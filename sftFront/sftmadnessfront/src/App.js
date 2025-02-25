@@ -1,85 +1,152 @@
-import React, { Fragment } from 'react'
-import { Helmet } from 'react-helmet'
-import { Authenticator } from '@aws-amplify/ui-react';
-import '@aws-amplify/ui-react/styles.css';
-import DataTakeIn from './components/DataTakeIn'
-import Navbar1 from './components/navbar1'
-
+import React, { useState, useEffect } from 'react';
+import { signOut } from 'aws-amplify/auth';
+import { LoginForm } from './components/registration/logIn';
+import { RegisterForm } from './components/registration/register';
+import { Dashboard } from './components/dashboard';
+import { userService } from './services/api/userService';
 
 function App() {
-  
-  return (
-    <Authenticator>
-      {({ signOut }) => (
-        
-        <div className="min-h-screen bg-gray-100 p-8">
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState('');
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      setLoading(true);
+      setAuthError('');
+      
+      const authenticated = await userService.isAuthenticated();
+      console.log('Authentication status:', authenticated);
+      setIsAuthenticated(authenticated);
+      
+      if (!authenticated) {
+        // If there was a previous auth token but it's no longer valid, sign out
+        try {
+          await signOut();
+        } catch (e) {
+          console.error('Error during cleanup sign out:', e);
+        }
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      setAuthError('Authentication check failed. Please try again.');
+      setIsAuthenticated(false);
+      
+      try {
+        await signOut();
+      } catch (e) {
+        console.error('Error during error-cleanup sign out:', e);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginSuccess = async (result) => {
+    console.log('Login successful:', result);
+    setIsAuthenticated(true);
+  };
+
+  const handleRegisterSuccess = async (result) => {
+    console.log('Registration successful:', result);
+    setIsAuthenticated(true);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      // Direct signOut call
+      await signOut();
+      console.log('Sign out successful');
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Sign out error:', error);
+      setIsAuthenticated(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">
+            SFT Madness
+          </h1>
           
-          <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-           <h1 className="text-2xl font-bold text-blue-600 mb-4">Welcome to SFT Madness</h1>
-            
-            <DataTakeIn/>
-            <button 
-              onClick={signOut}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Sign out
-            </button>
-          </div>
+          {authError && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+              {authError}
+            </div>
+          )}
+          
+          {showRegister ? (
+            <>
+              <RegisterForm onSuccess={handleRegisterSuccess} />
+              <p className="text-center mt-4">
+                Already have an account?{' '}
+                <button
+                  onClick={() => {
+                    setShowRegister(false);
+                    setShowForgotPassword(false);
+                  }}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Login here
+                </button>
+              </p>
+            </>
+          ) : showForgotPassword ? (
+            <>
+              {/* This would be your ForgotPasswordForm */}
+              <p className="text-center mt-4">
+                Remember your password?{' '}
+                <button
+                  onClick={() => setShowForgotPassword(false)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Back to login
+                </button>
+              </p>
+            </>
+          ) : (
+            <>
+              <LoginForm onSuccess={handleLoginSuccess} />
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Forgot password?
+                </button>
+                <button
+                  onClick={() => setShowRegister(true)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Register here
+                </button>
+              </div>
+            </>
+          )}
         </div>
-      )}
-    </Authenticator>
-  );
+      </div>
+    );
+  }
+
+  // If user is authenticated, render the Dashboard component with onSignOut prop
+  return <Dashboard onSignOut={handleSignOut} />;
 }
 
 export default App;
-
-// import { Amplify } from 'aws-amplify';
-// import { Authenticator } from '@aws-amplify/ui-react';
-// import '@aws-amplify/ui-react/styles.css';
-// import awsConfig from './aws-config';
-// import logo from './logo.svg';
-// import './App.css';
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//         <p>
-//           i love you kylie
-//         </p>
-//       </header>
-//     </div>
-//   );
-// }
-
-// export default App;
-
-
-// Amplify.configure(awsConfig);
-
-// function App() {
-//   return (
-//     <Authenticator>
-//       {({ signOut, user }) => (
-//         <div className="App">
-//           <h1>Hello World</h1>
-//           <button onClick={signOut}>Sign out</button>
-//         </div>
-//       )}
-//     </Authenticator>
-//   );
-// }
-
-// export default App;
