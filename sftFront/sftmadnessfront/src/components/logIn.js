@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
 import { authService } from '../services/api/authService';
+import PropTypes from 'prop-types';
+import './LogIn.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -46,7 +48,7 @@ const Login = () => {
       </div>
 
       <div className="mb-6">
-        <label className="block text-gray-700 mb-2">Password</label>
+        <label className="block text-gray-700 mb-2">PasdasDSAsword</label>
         <input
           type="password"
           value={password}
@@ -62,8 +64,12 @@ const Login = () => {
       >
         Log In
       </button>
+     
     </form>
+
+    
   );
 };
+
 
 export default Login;

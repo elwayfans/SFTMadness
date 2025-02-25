@@ -1,13 +1,23 @@
+import React, { Fragment } from 'react'
+import { Helmet } from 'react-helmet'
 import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
+import DataTakeIn from './components/DataTakeIn'
+import Navbar1 from './components/navbar1'
+
 
 function App() {
+  
   return (
     <Authenticator>
       {({ signOut }) => (
+        
         <div className="min-h-screen bg-gray-100 p-8">
+          
           <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-            <h1 className="text-2xl font-bold text-blue-600 mb-4">Welcome to SFT Madness</h1>
+           <h1 className="text-2xl font-bold text-blue-600 mb-4">Welcome to SFT Madness</h1>
+            
+            <DataTakeIn/>
             <button 
               onClick={signOut}
               className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
