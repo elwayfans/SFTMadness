@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { userService } from "../services/api/userService";
+import { userService } from "../../services/api/userService";
 import { ConfirmSignUp } from "./confirmRegistration";
 
 export const RegisterForm = ({ onSuccess }) => {

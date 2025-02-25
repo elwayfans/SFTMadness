@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { userService } from '../services/api/userService';
+import { userService } from '../../services/api/userService';
 
 export const LoginForm = ({ onSuccess }) => {
   const [email, setEmail] = useState('');

@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { signOut } from 'aws-amplify/auth';
-import { userService } from '../../services/api/userService';
-import { UserProfileForm } from './profile';
-import { DeleteAccountForm } from './deleteUser';
-import { ForgotPasswordForm } from './forgotPass';
-import { ConfirmPasswordResetForm } from './confirmPassRe';
+import { userService } from '../services/api/userService';
+import { UserProfileForm } from './users/profile';
+import { ForgotPasswordForm } from './users/forgotPass';
+import { ConfirmPasswordResetForm } from './users/confirmPassRe';
+import { DeleteAccountForm } from './users/deleteUser';
+import { SchoolContactProfile } from './schoolContact/schoolContactProfile';
+import { CreateContact } from './schoolContact/createSchoolContact';
 
 export const Dashboard = ({ onSignOut }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
   const [passwordResetEmail, setPasswordResetEmail] = useState('');
   const [showPasswordResetConfirmation, setShowPasswordResetConfirmation] = useState(false);
-  const [error, setError] = useState('');
+  
+  // School contact state
+  const [contactId, setContactId] = useState('');
+  const [showContactIdInput, setShowContactIdInput] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -58,26 +64,26 @@ export const Dashboard = ({ onSignOut }) => {
 
   const handleSignOut = async () => {
     try {
-        await signOut();
+      await signOut();
       
-        if (onSignOut) {
-          onSignOut();
-        } else {
-          // Fallback if onSignOut prop not provided
-          window.location.href = '/';
-        }
-      } catch (error) {
-        console.error('Sign out error:', error);
-        setError('Error signing out. Please try again.');
+      if (onSignOut) {
+        onSignOut();
+      } else {
+        // Fallback if onSignOut prop not provided
+        window.location.href = '/';
       }
+    } catch (error) {
+      console.error('Sign out error:', error);
+      setError('Error signing out. Please try again.');
+    }
   };
 
   const handleDeleteSuccess = () => {
     if (onSignOut) {
-        onSignOut();
-      } else {
-        window.location.href = '/';
-      }
+      onSignOut();
+    } else {
+      window.location.href = '/';
+    }
   };
 
   const handlePasswordResetRequest = (email) => {
@@ -90,6 +96,35 @@ export const Dashboard = ({ onSignOut }) => {
     setActiveTab('profile');
     alert('Password has been reset successfully. Please log in with your new password.');
     handleSignOut();
+  };
+  
+  const handleContactIdChange = (e) => {
+    setContactId(e.target.value);
+  };
+
+  const handleContactIdSubmit = (e) => {
+    e.preventDefault();
+    if (contactId.trim()) {
+      setShowContactIdInput(false);
+    } else {
+      setError('Please enter a valid contact ID');
+    }
+  };
+  
+  const handleContactCreated = (newContact) => {
+    setContactId(newContact.id);
+    setActiveTab('view-contact');
+    alert(`Contact created with ID: ${newContact.id}`);
+  };
+  
+  const handleContactUpdate = () => {
+    alert('Contact updated successfully!');
+  };
+  
+  const handleContactDelete = () => {
+    setContactId('');
+    setActiveTab('profile');
+    alert('Contact deleted successfully!');
   };
 
   if (loading) {
@@ -126,7 +161,7 @@ export const Dashboard = ({ onSignOut }) => {
           )}
 
           <div className="border-b border-gray-200 mb-6">
-            <nav className="flex space-x-8">
+            <nav className="flex flex-wrap space-x-4">
               <button
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'profile'
@@ -156,6 +191,34 @@ export const Dashboard = ({ onSignOut }) => {
                 onClick={() => setActiveTab('delete')}
               >
                 Delete Account
+              </button>
+              
+              {/* School Contact Navigation */}
+              <button
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'create-contact'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                onClick={() => {
+                  setActiveTab('create-contact');
+                  setShowContactIdInput(false);
+                }}
+              >
+                Create Contact
+              </button>
+              <button
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'view-contact'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                onClick={() => {
+                  setActiveTab('view-contact');
+                  setShowContactIdInput(true);
+                }}
+              >
+                View Contact
               </button>
             </nav>
           </div>
@@ -190,6 +253,47 @@ export const Dashboard = ({ onSignOut }) => {
                 onSuccess={handleDeleteSuccess} 
                 user={user}
               />
+            )}
+            
+            {/* School Contact Components */}
+            {activeTab === 'create-contact' && (
+              <CreateContact onSuccess={handleContactCreated} />
+            )}
+            
+            {activeTab === 'view-contact' && (
+              <>
+                {showContactIdInput && (
+                  <div className="mb-6">
+                    <form onSubmit={handleContactIdSubmit} className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={contactId}
+                        onChange={handleContactIdChange}
+                        placeholder="Enter Contact ID"
+                        className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                      >
+                        Load Contact
+                      </button>
+                    </form>
+                  </div>
+                )}
+                
+                {contactId ? (
+                  <SchoolContactProfile
+                    contactId={contactId}
+                    onUpdate={handleContactUpdate}
+                    onDelete={handleContactDelete}
+                  />
+                ) : !showContactIdInput && (
+                  <div className="text-center py-8 text-gray-500">
+                    No contact ID provided. Please use the "View Contact" tab to enter an ID.
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

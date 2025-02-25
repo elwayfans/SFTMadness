@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { signOut } from 'aws-amplify/auth';
 import { LoginForm } from './components/users/logIn';
 import { RegisterForm } from './components/users/register';
-import { Dashboard } from './components/users/usersDashboard';
+import { Dashboard } from './components/dashboard';
 import { userService } from './services/api/userService';
 
 function App() {
