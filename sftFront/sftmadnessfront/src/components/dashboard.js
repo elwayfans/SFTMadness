@@ -104,7 +104,9 @@ export const Dashboard = ({ onSignOut }) => {
 
   const handleContactIdSubmit = (e) => {
     e.preventDefault();
-    if (contactId.trim()) {
+    const contactIdStr = String(contactId);
+  
+    if (contactIdStr.trim()) {
       setShowContactIdInput(false);
     } else {
       setError('Please enter a valid contact ID');
