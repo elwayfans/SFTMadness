@@ -17,36 +17,44 @@ Globals:
 
     Environment:
       Variables:
+        #references (ref) environment / version
         ENV: !Ref Env
 
+        #ref database parameters
         DB_NAME: !Ref DBName
         DB_HOST: !Ref DBHost
         DB_USER: !Ref DBUser
         DB_PASSWORD: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg:SecretString:password}}'
         DB_PORT: !Ref DBPort
 
+        #ref cognito parameters
         COGNITO_USER_POOL_ID: !Ref UserPool
         COGNITO_CLIENT_ID: !Ref UserPoolClient
 
+        #ref s3 bucket
         S3_BUCKET_NAME: !Ref FileStorageBucket
 
+        #ref ses parameters
         SES_SENDER_EMAIL: !Ref SESSenderEmail
         SES_DOMAIN: !Ref SESDomain
         SES_REGION: !Ref SESRegion
         SES_CONFIGURATION_SET: !Ref SESConfigurationSet
 
+    #global dependencies
     Layers:
       - !Ref DependenciesLayer
 
+    #global vpc configuration
     VpcConfig:
       SecurityGroupIds:
         - !Ref LambdaSecurityGroup
+      # all lambdas must run in private subnets
       SubnetIds:
         - !Select [0, !Split [",", !Ref PrivateSubnetIds]]
         - !Select [1, !Split [",", !Ref PrivateSubnetIds]]
         - !Select [2, !Split [",", !Ref PrivateSubnetIds]]
     
-
+#referenced parameters initialization
 Parameters:
   Env:
     Type: String
@@ -99,21 +107,26 @@ Parameters:
       - "false"
     Description: Whether to create email identity
 
+# Conditions for SES Configuration Set and Domain Identity
 Conditions:
   CreateConfigSet: !Not [!Equals [!Ref SESConfigurationSet, ""]]
   VerifyDomain: !Not [!Equals [!Ref SESDomain, ""]]
   CreateEmailIdentity: !Equals [!Ref CreateEmailIdentity, "true"]
 
 Resources:
+  # creates the api gateway
   sft:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
+      # cors configuration
       Cors:
         AllowMethods: "'POST, GET, OPTIONS, PUT, DELETE'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Accept'"
-        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Accept,Origin'"
+        AllowOrigin: "'*'" #"'http://localhost:3000'"
         MaxAge: "'7200'"
+        # AllowCredentials: true
+      # authorizer configuration
       Auth:
         DefaultAuthorizer: CognitoAuthorizer
         Authorizers:
@@ -123,6 +136,9 @@ Resources:
               Header: Authorization
             Type: COGNITO_USER_POOLS
 
+  # creates the lambda execution role
+  # this role is used by all lambda functions
+  # permissions and policies set for secretsAccess, cognitoAccess, rdsAccess, networkAccess, s3Access, sesAccess
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -133,6 +149,7 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
+      # managed policies
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
@@ -144,6 +161,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
+                #access to the rds secret
                 Resource: 
                   - !Sub 'arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg'
         - PolicyName: CognitoAccess
@@ -151,6 +169,7 @@ Resources:
             Version: '2012-10-17'
             Statement: 
               - Effect: Allow
+                # cognito user pool permissions
                 Action:
                   - cognito-idp:AdminCreateUser
                   - cognito-idp:AdminInitiateAuth
@@ -178,6 +197,7 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
+                # network permissions
                 Action:
                   - ec2:CreateNetworkInterface
                   - ec2:DeleteNetworkInterface
@@ -191,6 +211,7 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
+                # s3 bucket permissions
                 Action:
                   - s3:PutObject
                   - s3:GetObject
@@ -205,20 +226,19 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
+                # ses permissions
                 Action:
                   - ses:SendEmail
                   - ses:SendRawEmail
-                  # - ses:GetSendQuota
-                  # - ses:GetSendStatistics
                 Resource: 
-                  # - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
-                  # - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${SESConfigurationSet}'
                   - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+                  # if config set is not created, allows creation here
                   - !If 
                     - CreateConfigSet
                     - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${SESConfigurationSet}'
                     - !Ref AWS::NoValue
 
+  # nat gateway and eip for private subnet access
   NatGateway:
     Type: AWS::EC2::NatGateway
     Properties:
@@ -230,6 +250,7 @@ Resources:
     Properties:
       Domain: vpc
 
+  # public and private route tables configuration
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -242,6 +263,8 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGatewayId
 
+  # only public subnets have internet access and are in the public route table
+  # only private subnets have nat gateway access and are in the private route table
   PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -290,6 +313,7 @@ Resources:
       SubnetId: !Select [2, !Split [",", !Ref PrivateSubnetIds]]
       RouteTableId: !Ref PrivateRouteTable
 
+  # security group for lambda functions
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -299,6 +323,7 @@ Resources:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
 
+  # layer for dependencies, all lambda functions use this layer
   DependenciesLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -310,14 +335,21 @@ Resources:
     Metadata:
       BuildMethod: python3.12
 
+  # user pool and client configuration
   UserPool:
     Type: AWS::Cognito::UserPool
+    # if stack is deleted, user pool is retained
     DeletionPolicy: Retain
+    # if stack is updated, user pool is retained
     UpdateReplacePolicy: Retain
     Properties:
       UserPoolName: sftMadnessUserPool
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
+      # email is the username attribute
+      # email is auto-verified
+      # email is required and mutable
+      # password policy is enforced
       UsernameAttributes:
         - email
       AutoVerifiedAttributes:
@@ -342,11 +374,13 @@ Resources:
       UserPoolId: !Ref UserPool
       GenerateSecret: false
       PreventUserExistenceErrors: ENABLED
+      # client is allowed to use all oauth flows
       ExplicitAuthFlows:
         - ALLOW_ADMIN_USER_PASSWORD_AUTH
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_USER_SRP_AUTH
+      # token validity is set to 60 minutes
       AccessTokenValidity: 60
       IdTokenValidity: 60
       RefreshTokenValidity: 30
@@ -355,6 +389,7 @@ Resources:
         IdToken: minutes
         RefreshToken: days
 
+  # s3 bucket configuration for file storage
   FileStorageBucket:
     Type: AWS::S3::Bucket
     UpdateReplacePolicy: Retain
@@ -401,12 +436,14 @@ Resources:
               StringEquals:
                 aws:PrincipalArn: !Ref AWS::AccountId
 
+  # email logging configuration
   EmailLoggingGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/ses/${AWS::StackName}"
       RetentionInDays: 14
 
+  # email metrics configuration
   EmailMetricsRole:
     Type: AWS::IAM::Role
     Properties:
@@ -418,28 +455,35 @@ Resources:
               Service: ses.amazonaws.com
             Action: sts:AssumeRole
       Policies:
+        # stored in cloudwatch
         - PolicyName: CloudWatchLogging
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
+                # cloudwatch logs permissions
                 Action:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: !GetAtt EmailLoggingGroup.Arn
 
+  # ses domain identity configuration
   SESDomainIdentity:
+    # if stack is deleted, domain identity is retained
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    # creates the domain identity if it does not exist
     Condition: CreateEmailIdentity
     Type: AWS::SES::EmailIdentity
     Properties:
       EmailIdentity: !Ref SESSenderEmail
+      # if there is no configuration set, uses the default
       ConfigurationSetAttributes:
         ConfigurationSetName: !If [CreateConfigSet, !Ref SESConfigurationSet, !Ref "AWS::NoValue"]
       DkimAttributes:
         SigningEnabled: true
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
 
+  # ses configuration set
   SESConfigurationSetResource:
     Type: AWS::SES::ConfigurationSet
     Properties:
@@ -450,7 +494,8 @@ Resources:
         ReputationMetricsEnabled: true
       SendingOptions:
         SendingEnabled: true
-      
+  
+  # ses event destination configuration
   SESEventDestination:
     Type: AWS::SES::ConfigurationSetEventDestination
     Condition: CreateConfigSet
@@ -460,6 +505,7 @@ Resources:
       EventDestination:
         Name: "EmailEventLogging"
         Enabled: true
+        # logs all email events in cloudwatch
         MatchingEventTypes:
           - "send"
           - "reject"
@@ -475,10 +521,11 @@ Resources:
 ######################################################
 # Functions
 ######################################################
-  # Email Verification Function
 
+  # Email Verification Function
   email:
     Type: AWS::Serverless::Function
+    # depends on the private subnets and nat gateway
     DependsOn:
       - PrivateSubnet1RouteTableAssociation
       - PrivateSubnet2RouteTableAssociation
@@ -488,6 +535,7 @@ Resources:
       CodeUri: email/
       Handler: app.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      # all endpoints in email service
       Events:
         testEmail:
           Type: Api
@@ -495,12 +543,17 @@ Resources:
             RestApiId: !Ref sft
             Path: /testEmail
             Method: post
+            # if no authorization is specified, uses Cognito Authorizer
         testEmailOptions:
+        # each endpoint has an options method that matches every path
+        # this is used for CORS configuration
+        # all options methods have no authorization
           Type: Api
           Properties:
             RestApiId: !Ref sft
             Path: /testEmail
             Method: options
+            # uses no authorization
             Auth:
               Authorizer: NONE
 
@@ -517,6 +570,8 @@ Resources:
         Handler: app.lambda_handler
         Role: !GetAtt LambdaExecutionRole.Arn
         Events:
+          # function is scheduled to run daily
+          # cleans expired tokens stored in the database
           ScheduledCleanup:
             Type: Schedule
             Properties:
@@ -526,6 +581,35 @@ Resources:
               Enabled: true
 
 ##########################################
+
+  usersByCognito:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - PrivateSubnet1RouteTableAssociation
+      - PrivateSubnet2RouteTableAssociation
+      - PrivateSubnet3RouteTableAssociation
+      - NatGateway
+    Properties:
+      CodeUri: users_by_cognito/
+      Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        # get user by cognito id
+        getUserByCognitoId:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/cognito/{cognitoId}
+            Method: get
+        # options method for get user by cognito id
+        cognitoIdOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/cognito/{cognitoId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   logIn:
     Type: AWS::Serverless::Function
@@ -595,6 +679,7 @@ Resources:
       Handler: app.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
+        # can never have more than one route with the same path and method
         registerUser:
           Type: Api
           Properties:
@@ -1011,6 +1096,7 @@ Resources:
             Auth:
               Authorizer: NONE
 
+  # Application Insights Resource Group
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
@@ -1018,6 +1104,8 @@ Resources:
         Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
       ResourceQuery:
         Type: CLOUDFORMATION_STACK_1_0
+
+  # Application Insights Monitoring
   ApplicationInsightsMonitoring:
     Type: AWS::ApplicationInsights::Application
     Properties:
@@ -1025,6 +1113,9 @@ Resources:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: 'true'
 
+# outputs for the stack
+# all outputs are exported for use in other stacks
+# all outputs need a value, description preferred
 Outputs:
   sftMadnessApi:
     Description: "API Gateway endpoint URL for Prod stage for sftMadness functions"

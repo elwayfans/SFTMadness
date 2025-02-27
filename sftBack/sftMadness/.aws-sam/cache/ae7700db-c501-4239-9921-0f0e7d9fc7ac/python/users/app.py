@@ -3,13 +3,13 @@ import os
 import psycopg2
 from datetime import datetime, date
 import boto3
-# import base64
 import jwt
 from botocore.exceptions import ClientError
 from psycopg2.extras import RealDictCursor
 import requests
 from jwt import algorithms
 
+# cors_response function to return API Gateway response with CORS headers
 def cors_response(status_code, body, content_type="application/json"):
     headers = {
         'Content-Type': content_type,
@@ -20,17 +20,14 @@ def cors_response(status_code, body, content_type="application/json"):
 
     if content_type == "application/json":
         body = json.dumps(body, default=str)
-        # is_base64_encoded = False
-    # else:
-        # is_base64_encoded = True
 
     return {
         'statusCode': status_code,
         'body': body,
         'headers': headers,
-        # 'isBase64Encoded': is_base64_encoded, #base64 for images if used
     }
 
+# lambda_handler function to handle incoming API Gateway requests
 def lambda_handler(event, context):
     if event['httpMethod'] == 'OPTIONS':
         return cors_response(200, "ok")
@@ -40,10 +37,11 @@ def lambda_handler(event, context):
     http_method = event['httpMethod']
     resource_path = event['resource']
 
-    #for no authentication
+    #for route with no authentication
     if resource_path == '/users' and http_method == 'POST':
         return registerUser(event, context)
     
+    # Authenticate the request
     try:
         #verify token
         auth_header = event.get('headers', {}).get('Authorization')
@@ -54,8 +52,8 @@ def lambda_handler(event, context):
             return cors_response(401, "Invalid Authorization header format. Must start with 'Bearer '")
         
         token = auth_header.split(' ')[-1]
+
         try:
-            # verify_token(token)
             token_payload = verify_token(token)
             print(f"Token verified successfully: {json.dumps(token_payload)}")
         except Exception as e:
@@ -82,11 +80,13 @@ def lambda_handler(event, context):
 ###################
 #helper functions
 
+# Custom JSON serializer for datetime objects
 def json_serial(obj):
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
     raise TypeError ("Type %s not serializable" % type(obj))
 
+# Database connection function
 def get_db_connection():
     return psycopg2.connect(
         dbname=os.environ['DB_NAME'],
@@ -98,6 +98,7 @@ def get_db_connection():
         connect_timeout=5)
     
 #AUTH
+# check if token is invalidated in db
 def is_token_invalidated(token_payload):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -116,6 +117,7 @@ def is_token_invalidated(token_payload):
             
             return cur.fetchone()[0]
         
+# Verify JWT token
 def verify_token(token):
     try:
         # Get the JWT token from the Authorization header
@@ -197,6 +199,7 @@ def registerUser(event, context):
     cognito_client = boto3.client('cognito-idp')
 
     try:
+        print("Starting user registration...")
         body = json.loads(event.get('body', {}))
     except json.JSONDecodeError:
         return cors_response(400, f"Invalid JSON: {str(e)}")
@@ -206,64 +209,128 @@ def registerUser(event, context):
     role = body.get('role')
     companyName = body.get('companyName')
     phoneNumber = body.get('phoneNumber')
+    skipCognitoCreation = body.get('skipCognitoCreation', False)
 
     if not email or not password or not role:
-        return cors_response(400, "Missing required fields")
+        missing = []
+        if not email: missing.append('email')
+        if not password: missing.append('password')
+        if not role: missing.append('role')
+        return cors_response(400, {"error": f"Missing required fields: {', '.join(missing)}"})
     
     try:
-        try:
-            #create user in cognito
-            cognito_response = cognito_client.admin_create_user(
-                UserPoolId=user_pool_id, #use aws parameter names - case sensitive
-                Username=email,
-                UserAttributes=[
-                    {'Name': 'email', 'Value': email},
-                    {'Name': 'email_verified', 'Value': 'true'}
-                ],
-                TemporaryPassword=password,
-                MessageAction='SUPPRESS',
-            )
+        cognito_user_id = None
+        if skipCognitoCreation:
+            print(f"Skip Cognito creation flag set, getting existing user")
+            try:
+                user_response = cognito_client.admin_get_user(
+                    UserPoolId=user_pool_id,
+                    Username=email
+                )
+                    
+                for attribute in user_response['UserAttributes']:
+                    if attribute['Name'] == 'sub':
+                        cognito_user_id = attribute['Value']
+                        break
+                            
+                print(f"Found existing Cognito user with ID: {cognito_user_id}")
+            except Exception as e:
+                print(f"Error getting existing Cognito user: {str(e)}")
+                return cors_response(404, {"error": f"User not found in Cognito: {str(e)}"})
 
-            cognito_client.admin_set_user_password(
-                UserPoolId=user_pool_id,
-                Username=email,
-                Password=password,
-                Permanent=True
-            )
+        else:
+            try:
+                #create user in cognito
+                cognito_response = cognito_client.admin_create_user(
+                    UserPoolId=user_pool_id, #use aws parameter names - case sensitive
+                    Username=email,
+                    UserAttributes=[
+                        {'Name': 'email', 'Value': email},
+                        {'Name': 'email_verified', 'Value': 'true'}
+                    ],
+                    TemporaryPassword=password,
+                    MessageAction='SUPPRESS',
+                )
 
-            #create user in db
-            cognito_user_id = None
-            for attribute in cognito_response['User']['Attributes']:
-                if attribute['Name'] == 'sub':
-                    cognito_user_id = attribute['Value']
-                    break
+                cognito_client.admin_set_user_password(
+                    UserPoolId=user_pool_id,
+                    Username=email,
+                    Password=password,
+                    Permanent=True
+                )
 
-            if not cognito_user_id:
-                raise Exception("Could not get Cognito user ID")
+                #create user in db
+                for attribute in cognito_response['User']['Attributes']:
+                    if attribute['Name'] == 'sub':
+                        cognito_user_id = attribute['Value']
+                        break
+
+                print(f"Created new Cognito user with ID: {cognito_user_id}")
+            except cognito_client.exceptions.UsernameExistsException:
+                print(f"User already exists in Cognito, getting ID")
+                
+                try:
+                    user_response = cognito_client.admin_get_user(
+                        UserPoolId=user_pool_id,
+                        Username=email
+                    )
+                    for attribute in user_response['UserAttributes']:
+                        if attribute['Name'] == 'sub':
+                            cognito_user_id = attribute['Value']
+                            break
+                
+                    print(f"Found existing Cognito user with ID: {cognito_user_id}")
+                except Exception as e:
+                    print(f"Error getting existing user: {str(e)}")
+                    return cors_response(500, {"error": f"Error retrieving user from Cognito: {str(e)}"})
             
+        if not cognito_user_id:
+            raise Exception("Could not get Cognito user ID")
+        
+        try:
+            print(f"Creating user in database with Cognito ID: {cognito_user_id}")
             conn = get_db_connection()
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
+            print("Connected to database successfully")
+
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+            existing_user = cur.fetchone()
+        
+            if existing_user:
+                print(f"User already exists in database with ID: {existing_user['id']}")
+                return cors_response(400, {"error": "User already exists in database"})
+
             user_insert_query = """INSERT INTO users (email, password, role, companyName, phoneNumber, joinDate, cognito_id) 
                         VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP, %s) 
-                        RETURNING id, email, password, role, companyName, phoneNumber, joinDate, cognito_id"""
+                        RETURNING id, email, password, role, companyName, phoneNumber, joinDate::text, cognito_id"""
             cur.execute(user_insert_query, (email, password, role, companyName, phoneNumber, cognito_user_id))
             new_user = cur.fetchone()
             conn.commit()
 
+            user_dict = dict(new_user)
+            print(f"User created in database: {json.dumps(user_dict, default=str)}")
+
             return cors_response(201, {
                 "message": "User created",
-                "user": new_user,
-                "cognitoUser": cognito_response['User']
+                "user": new_user
             })
 
-        except ClientError as e:
-            return cors_response(400, f"Error creating user: {str(e)}")
+        except Exception as db_error:
+            print(f"Database error: {str(db_error)}")
+            if conn:
+                conn.rollback()
+            return cors_response(500, {"error": f"Database error: {str(db_error)}"})
+            
     except Exception as e:
-        return cors_response(500, f"Error creating user: {str(e)}")
+        print(f"Unhandled exception in registerUser: {str(e)}")
+        if conn:
+            conn.rollback()
+        return cors_response(500, {"error": f"Unhandled error: {str(e)}"})
     finally:
         if conn:
             conn.close()
+
 
 def getUser(event, context):
     conn = None
