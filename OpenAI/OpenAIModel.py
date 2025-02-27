@@ -22,9 +22,8 @@ class AIModelClass:
         self.bot_name = bot_name
         
         self.add_system_prompt(f"You are a helpful assistant tasked with promoting {college_name}. \nEnsure all responses focus solely on {college_name}, its programs, values, achievements, and unique offerings. \nAvoid mentioning other institutions or making comparisons unless specifically asked to do so by the user.\ntry to keep things concise as possible, while still keeping the conversational/professional tone.\nEnsure that responses to prospective student questions use varied sentence structures and tones to keep the conversation engaging. \nAvoid reusing exact phrasing from the initial email.\nPrompt a few questions the user can ask you the assistant about the school. Questions like 'What degrees does {college_name} offer?'\nDo not suggest questions that have either already been answered or have been asked before.")
-        self.training_data()
         
-        #self.load_message_history('sample.json')
+        self.load_message_history('sample.json')
         
     def create_message(self, role: str, message: str):
         """
@@ -32,7 +31,7 @@ class AIModelClass:
 
             Args:
                 arg1: string, pass in the role name of what type of message you are creating
-                arg2: string, pass in the text of the message you want to play.
+                arg2: string, pass in the text of the message you want to add.
 
             Returns:
                 function returns a dictionary with two key-value pairs:
@@ -47,7 +46,7 @@ class AIModelClass:
 
             Args:
                 arg1: self, this allows for the call of variables that are instantiated within the class.
-                arg2:
+                arg2: string, pass in the text of the message you want to add.
 
             Returns:
                 this function does not return anything, instead it appends to the class variable "message_history"
@@ -56,14 +55,44 @@ class AIModelClass:
         self.message_history.append(message)
 
     def add_user_prompt(self, msg):
+        """
+            This function creates and appends a user prompt message to message history for use from the AI model
+
+            Args:
+                arg1: self, this allows for the call of variables that are instantiated within the class.
+                arg2: string, pass in the text of the message you want to add.
+
+            Returns:
+                this function does not return anything, instead it appends to the class variable "message_history"
+        """
         message = self.create_message("user", msg)
         self.message_history.append(message)
         
     def add_assistant_prompt(self, msg):
+        """
+            This function creates and appends a assistant prompt message to message history for use from the AI model
+
+            Args:
+                arg1: self, this allows for the call of variables that are instantiated within the class.
+                arg2: string, pass in the text of the message you want to add.
+
+            Returns:
+                this function does not return anything, instead it appends to the class variable "message_history"
+        """
         message = self.create_message("assistant", msg)
         self.message_history.append(message)
 
     def get_chat_response(self, msg):
+        """
+            This function gets the AI's response via an api call.
+
+            Args:
+            arg1: self, this allows for the call of variables that are instantiated within the class.
+            arg2: string, pass in the message that you want to send to the AI for a response.
+
+            Returns:
+                this function returns the AI's response.
+        """
         self.add_user_prompt(msg)
         
         chat_response = client.chat.completions.create(
@@ -75,19 +104,6 @@ class AIModelClass:
         self.add_assistant_prompt(agent_message.content)
         
         return agent_message
-    
-    def training_data(self):
-        self.add_user_prompt("What scholarships do you offer?")
-        self.add_assistant_prompt(f"""Great question!
-{self.college_name} offers a variety of scholarships, including merit-based awards for academic excellence, need-based assistance, and special grants for extracurricular achievements. 
-Our admissions team is happy to guide you through the application process.
-Let me know if you'd like more details on specific opportunities!""")
-        
-        self.add_user_prompt("How do I apply for financial aid?")
-        self.add_assistant_prompt(f"""Applying for financial aid at {self.college_name} is straightforward! 
-You'll need to fill out the FAFSA form to determine your eligibility for federal aid. 
-We also have institutional grants and work-study opportunities available. 
-Feel free to reach out if you need guidance with the application process!""")
         
     def save_message_history(self):
         json_object = json.dumps(self.message_history, indent=4)

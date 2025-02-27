@@ -54,6 +54,15 @@ ROBOTSTXT_OBEY = True
 #    "SchoolScraper.middlewares.SchoolscraperDownloaderMiddleware": 543,
 #}
 
+# settings.py or passed to CrawlerProcess
+DOWNLOAD_HANDLERS = {
+    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+}
+
+TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+PLAYWRIGHT_BROWSER_TYPE = "chromium"  # Use Chromium as the browser
+
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
 #EXTENSIONS = {
