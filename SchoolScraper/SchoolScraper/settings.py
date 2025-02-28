@@ -7,11 +7,11 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+# settings.py
 BOT_NAME = "SchoolScraper"
 
 SPIDER_MODULES = ["SchoolScraper.spiders"]
 NEWSPIDER_MODULE = "SchoolScraper.spiders"
-
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "SchoolScraper (+http://www.yourdomain.com)"
@@ -60,8 +60,8 @@ DOWNLOAD_HANDLERS = {
     "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
 }
 
+PLAYWRIGHT_BROWSER_TYPE = "chromium"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
-PLAYWRIGHT_BROWSER_TYPE = "chromium"  # Use Chromium as the browser
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -71,10 +71,10 @@ PLAYWRIGHT_BROWSER_TYPE = "chromium"  # Use Chromium as the browser
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    "SchoolScraper.pipelines.SchoolscraperPipeline": 300,
-#}
-
+# Enable the PostgreSQL pipeline
+ITEM_PIPELINES = {
+    "SchoolScraper.pipelines.PostgreSQLPipeline": 300,
+}
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True

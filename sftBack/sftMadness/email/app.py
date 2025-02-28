@@ -10,7 +10,7 @@ import logging
 import psycopg2
 from psycopg2.extras import Json
 import jwt
-from jwt import algorithms
+from jwt import algorithm
 import requests
 
 logger = logging.getLogger()
@@ -79,7 +79,7 @@ def verify_token(token):
         for key in keys:
             if key['kid'] == kid:
                 try:
-                    public_key = algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
+                    public_key = algorithm.RSAAlgorithm.from_jwk(json.dumps(key))
                     break
                 except Exception as e:
                     raise Exception(f'Error parsing public key: {str(e)}')
