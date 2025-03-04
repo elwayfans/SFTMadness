@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { schoolContactService } from '../../services/api/schoolContactService.js';
 
+//form to create a new school contact
 export const CreateContact = ({ onSuccess }) => {
   const [contact, setContact] = useState({
     email: '',
@@ -23,7 +24,7 @@ export const CreateContact = ({ onSuccess }) => {
     setError('');
     setSuccess('');
     
-    // Validate form
+    //validate form fields
     if (!contact.email && !contact.phoneNumber) {
       setError('Please provide either an email or phone number');
       return;
@@ -36,13 +37,13 @@ export const CreateContact = ({ onSuccess }) => {
       
       setSuccess(`Contact created successfully with ID: ${newContact.id}`);
       
-      // Reset form
+      //reset form
       setContact({
         email: '',
         phoneNumber: '',
       });
       
-      // Notify parent component
+      //notify parent component to update contact list
       if (onSuccess) {
         onSuccess(newContact);
       }

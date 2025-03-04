@@ -11,6 +11,8 @@ def get_db_connection():
 
         connect_timeout=5)
 
+# helper handler to cleanup invalidated tokens in the database
+# this is a scheduled event that runs every 6 hours in the background - no need to call this manually
 def cleanup_handler(event, context):
     try:
         with get_db_connection() as conn:

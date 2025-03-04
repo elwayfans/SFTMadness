@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { userService } from "../../services/api/userService";
 import { ConfirmSignUp } from "./confirmRegistration";
 
+//form for registering a new user
 export const RegisterForm = ({ onSuccess }) => {
     const [formData, setFormData] = useState({
       email: '',
@@ -10,6 +11,7 @@ export const RegisterForm = ({ onSuccess }) => {
       companyName: '',
       phoneNumber: ''
     });
+
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
@@ -26,6 +28,7 @@ export const RegisterForm = ({ onSuccess }) => {
       e.preventDefault();
       setError('');
   
+      //validates that the password and confirm password fields match
       if (formData.password !== formData.confirmPassword) {
         setError('Passwords do not match');
         return;
@@ -33,6 +36,7 @@ export const RegisterForm = ({ onSuccess }) => {
   
       setLoading(true);
   
+      //registers user with the provided information
       try {
         console.log('Submitting registration...', formData);
         const result = await userService.register({
@@ -58,12 +62,12 @@ export const RegisterForm = ({ onSuccess }) => {
       }
     };
 
+    //handles the confirmation of the registration - logs in the user if successful
     const handleConfirmationSuccess = async () => {
       try {
-        // Call the API to create the user in your database
         const result = await userService.completeRegistration(tempRegistrationData);
         if (result.success) {
-          // Try to log in automatically
+          //log in automatically
           const loginResult = await userService.login(
             tempRegistrationData.email,
             tempRegistrationData.password
@@ -78,6 +82,7 @@ export const RegisterForm = ({ onSuccess }) => {
       }
     };
 
+    //confirmation form for the registration
     if (showConfirmation) {
       return (
         <ConfirmSignUp
@@ -88,6 +93,7 @@ export const RegisterForm = ({ onSuccess }) => {
       );
     }
   
+    //registration form
     return (
         <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Register</h2>

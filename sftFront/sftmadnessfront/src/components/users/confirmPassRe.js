@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { userService } from '../../services/api/userService';
 
+//form to confirm password reset
 export const ConfirmPasswordResetForm = ({ email, onSuccess, onCancel }) => {
     const [formData, setFormData] = useState({
       code: '',
@@ -29,7 +30,6 @@ export const ConfirmPasswordResetForm = ({ email, onSuccess, onCancel }) => {
       setLoading(true);
       
       try {
-        // This should be in your authService if not in userService
         const result = await userService.confirmForgotPassword(
           email,
           formData.code,
@@ -49,6 +49,7 @@ export const ConfirmPasswordResetForm = ({ email, onSuccess, onCancel }) => {
       }
     };
     
+    //form to confirm password reset
     return (
       <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Confirm Password Reset</h2>

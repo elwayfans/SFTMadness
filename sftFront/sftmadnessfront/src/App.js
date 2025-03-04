@@ -3,10 +3,13 @@ import { signOut } from 'aws-amplify/auth';
 import { LoginForm } from './components/registration/logIn';
 import { RegisterForm } from './components/registration/register';
 import { Dashboard } from './components/dashboard';
+import { AdminDashboard } from './components/adminDashboard';
 import { userService } from './services/api/userService';
+import { adminsService } from './services/api/adminsService';
 
 function App() { 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -25,8 +28,12 @@ function App() {
       console.log('Authentication status:', authenticated);
       setIsAuthenticated(authenticated);
       
-      if (!authenticated) {
-        // If there was a previous auth token but it's no longer valid, sign out
+      if (authenticated) {
+        //check if user is an admin
+        const adminStatus = await adminsService.isAdmin();
+        console.log('Admin status:', adminStatus);
+        setIsAdmin(adminStatus);
+      } else {
         try {
           await signOut();
         } catch (e) {
@@ -37,6 +44,7 @@ function App() {
       console.error('Auth check error:', error);
       setAuthError('Authentication check failed. Please try again.');
       setIsAuthenticated(false);
+      setIsAdmin(false);
       
       try {
         await signOut();
@@ -51,11 +59,19 @@ function App() {
   const handleLoginSuccess = async (result) => {
     console.log('Login successful:', result);
     setIsAuthenticated(true);
+
+    try {
+      const adminStatus = await adminsService.isAdmin();
+      setIsAdmin(adminStatus);
+    } catch (error) {
+      console.error('Error checking admin status after login:', error);
+    }
   };
 
   const handleRegisterSuccess = async (result) => {
     console.log('Registration successful:', result);
     setIsAuthenticated(true);
+    setIsAdmin(false);
   };
 
   const handleSignOut = async () => {
@@ -64,9 +80,11 @@ function App() {
       await signOut();
       console.log('Sign out successful');
       setIsAuthenticated(false);
+      setIsAdmin(false);
     } catch (error) {
       console.error('Sign out error:', error);
       setIsAuthenticated(false);
+      setIsAdmin(false);
     }
   };
 
@@ -110,7 +128,7 @@ function App() {
             </>
           ) : showForgotPassword ? (
             <>
-              {/* This would be your ForgotPasswordForm */}
+              {/* ForgotPasswordForm */}
               <p className="text-center mt-4">
                 Remember your password?{' '}
                 <button
@@ -145,8 +163,12 @@ function App() {
     );
   }
 
-  // If user is authenticated, render the Dashboard component with onSignOut prop
-  return <Dashboard onSignOut={handleSignOut} />;
+  // dashboard shown based on user role : admin/customer
+  return isAdmin ? (
+    <AdminDashboard onSignOut={handleSignOut} />
+  ) : (
+    <Dashboard onSignOut={handleSignOut} />
+  );
 }
 
 export default App;
