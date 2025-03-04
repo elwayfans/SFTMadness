@@ -1,10 +1,14 @@
 from google import genai
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+from SchoolScraper.spiders.school_spider import SchoolSpider
+from SchoolScraper.pipelines import ListCollectorPipeline
+
 
 client = genai.Client(api_key="AIzaSyDC5YXVeiU3UPnKJZ2ev_HKTQtV20zSIDc")
-
+scraped_data = []
 class GeminiTrainingData:
     message_history = []
-    scrapped_info = ""
 
     def Load_Scrapped_Information(self):
         """
@@ -17,6 +21,29 @@ class GeminiTrainingData:
             This function does not return anything. Instead it sets a class variable
         """
 
+    def Start_Scraper(self):
+        # Initialize the pipeline
+        pipeline = ListCollectorPipeline()
+
+        # Configure settings
+        settings = get_project_settings()
+        settings.set('ITEM_PIPELINES', {
+            'SchoolScraper.pipelines.ListCollectorPipeline': 300,
+        })
+
+        # Define start URLs and allowed domains
+        start_urls = ["https://www.neumont.edu/",
+                "https://www.neumont.edu/degrees",]
+        allowed_domains = ["neumont.edu"]
+
+        # Create and run the crawler
+        process = CrawlerProcess(settings)
+        process.crawl(SchoolSpider, start_urls=start_urls, allowed_domains=allowed_domains)
+        process.start()
+
+        # Access the collected items
+        scraped_items = pipeline.items
+        print(f"here are the items {scraped_items}")
 
     def Generate_Data(self):
         """
@@ -28,7 +55,7 @@ class GeminiTrainingData:
         Returns:
             This function returns Gemini's response which is in a Json format.
         """
-
+        self.Start_Scraper()
         response = client.models.generate_content(
         model="gemini-2.0-flash",
         contents=f"""Please parse through this html to find relevant text, into a json training format for another ai that talks about what the school provides. This is the specific format I want you to use
@@ -40,8 +67,8 @@ class GeminiTrainingData:
             "role": "assistant",
             "content": "Great question! (college_name) offers a variety of scholarships, including merit-based awards for academic excellence, need-based assistance, and special grants for extracurricular achievements. Our admissions team is happy to guide you through the application process. Let me know if you'd like more details on specific opportunities!"
         )
-        this is the file I want you to parse.
-        {self.scrapped_info}"""
+        this is the information I want you to parse.
+        {scraped_data}"""
         )
         return response
 
@@ -54,4 +81,13 @@ class GeminiTrainingData:
             Returns:
                 This function does not return anything.
         """
+
         pass
+
+if __name__ == "__main__":
+    gemini = GeminiTrainingData()
+    #proper user loop
+    while True:
+        user_message = input(">: ")
+        if (user_message == "scrape"):
+            print(gemini.Generate_Data().text)

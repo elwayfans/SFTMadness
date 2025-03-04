@@ -10,6 +10,7 @@
 # settings.py
 BOT_NAME = "SchoolScraper"
 
+
 SPIDER_MODULES = ["SchoolScraper.spiders"]
 NEWSPIDER_MODULE = "SchoolScraper.spiders"
 
@@ -18,7 +19,6 @@ NEWSPIDER_MODULE = "SchoolScraper.spiders"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
-
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
@@ -61,7 +61,6 @@ DOWNLOAD_HANDLERS = {
 }
 
 PLAYWRIGHT_BROWSER_TYPE = "chromium"
-TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -73,7 +72,7 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 # Enable the PostgreSQL pipeline
 ITEM_PIPELINES = {
-    "SchoolScraper.pipelines.PostgreSQLPipeline": 300,
+    'SchoolScraper.pipelines.ListCollectorPipeline': 300,
 }
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -97,5 +96,7 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = "scrapy.extensions.httpcache.FilesystemCacheStorage"
 
 # Set settings whose default value is deprecated to a future-proof value
+# settings.py
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+
 FEED_EXPORT_ENCODING = "utf-8"

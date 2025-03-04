@@ -1,7 +1,7 @@
 import scrapy
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from SchoolScraper.items import SchoolscraperItem
+from scrapy.linkextractors import LinkExtractor
 
 class SchoolSpider(scrapy.Spider):
     name = "schools"
@@ -11,16 +11,18 @@ class SchoolSpider(scrapy.Spider):
         super(SchoolSpider, self).__init__(*args, **kwargs)
         self.start_urls = start_urls or []  # Mutable start URLs
         self.allowed_domains = allowed_domains or []  # Mutable allowed domains
-        self.link_extractor = scrapy.linkextractors.LinkExtractor(allow_domains=self.allowed_domains)
+        self.link_extractor = LinkExtractor(allow_domains=self.allowed_domains)
 
     def start_requests(self):
         for url in self.start_urls:
+            self.logger.info(f"Starting request for URL: {url}")
             yield scrapy.Request(
                 url,
                 meta={
                     "playwright": True,
                     "playwright_include_page": True,
                 },
+                callback=self.parse,
             )
 
     async def parse(self, response):
@@ -40,14 +42,12 @@ class SchoolSpider(scrapy.Spider):
         soup = BeautifulSoup(content, "html.parser")
         cleaned_text = soup.get_text(separator=" ", strip=True)
 
-        # Create an item and populate it with data
-        item = SchoolItem()
-        item["url"] = response.url
-        item["domain"] = urlparse(response.url).netloc
-        item["text"] = cleaned_text
-
-        # Yield the item to the pipeline
-        yield item
+        # Yield the scraped data as a dictionary
+        yield {
+            "url": response.url,
+            "domain": urlparse(response.url).netloc,
+            "text": cleaned_text
+        }
 
         # Extract all links from the page using LinkExtractor
         links = self.link_extractor.extract_links(response)
