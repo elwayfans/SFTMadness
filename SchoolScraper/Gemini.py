@@ -43,7 +43,7 @@ class GeminiTrainingData:
 
         # Define start URLs and allowed domains
         start_urls = ["https://www.neumont.edu/",
-                "https://www.neumont.edu/degrees",]
+                "https://www.neumont.edu/degrees"]
         allowed_domains = ["neumont.edu"]
 
         # Create and run the crawler
@@ -64,20 +64,36 @@ class GeminiTrainingData:
         Returns:
             This function returns Gemini's response which is in a Json format.
         """
+
+        # starts scraping process
         self.Start_Scraper()
+        # getting model response.
         response = client.models.generate_content(
         model="gemini-2.0-flash",
-        contents=f"""Please parse through this html to find relevant text, into a json training format for another ai that talks about what the school provides. This is the specific format I want you to use
-        (
-            "role": "user",
-            "content": "What scholarships do you offer?"
-        ),
-        (
-            "role": "assistant",
-            "content": "Great question! (college_name) offers a variety of scholarships, including merit-based awards for academic excellence, need-based assistance, and special grants for extracurricular achievements. Our admissions team is happy to guide you through the application process. Let me know if you'd like more details on specific opportunities!"
-        )
-        this is the information I want you to parse.
-        {self.scraped_data}"""
+        contents=f"""You are an AI specialized in extracting structured information from raw text data scraped from school websites. 
+        Your task is to analyze the provided text and identify relevant details about what the school offers, such as academic programs, scholarships, student services, and other key offerings.
+
+            Format the extracted information into structured conversational pairs following this specific JSON format:
+            (
+                "role": "user",
+                "content": "What scholarships do you offer?"
+            ),
+            (
+                "role": "assistant",
+                "content": "Great question! (college_name) offers a variety of scholarships, including merit-based awards for academic excellence, need-based assistance, and special grants for extracurricular achievements. Our admissions team is happy to guide you through the application process. Let me know if you'd like more details on specific opportunities!"
+            )
+            Instructions:
+            Use only the provided scraped text {self.scraped_data}. Do not generate responses based on external knowledge or assumptions.
+            Extract as many relevant user-assistant conversational pairs as possible while ensuring factual accuracy.
+            Keep responses natural, engaging, and informative, making them suitable for a college inquiry chatbot.
+            Ensure extracted information remains true to the original text without reinterpreting or fabricating details.
+
+            Restrictions:
+            Do not invent or assume any details about the school’s offerings beyond what is explicitly stated in the provided text.
+            If certain details are unclear or missing, structure the response to reflect that uncertainty rather than making up information.
+            Exclude irrelevant, redundant, or incomplete data that does not contribute to answering user inquiries.
+            Your goal is to maximize the number of high-quality, factually accurate training pairs while strictly adhering to the provided scraped text.
+        """
         )
         return response
 

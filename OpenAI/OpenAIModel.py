@@ -1,6 +1,7 @@
 from openai import OpenAI
 import os
 import json
+import psycopg2
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -114,6 +115,16 @@ class AIModelClass:
         with open(json_file_name, 'r') as openfile:
             json_object = json.load(openfile)
             self.message_history = json_object
+
+    def get_db_connection():
+        return psycopg2.connect(
+            dbname=os.environ['DB_NAME'],
+            host=os.environ['DB_HOST'],
+            user=os.environ['DB_USER'],
+            password=os.environ['DB_PASSWORD'],
+            port=os.environ['DB_PORT'],
+
+            connect_timeout=5)
 
 
 

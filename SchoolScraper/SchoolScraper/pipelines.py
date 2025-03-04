@@ -8,9 +8,9 @@
 
 # pipelines.py
 class ListCollectorPipeline:
-    def __init__(self):
-        self.items = []  # List to store scraped items
+    items = []  # Now it's a class-level list
 
     def process_item(self, item, spider):
-        self.items.append(item)  # Add each item to the list
+        print(f"Processing item in pipeline: {item}")
+        self.items.append(item)  # Store in class variable
         return item
