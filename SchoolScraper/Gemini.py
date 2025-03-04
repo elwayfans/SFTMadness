@@ -6,9 +6,10 @@ from SchoolScraper.pipelines import ListCollectorPipeline
 
 
 client = genai.Client(api_key="AIzaSyDC5YXVeiU3UPnKJZ2ev_HKTQtV20zSIDc")
-scraped_data = []
+
 class GeminiTrainingData:
     message_history = []
+    scraped_data = []
 
     def Load_Scrapped_Information(self):
         """
@@ -27,8 +28,17 @@ class GeminiTrainingData:
 
         # Configure settings
         settings = get_project_settings()
-        settings.set('ITEM_PIPELINES', {
-            'SchoolScraper.pipelines.ListCollectorPipeline': 300,
+        # Add Playwright settings
+        settings.set("DOWNLOAD_HANDLERS", {
+            "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+            "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+        })
+
+        settings.set("TWISTED_REACTOR", "twisted.internet.asyncioreactor.AsyncioSelectorReactor")
+
+        # Enable the pipeline
+        settings.set("ITEM_PIPELINES", {
+            "SchoolScraper.pipelines.ListCollectorPipeline": 300,
         })
 
         # Define start URLs and allowed domains
@@ -42,8 +52,7 @@ class GeminiTrainingData:
         process.start()
 
         # Access the collected items
-        scraped_items = pipeline.items
-        print(f"here are the items {scraped_items}")
+        self.scraped_data = pipeline.items
 
     def Generate_Data(self):
         """
@@ -68,7 +77,7 @@ class GeminiTrainingData:
             "content": "Great question! (college_name) offers a variety of scholarships, including merit-based awards for academic excellence, need-based assistance, and special grants for extracurricular achievements. Our admissions team is happy to guide you through the application process. Let me know if you'd like more details on specific opportunities!"
         )
         this is the information I want you to parse.
-        {scraped_data}"""
+        {self.scraped_data}"""
         )
         return response
 
