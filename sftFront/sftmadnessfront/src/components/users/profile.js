@@ -13,7 +13,7 @@ export const UserProfileForm = ({ user, onProfileUpdate }) => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    // Initialize the form with data from props
+    //initialize the form with data from the user object
     if (user) {
       setProfile({
         email: user.email || user.username || '',
@@ -23,6 +23,7 @@ export const UserProfileForm = ({ user, onProfileUpdate }) => {
     }
   }, [user]);
 
+  //helper function to handle form input changes
   const handleChange = (e) => {
     setProfile({
       ...profile,
@@ -30,6 +31,7 @@ export const UserProfileForm = ({ user, onProfileUpdate }) => {
     });
   };
 
+  //helper function to handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -37,11 +39,10 @@ export const UserProfileForm = ({ user, onProfileUpdate }) => {
     setUpdating(true);
 
     try {
-        // Critical: Use the numerical database ID for API calls
-        // This is a hack for now - in a real app, you'd need to ensure this ID is correct
+        //fallback to default user id if not available
         const userId = user.id || "1";
         
-        // Create update payload 
+        //create update payload 
         const updatePayload = {
           companyName: profile.companyName,
           phoneNumber: profile.phoneNumber
@@ -49,11 +50,12 @@ export const UserProfileForm = ({ user, onProfileUpdate }) => {
         
         console.log(`Updating user ${userId} with:`, updatePayload);
         
+        //call the user service to update the user profile
         await userService.updateProfile(userId, updatePayload);
         
         setSuccess('Profile updated successfully');
         
-        // Notify parent to refresh the profile data
+        //notify parent to refresh the profile data
         if (onProfileUpdate) {
           onProfileUpdate();
         }

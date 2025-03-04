@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { userService } from '../../services/api/userService';
 
+//form for logging in an existing user
 export const LoginForm = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,6 +27,7 @@ export const LoginForm = ({ onSuccess }) => {
     }
   };
 
+  //login form
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Login</h2>

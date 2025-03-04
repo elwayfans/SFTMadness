@@ -343,6 +343,12 @@ def getUser(event, context):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
+        print('DBUser:', os.environ['DB_USER'])
+        print('DBName:', os.environ['DB_NAME'])
+        print('DBHost:', os.environ['DB_HOST'])
+        print('DBPort:', os.environ['DB_PORT'])
+        print('DBPassword:', os.environ['DB_PASSWORD'])
+
         # Query to get user details
         user_query = """
             SELECT id, email, role, companyName, phoneNumber, joinDate 
