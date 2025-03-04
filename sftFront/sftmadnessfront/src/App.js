@@ -5,7 +5,7 @@ import { RegisterForm } from './components/registration/register';
 import { Dashboard } from './components/dashboard';
 import { userService } from './services/api/userService';
 
-function App() {
+function App() { 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
