@@ -1,10 +1,15 @@
 import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 
+//create school contact
+//get school contact by Id
+//update school contact
+//delete school contact
+//school contact:
+
 export const schoolContactService = {
-  // Create a new school contact
+  //create school contact
   createContact: async (contactData) => {
     try {
-      // Get auth session with ID token
       const session = await fetchAuthSession();
       if (!session.tokens?.idToken) {
         throw new Error('Authentication required');
@@ -37,10 +42,9 @@ export const schoolContactService = {
     }
   },
 
-  // Get a school contact by ID
+  //get school contact by Id
   getContactById: async (contactId) => {
     try {
-      // Get auth session with ID token
       const session = await fetchAuthSession();
       if (!session.tokens?.idToken) {
         throw new Error('Authentication required');
@@ -72,10 +76,9 @@ export const schoolContactService = {
     }
   },
 
-  // Update a school contact
+  //update school contact
   updateContact: async (contactId, updateData) => {
     try {
-      // Get auth session with ID token
       const session = await fetchAuthSession();
       if (!session.tokens?.idToken) {
         throw new Error('Authentication required');
@@ -108,10 +111,9 @@ export const schoolContactService = {
     }
   },
 
-  // Delete a school contact
+  //delete school contact
   deleteContact: async (contactId) => {
     try {
-      // Get auth session with ID token
       const session = await fetchAuthSession();
       if (!session.tokens?.idToken) {
         throw new Error('Authentication required');
@@ -142,7 +144,7 @@ export const schoolContactService = {
     }
   },
 
-  // Check if user is authenticated (reusing from userService)
+  //check if user is authenticated
   isAuthenticated: async () => {
     try {
       const user = await getCurrentUser();

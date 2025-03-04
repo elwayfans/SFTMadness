@@ -10,6 +10,7 @@ from psycopg2.extras import RealDictCursor
 import requests
 from jwt import algorithms
 import uuid
+import re
 
 def cors_response(status_code, body, content_type="application/json"):
     headers = {
@@ -165,62 +166,153 @@ def uploadFile(event, context):
             return cors_response(404, "User not found")
         user_id = db_user['id']
 
-        # Parse multipart form data
         try:
+            # Get content type from front and check for responding boundary
             content_type = event['headers'].get('Content-Type', '')
-            boundary = content_type.split('boundary=')[1]
 
+            # if content type is not directly provided, try to extract it from headers
+            if not content_type:
+                for header_key in event['headers']:
+                    if header_key.lower() == 'content-type':
+                        content_type = event['headers'][header_key]
+                        break
+
+            print(f"Detected Content-Type: {content_type}")
+
+            if 'multipart/form-data' not in content_type.lower():
+                return cors_response(400, "Content-Type must be multipart/form-data")
+                
+            #extract boundary with flexible pattern matching
+            boundary = None
+            if 'boundary=' in content_type:
+                boundary = content_type.split('boundary=')[1].strip()
+                #remove quotes if present
+                if boundary.startswith('"') and boundary.endswith('"'):
+                    boundary = boundary[1:-1]
+                elif boundary.startswith("'") and boundary.endswith("'"):
+                    boundary = boundary[1:-1]
+            else:
+                #alternative boundary detection
+                parts = content_type.split(';')
+                for part in parts:
+                    if 'boundary' in part.lower():
+                        boundary = part.split('=')[1].strip()
+                        #remove quotes if present
+                        if boundary.startswith('"') and boundary.endswith('"'):
+                            boundary = boundary[1:-1]
+                        elif boundary.startswith("'") and boundary.endswith("'"):
+                            boundary = boundary[1:-1]
+                        break
+            
+            #if boundary is still not found, try to detect it from the body
+            if not boundary:
+                body = event.get('body', '')
+                if event.get('isBase64Encoded', False):
+                    body = base64.b64decode(body)
+                
+                if isinstance(body, bytes):
+                    body = body.decode('utf-8', errors='replace')
+                
+                #look for common boundary patterns
+                boundary_matches = re.findall(r'--+[\w-]+', body[:1000])
+                if boundary_matches:
+                    boundary = boundary_matches[0][2:]  #remove leading --
+                    print(f"Auto-detected boundary from body: {boundary}")
+                    
+            if not boundary:
+                return cors_response(400, "Cannot detect boundary in the multipart request")
+                
+            print(f"Using boundary: {boundary}")
+
+            #decode body if necessary
             body = event.get('body', '')
-            # Decode base64 body if it's encoded
             if event.get('isBase64Encoded', False):
                 body = base64.b64decode(body)
-
-            if isinstance(body, bytes):
-                body = body.decode('utf-8')
-
-            # Split the body by boundary
-            parts = body.split('--' + boundary)
             
-            # Initialize variables
+            if isinstance(body, bytes):
+                body = body.decode('utf-8', errors='replace')
+
+            #split by boundary
+            boundary_pattern = f'--{boundary}'
+            parts = body.split(boundary_pattern)
+            
             file_content = None
             filename = None
             filetype = None
 
-            # Parse each part
-            for part in parts:
-                if 'name="file"' in part:
-                    # Extract file content without stripping
-                    content_parts = part.split('\r\n\r\n')
-                    if len(content_parts) > 1:
-                        file_content = content_parts[1]
-                        # Convert to bytes if it's not already
-                        if isinstance(file_content, str):
-                            file_content = file_content.encode('utf-8')
-                elif 'name="filename"' in part:
-                    # Extract filename
-                    filename = part.split('\r\n\r\n')[1].strip()
-                elif 'name="filetype"' in part:
-                    # Extract filetype
-                    filetype = part.split('\r\n\r\n')[1].strip()
+            print(f"Found {len(parts)} parts in the multipart request")
+            
+            #iterate over parts and extract file content, filename and filetype
+            for i, part in enumerate(parts):
+                part = part.strip()
+                if not part or part == '--': 
+                    continue
+                    
+                print(f"Processing part {i}: length={len(part)}")
+                
+                #check for content-disposition header to identify form fields
+                if 'Content-Disposition:' not in part and 'content-disposition:' not in part:
+                    continue
+                
+                #split part into headers and content
+                if '\r\n\r\n' in part:
+                    headers, content = part.split('\r\n\r\n', 1)
+                elif '\n\n' in part:
+                    headers, content = part.split('\n\n', 1)
+                else:
+                    print(f"Couldn't find header/content delimiter in part {i}")
+                    continue
+                
+                #convert headers to lowercase for case-insensitive matching
+                headers_lower = headers.lower()
+                
+                #extract field name from content-disposition
+                if 'name="file"' in headers_lower or "name='file'" in headers_lower:
+                    #for file data, handle potential binary content correctly
+                    file_content = content
+                    #if trailing boundary - remove it
+                    if '--' in file_content:
+                        file_content = file_content.split('--')[0]
+                    
+                    #convert to bytes
+                    if isinstance(file_content, str):
+                        file_content = file_content.encode('utf-8')
+                        
+                    print(f"Found file content of length: {len(file_content) if file_content else 0}")
+                elif 'name="filename"' in headers_lower or "name='filename'" in headers_lower:
+                    #extract filename, remove any trailing boundaries
+                    filename = content.split('--')[0].strip()
+                    print(f"Found filename: {filename}")
+                elif 'name="filetype"' in headers_lower or "name='filetype'" in headers_lower:
+                    #extract filetype, remove any trailing boundaries
+                    filetype = content.split('--')[0].strip()
+                    print(f"Found filetype: {filetype}")
 
-            if not filename or not filetype:
-                return cors_response(400, "filename and filetype are required")
+            #validate required fields
+            if not file_content:
+                return cors_response(400, "No file content found in the request")
+                
+            if not filename:
+                return cors_response(400, "Filename parameter is required")
+                
+            if not filetype:
+                return cors_response(400, "Filetype parameter is required")
 
         except Exception as e:
+            import traceback
+            traceback_str = traceback.format_exc()
+            print(f"Error parsing multipart data: {str(e)}\n{traceback_str}")
             return cors_response(400, f"Error processing file upload: {str(e)}")
 
-        # Generate unique filename
+        #generate unique filename
         unique_filename = f"{uuid.uuid4()}-{filename}"
         
-        # Initialize S3 client
+        #initialize S3 client
         s3_client = boto3.client('s3')
         bucket_name = os.environ['S3_BUCKET_NAME']
 
         try:
-            if not file_content:
-                return cors_response(400, "No file content found")
-
-            # Upload to S3
+            #upload to S3 bucket
             s3_response = s3_client.put_object(
                 Bucket=bucket_name,
                 Key=f"user-{user_id}/{unique_filename}",
@@ -228,6 +320,7 @@ def uploadFile(event, context):
                 ContentType=filetype
             )
 
+            #insert file into database
             insert_query = """
                 INSERT INTO files (userId, filename, filepath, filetype)
                 VALUES (%s, %s, %s, %s)
@@ -255,7 +348,7 @@ def uploadFile(event, context):
     finally:
         if conn:
             conn.close()
-
+            
 def getFile(event, context):
     conn = None
     try:

@@ -1,22 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { signOut } from 'aws-amplify/auth';
+
 import { userService } from '../services/api/userService';
 import { UserProfileForm } from './users/profile';
 import { ForgotPasswordForm } from './users/forgotPass';
 import { ConfirmPasswordResetForm } from './users/confirmPassRe';
 import { DeleteAccountForm } from './users/deleteUser';
+
 import { SchoolContactProfile } from './schoolContact/schoolContactProfile';
 import { CreateContact } from './schoolContact/createSchoolContact';
 
+import { FileManagement } from './files/fileManager';
+
+import { Calender } from './events/calender';
+
+import { EmailForm } from './email/emailForm';
+
+import { CustomsManager } from './customs/customForm';
+
+import { ConversationLogs } from './conversationLogs/conversationLogs';
+
+//customer dashboard
 export const Dashboard = ({ onSignOut }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
+
+  //password reset state - not yet implemented
   const [passwordResetEmail, setPasswordResetEmail] = useState('');
   const [showPasswordResetConfirmation, setShowPasswordResetConfirmation] = useState(false);
   
-  // School contact state
+  //school contact state
   const [contactId, setContactId] = useState('');
   const [showContactIdInput, setShowContactIdInput] = useState(false);
 
@@ -24,6 +39,8 @@ export const Dashboard = ({ onSignOut }) => {
     fetchUser();
   }, []);
 
+  //user handlers
+  //fetch user data handler
   const fetchUser = async () => {
     try {
       setLoading(true);
@@ -43,6 +60,7 @@ export const Dashboard = ({ onSignOut }) => {
       setError('Failed to load complete user data. Using basic profile information.');
       
       try {
+        // fallback to cognito user data
         const cognitoUser = await userService.getCurrentUser();
         setUser({
           email: cognitoUser.username,
@@ -50,7 +68,7 @@ export const Dashboard = ({ onSignOut }) => {
           userId: cognitoUser.userId,
           companyName: '',
           phoneNumber: '',
-          id: '1', // Default ID for API calls
+          id: '1',
           createdFromCognito: true
         });
       } catch (cognitoErr) {
@@ -62,6 +80,7 @@ export const Dashboard = ({ onSignOut }) => {
     }
   };
 
+  //sign out handler
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -69,7 +88,7 @@ export const Dashboard = ({ onSignOut }) => {
       if (onSignOut) {
         onSignOut();
       } else {
-        // Fallback if onSignOut prop not provided
+        //fallback if onSignOut prop not provided
         window.location.href = '/';
       }
     } catch (error) {
@@ -78,6 +97,7 @@ export const Dashboard = ({ onSignOut }) => {
     }
   };
 
+  //delete account handler
   const handleDeleteSuccess = () => {
     if (onSignOut) {
       onSignOut();
@@ -86,22 +106,27 @@ export const Dashboard = ({ onSignOut }) => {
     }
   };
 
+  //password reset handlers - not yet implemented
   const handlePasswordResetRequest = (email) => {
     setPasswordResetEmail(email);
     setShowPasswordResetConfirmation(true);
   };
 
+  //password reset success handler - not yet implemented
   const handlePasswordResetSuccess = () => {
     setShowPasswordResetConfirmation(false);
     setActiveTab('profile');
     alert('Password has been reset successfully. Please log in with your new password.');
     handleSignOut();
   };
-  
+
+  //school contact handlers
+  //contact id input handlers
   const handleContactIdChange = (e) => {
     setContactId(e.target.value);
   };
 
+  //contact id submission handler
   const handleContactIdSubmit = (e) => {
     e.preventDefault();
     if (contactId.trim()) {
@@ -111,22 +136,26 @@ export const Dashboard = ({ onSignOut }) => {
     }
   };
   
+  //contact creation handler
   const handleContactCreated = (newContact) => {
     setContactId(newContact.id);
     setActiveTab('view-contact');
     alert(`Contact created with ID: ${newContact.id}`);
   };
   
+  //contact update handler
   const handleContactUpdate = () => {
     alert('Contact updated successfully!');
   };
   
+  //contact delete handler
   const handleContactDelete = () => {
     setContactId('');
     setActiveTab('profile');
     alert('Contact deleted successfully!');
   };
 
+  //loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -135,7 +164,7 @@ export const Dashboard = ({ onSignOut }) => {
     );
   }
 
-  // Get display name from the appropriate source
+  //get display name
   const displayName = user?.username || user?.email || 'User';
 
   return (
@@ -146,6 +175,7 @@ export const Dashboard = ({ onSignOut }) => {
             <h1 className="text-2xl font-bold text-blue-600">
               Welcome, {displayName}
             </h1>
+            {/* Profile Tab */}
             <button
               onClick={handleSignOut}
               className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
@@ -172,6 +202,8 @@ export const Dashboard = ({ onSignOut }) => {
               >
                 Profile
               </button>
+
+              {/* Password Reset Tab - not yet implemented */}
               <button
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'password'
@@ -193,7 +225,19 @@ export const Dashboard = ({ onSignOut }) => {
                 Delete Account
               </button>
               
-              {/* School Contact Navigation */}
+              {/* File Management Tab */}
+              <button
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'files'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                onClick={() => setActiveTab('files')}
+              >
+                Files
+              </button>
+              
+              {/* School Contact Tab */}
               <button
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'create-contact'
@@ -220,17 +264,71 @@ export const Dashboard = ({ onSignOut }) => {
               >
                 View Contact
               </button>
+
+              {/* Calender Tab */}
+              <button
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'events'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                onClick={() => setActiveTab('events')}
+              >
+                Events
+              </button>
+              
+              {/* Email Tab */}
+              <button
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'email'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+              onClick={() => setActiveTab('email')}
+            >
+              Email
+            </button>
+
+            {/* Customs Tab */}
+            <button
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'customs'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+            onClick={() => setActiveTab('customs')}
+            >
+              AI Settings
+            </button>
+
+            {/* Conversation Logs Tab */}
+            <button
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'logs'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+              onClick={() => setActiveTab('logs')}
+            >
+              Conversation Logs
+            </button>
             </nav>
           </div>
 
+          {/* ***************************************************** */}
+          {/* Dashboard Content - Components */}
+          {/* ***************************************************** */}
+
           <div className="mt-6">
+            {/* Profile Component */}
             {activeTab === 'profile' && (
               <UserProfileForm 
                 user={user}
                 onProfileUpdate={fetchUser}
               />
             )}
-            
+
+            {/* Password Reset Component - not yet implemented */}
             {activeTab === 'password' && (
               <>
                 {showPasswordResetConfirmation ? (
@@ -248,6 +346,7 @@ export const Dashboard = ({ onSignOut }) => {
               </>
             )}
             
+            {/* Delete Profile Component */}
             {activeTab === 'delete' && (
               <DeleteAccountForm 
                 onSuccess={handleDeleteSuccess} 
@@ -255,11 +354,18 @@ export const Dashboard = ({ onSignOut }) => {
               />
             )}
             
+            {/* File Management Component */}
+            {activeTab === 'files' && (
+              <FileManagement />
+            )}
+            
             {/* School Contact Components */}
+            {/* Create Contact Component */}
             {activeTab === 'create-contact' && (
               <CreateContact onSuccess={handleContactCreated} />
             )}
             
+            {/* View Contact Component */}
             {activeTab === 'view-contact' && (
               <>
                 {showContactIdInput && (
@@ -282,6 +388,7 @@ export const Dashboard = ({ onSignOut }) => {
                   </div>
                 )}
                 
+                {/* Contact Profile Component */}
                 {contactId ? (
                   <SchoolContactProfile
                     contactId={contactId}
@@ -295,6 +402,27 @@ export const Dashboard = ({ onSignOut }) => {
                 )}
               </>
             )}
+
+              {/* Calender Component */}
+                {activeTab === 'events' && (
+                <Calender />
+              )}
+
+              {/* Email Component */}
+              {activeTab === 'email' && (
+                <EmailForm />
+              )}
+
+              {/* Customs Component */}
+              {activeTab === 'customs' && (
+                <CustomsManager />
+              )}
+
+              {/* Conversation Logs Component */}
+              {activeTab === 'logs' && (
+                <ConversationLogs />
+              )}
+
           </div>
         </div>
       </div>

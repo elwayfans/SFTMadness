@@ -5,6 +5,7 @@ export const ProtectedRoute = ({ children, fallback }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  //checks if user is authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {

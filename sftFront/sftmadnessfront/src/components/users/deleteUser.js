@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { userService } from '../../services/api/userService';
 
+//form to delete user account
 export const DeleteAccountForm = ({ onSuccess, user }) => {
   const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState('');
