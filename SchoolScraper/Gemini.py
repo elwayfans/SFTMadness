@@ -3,7 +3,8 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from SchoolScraper.spiders.school_spider import SchoolSpider
 from SchoolScraper.pipelines import ListCollectorPipeline
-
+import psycopg2
+import os
 
 client = genai.Client(api_key="AIzaSyDC5YXVeiU3UPnKJZ2ev_HKTQtV20zSIDc")
 
@@ -108,6 +109,16 @@ class GeminiTrainingData:
         """
 
         pass
+
+    def get_db_connection():
+        return psycopg2.connect(
+            dbname=os.environ['DB_NAME'],
+            host=os.environ['DB_HOST'],
+            user=os.environ['DB_USER'],
+            password=os.environ['DB_PASSWORD'],
+            port=os.environ['DB_PORT'],
+
+            connect_timeout=5)
 
 if __name__ == "__main__":
     gemini = GeminiTrainingData()
