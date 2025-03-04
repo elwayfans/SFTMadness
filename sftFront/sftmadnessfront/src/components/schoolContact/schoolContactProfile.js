@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { schoolContactService } from '../../services/api/schoolContactService.js';
 
+//form to display school contact information
 export const SchoolContactProfile = ({ contactId, onUpdate, onDelete }) => {
   const [contact, setContact] = useState({
     email: '',
@@ -15,6 +16,7 @@ export const SchoolContactProfile = ({ contactId, onUpdate, onDelete }) => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
+    //fetch contact details
     const fetchContactDetails = async () => {
       try {
         setLoading(true);
@@ -57,7 +59,7 @@ export const SchoolContactProfile = ({ contactId, onUpdate, onDelete }) => {
     setUpdating(true);
 
     try {
-      // Create update payload
+      //create update payload
       const updatePayload = {
         email: contact.email,
         phoneNumber: contact.phoneNumber
@@ -65,11 +67,12 @@ export const SchoolContactProfile = ({ contactId, onUpdate, onDelete }) => {
       
       console.log(`Updating contact ${contactId} with:`, updatePayload);
       
+      //update contact
       const updatedContact = await schoolContactService.updateContact(contactId, updatePayload);
       
       setSuccess('Contact updated successfully');
       
-      // Notify parent component
+      //notify parent component
       if (onUpdate) {
         onUpdate(updatedContact);
       }
@@ -81,6 +84,7 @@ export const SchoolContactProfile = ({ contactId, onUpdate, onDelete }) => {
     }
   };
 
+  //delete contact
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this contact? This action cannot be undone.')) {
       return;
@@ -95,7 +99,7 @@ export const SchoolContactProfile = ({ contactId, onUpdate, onDelete }) => {
       
       setSuccess('Contact deleted successfully');
       
-      // Notify parent component
+      //notify parent component
       if (onDelete) {
         onDelete(contactId);
       }
@@ -107,6 +111,7 @@ export const SchoolContactProfile = ({ contactId, onUpdate, onDelete }) => {
     }
   };
 
+  //loading page
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -115,6 +120,9 @@ export const SchoolContactProfile = ({ contactId, onUpdate, onDelete }) => {
     );
   }
 
+  //display contact information
+  //allows user to update contact information
+  //allows user to delete contact
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">School Contact Details</h2>

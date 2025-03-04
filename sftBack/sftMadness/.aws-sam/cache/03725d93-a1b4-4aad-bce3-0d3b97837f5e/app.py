@@ -3,7 +3,6 @@ import os
 import psycopg2
 from datetime import datetime, date
 import boto3
-# import base64
 import jwt
 from botocore.exceptions import ClientError
 from psycopg2.extras import RealDictCursor

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { confirmSignUp } from 'aws-amplify/auth';
 
+//form for confirming a new user's registration
 export const ConfirmSignUp = ({ email, onSuccess, onCancel }) => {
   const [confirmationCode, setConfirmationCode] = useState('');
   const [error, setError] = useState('');
@@ -25,6 +26,8 @@ export const ConfirmSignUp = ({ email, onSuccess, onCancel }) => {
     }
   };
 
+  //confirmation form
+  //sends confirmation code to the user's email to verify their registration
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Confirm Registration</h2>

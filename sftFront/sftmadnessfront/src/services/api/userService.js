@@ -1,13 +1,23 @@
 import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 
+//register new user
+//complete registration
+//user login
+//get user by cognito Id - helper method
+//get user profile
+//update user profile
+//delete user
+//get current user session
+//users:
+
 export const userService = {
-  // Register new user
+  //register new user
   register: async (userData) => {
     try {
       const { email, password, companyName, phoneNumber } = userData;
       console.log('Starting registration process...', { email, companyName, phoneNumber });
 
-      // First register with Cognito
+      //first register with cognito
       const signUpResult = await signUp({
         username: email,
         password,
@@ -43,7 +53,7 @@ export const userService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Origin': window.location.origin 
+          'Origin': window.location.origin //needed for CORS on all requests
         },
         body: JSON.stringify({
           email,
@@ -74,7 +84,7 @@ export const userService = {
     }
   },
 
-  // Login user
+  //user login
   login: async (email, password) => {
     try {
       const { isSignedIn, nextStep } = await signIn({
@@ -101,21 +111,18 @@ export const userService = {
     }
   },
 
-  // Get database user by Cognito ID
+  //helper method to get current user's db Id
+  //get user by cognito Id
   getUserByCognitoId: async () => {
     try {
-      // Get Cognito user
       const cognitoUser = await getCurrentUser();
       console.log('Current Cognito user:', cognitoUser);
       
-      // Get auth session
       const session = await fetchAuthSession();
       
-      // Use the ID token instead of the access token
       const token = session.tokens.idToken.toString();
       console.log('Using ID token for authorization');
       
-      // Create a custom endpoint to look up the user by Cognito ID
       console.log('Fetching user by Cognito ID:', cognitoUser.userId);
       const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/users/cognito/${cognitoUser.userId}`, {
         method: 'GET',
@@ -129,16 +136,15 @@ export const userService = {
       if (!response.ok) {
         console.error(`Error looking up user by Cognito ID: ${response.status}`);
         
-        // Try a different approach - direct query for all users and filter
         try {
-          // Create a basic user from Cognito data as fallback
+          //creates basic user in cognito (fallback approach)
           return {
             cognitoId: cognitoUser.userId,
             username: cognitoUser.username,
             email: cognitoUser.username,
             companyName: '',
             phoneNumber: '',
-            id: 1, // Default ID
+            id: 1,
             createdFromCognito: true
           };
         } catch (err) {
@@ -147,7 +153,6 @@ export const userService = {
         }
       }
       
-      // Parse the response
       const userData = await response.json();
       return userData.user;
     } catch (error) {
@@ -158,15 +163,14 @@ export const userService = {
 
   getCurrentUser: async () => {
     try {
-      // Create a more robust mechanism to get the user from your database
       try {
-        // Try to get the user data from the database using Cognito ID
+        //get user from db with cognito id
         const userData = await userService.getUserByCognitoId();
         return userData;
       } catch (dbError) {
         console.error('Error fetching user profile from DB:', dbError);
         
-        // Fall back to just Cognito data if DB lookup fails
+        //(fallback approach) gets basic user from cognito
         const cognitoUser = await getCurrentUser();
         return {
           cognitoId: cognitoUser.userId,
@@ -174,7 +178,7 @@ export const userService = {
           email: cognitoUser.username,
           companyName: '',
           phoneNumber: '',
-          id: 1, // Default ID
+          id: 1,
           createdFromCognito: true
         };
       }
@@ -184,16 +188,14 @@ export const userService = {
     }
   },
 
-  // Get user profile from the database API
+  //get user profile
   getUserProfile: async (userId) => {
     try {
-      // Get the auth token
       const session = await fetchAuthSession();
       const token = session.tokens.idToken.toString();
       
       console.log(`Fetching user profile for ID: ${userId}`);
       
-      // Make the API call with the database ID
       const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/users/${userId}`, {
         method: 'GET',
         headers: {
@@ -217,16 +219,14 @@ export const userService = {
     }
   },
 
-  // Update user profile
+  //update user profile
   updateProfile: async (userId, userData) => {
     try {
-      // Get the auth token
       const session = await fetchAuthSession();
       const token = session.tokens.idToken.toString();
       
       console.log(`Updating user profile for ID: ${userId}`, userData);
       
-      // Make the API call with the database ID
       const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/users/${userId}`, {
         method: 'PUT',
         headers: {
@@ -251,14 +251,12 @@ export const userService = {
     }
   },
 
-  // Delete user
+  //delete user
   deleteUser: async (userId) => {
     try {
-      // Get the auth token
       const session = await fetchAuthSession();
       const token = session.tokens.idToken.toString();
       
-      // Make the API call with the database ID
       const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/users/${userId}`, {
         method: 'DELETE',
         headers: {
@@ -273,7 +271,7 @@ export const userService = {
         throw new Error(`Failed to delete user: ${response.status}`);
       }
       
-      // Sign out from Cognito after successful deletion
+      //sign out from cognito after successful deletion / disables access
       await signOut();
       return true;
     } catch (error) {
@@ -282,7 +280,7 @@ export const userService = {
     }
   },
 
-  // Get current session
+  //get current user session
   getCurrentSession: async () => {
     try {
       const session = await fetchAuthSession();
@@ -293,7 +291,7 @@ export const userService = {
     }
   },
 
-  // Check if user is authenticated
+  //check if user is authenticated
   isAuthenticated: async () => {
     try {
       const user = await getCurrentUser();
