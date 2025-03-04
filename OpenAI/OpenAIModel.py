@@ -133,8 +133,6 @@ if __name__ == "__main__":
     bot_name = "Billy"
     
     AIModel = AIModelClass(college_name, bot_name)
-    
-    #print(AIModel.message_history)
 
     AIModel.add_user_prompt(f"""Write a casual and inviting email to promote {college_name} to prospective students and their families. 
 Use a friendly and personal tone. Highlight the school's unique features, such as academic programs, campus life, and opportunities for growth, in a concise manner. 
