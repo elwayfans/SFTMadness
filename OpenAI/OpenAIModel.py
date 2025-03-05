@@ -117,28 +117,9 @@ class AIModelClass:
         with open(json_file_name, 'r') as openfile:
             json_object = json.load(openfile)
             self.message_history = json_object
-
-    def get_db_connection(self):
-        return psycopg2.connect(
-            dbname=os.environ['DB_NAME'],
-            host=os.environ['DB_HOST'],
-            user=os.environ['DB_USER'],
-            password=os.environ['DB_PASSWORD'],
-            port=os.environ['DB_PORT'],
-
-            connect_timeout=5)
-    
-    def get_file_from_DB(self, fileID):
-
-        conn = self.get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
-        # Initialize S3 client
-        s3_client = boto3.client('s3')
-        bucket_name = os.environ['S3_BUCKET_NAME']
-
-        response = s3_client.get_object(Bucket=bucket_name)
-
-
+            
+    def Set_personality(self):
+        ""
 
 
 if __name__ == "__main__":
