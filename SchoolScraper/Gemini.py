@@ -96,6 +96,7 @@ class GeminiTrainingData:
             Your goal is to maximize the number of high-quality, factually accurate training pairs while strictly adhering to the provided scraped text.
         """
         )
+        self.message_history.append(response.text)
         return response
 
     def Save_Data(self):
@@ -107,8 +108,6 @@ class GeminiTrainingData:
             Returns:
                 This function does not return anything.
         """
-
-        pass
 
     def get_db_connection():
         return psycopg2.connect(

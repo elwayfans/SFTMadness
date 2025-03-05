@@ -1,7 +1,9 @@
 from openai import OpenAI
 import os
 import json
+import boto3
 import psycopg2
+from psycopg2.extras import RealDictCursor
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -116,7 +118,7 @@ class AIModelClass:
             json_object = json.load(openfile)
             self.message_history = json_object
 
-    def get_db_connection():
+    def get_db_connection(self):
         return psycopg2.connect(
             dbname=os.environ['DB_NAME'],
             host=os.environ['DB_HOST'],
@@ -125,6 +127,17 @@ class AIModelClass:
             port=os.environ['DB_PORT'],
 
             connect_timeout=5)
+    
+    def get_file_from_DB(self, fileID):
+
+        conn = self.get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        # Initialize S3 client
+        s3_client = boto3.client('s3')
+        bucket_name = os.environ['S3_BUCKET_NAME']
+
+        response = s3_client.get_object(Bucket=bucket_name)
+
 
 
 
