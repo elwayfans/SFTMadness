@@ -12,6 +12,8 @@ import { CreateContact } from './schoolContact/createSchoolContact';
 
 import { FileManagement } from './files/fileManager';
 
+import { ScrapedFileManagement } from './scrapedFiles/scrapedFileManager';
+
 import { Calender } from './events/calender';
 
 import { EmailForm } from './email/emailForm';
@@ -238,6 +240,18 @@ export const Dashboard = ({ onSignOut }) => {
               >
                 Files
               </button>
+
+              {/* Scraped File Management Tab */}
+              <button
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'scrapedFiles'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                onClick={() => setActiveTab('scrapedFiles')}
+              >
+                Scraped Files
+              </button>
               
               {/* School Contact Tab */}
               <button
@@ -359,6 +373,11 @@ export const Dashboard = ({ onSignOut }) => {
             {/* File Management Component */}
             {activeTab === 'files' && (
               <FileManagement />
+            )}
+
+            {/* Scraped File Management Component */}
+            {activeTab === 'scrapedFiles' && (
+              <ScrapedFileManagement />
             )}
             
             {/* School Contact Components */}
