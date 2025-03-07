@@ -150,7 +150,6 @@ def verify_token(token):
 
 ####################
 #scrapedFiles functions
-
 def uploadFile(event, context):
     conn = None
     try:
@@ -199,16 +198,15 @@ def uploadFile(event, context):
                             boundary = boundary[1:-1]
                         break
             
+            # Get the body content
+            body = event.get('body', '')
+            if event.get('isBase64Encoded', False):
+                body_content = base64.b64decode(body)
+            else:
+                body_content = body.encode('utf-8') if isinstance(body, str) else body
+            
             if not boundary:
-                body = event.get('body', '')
-                if event.get('isBase64Encoded', False):
-                    body = base64.b64decode(event.get('body', ''))
-                else:
-                    body_content = event.get('body', '')
-                    if isinstance(body_content, str):
-                        body_content = body_content.encode('utf-8')
-                
-                boundary_matches = re.findall(r'--+[\w-]+', body[:1000])
+                boundary_matches = re.findall(r'--+[\w-]+', body_content[:1000].decode('utf-8', errors='replace'))
                 if boundary_matches:
                     boundary = boundary_matches[0][2:]
                     print(f"Auto-detected boundary from body: {boundary}")
@@ -218,18 +216,17 @@ def uploadFile(event, context):
                 
             print(f"Using boundary: {boundary}")
 
-            body = event.get('body', '')
-            if event.get('isBase64Encoded', False):
-                body = base64.b64decode(body)
-            
-            if isinstance(body, bytes):
-                body = body.decode('utf-8', errors='replace')
+            # Convert body_content to string for parsing if it's bytes
+            if isinstance(body_content, bytes):
+                body_str = body_content.decode('utf-8', errors='replace')
+            else:
+                body_str = body_content
 
             boundary_pattern = f'--{boundary}'
-            parts = body.split(boundary_pattern)
+            parts = body_str.split(boundary_pattern)
             
             model = None
-            file_content = None
+            file_data = None
             filename = None
             filetype = None
 
@@ -256,14 +253,12 @@ def uploadFile(event, context):
                 headers_lower = headers.lower()
                 
                 if 'name="file"' in headers_lower or "name='file'" in headers_lower:
-                    file_content = content
-                    if '--' in file_content:
-                        file_content = file_content.split('--')[0]
+                    file_data = content
+                    if '--' in file_data:
+                        file_data = file_data.split('--')[0]
                     
-                    if isinstance(file_content, str):
-                        file_content = file_content.encode('utf-8')
-                        
-                    print(f"Found file content of length: {len(file_content) if file_content else 0}")
+                    # Keep file_data as string for now
+                    print(f"Found file content of length: {len(file_data) if file_data else 0}")
                 elif 'name="model"' in headers_lower or "name='model'" in headers_lower:
                     model = content.split('--')[0].strip()
                     print(f"Found model: {model}")
@@ -277,14 +272,21 @@ def uploadFile(event, context):
             if not model:
                 return cors_response(400, "Model parameter is required")
 
-            if not file_content:
+            if not file_data:
                 return cors_response(400, "No file content found in the request")
                 
             if not filename:
                 return cors_response(400, "Filename parameter is required")
                 
             if not filetype:
-                return cors_response(400, "Filetype parameter is required")
+                filetype = "application/octet-stream"  # Default if not provided
+                print(f"Using default filetype: {filetype}")
+
+            # Convert file_data to bytes for S3 upload if it's a string
+            if isinstance(file_data, str):
+                file_data_bytes = file_data.encode('utf-8')
+            else:
+                file_data_bytes = file_data
 
         except Exception as e:
             import traceback
@@ -293,13 +295,14 @@ def uploadFile(event, context):
             return cors_response(400, f"Error processing file upload: {str(e)}")
 
         unique_filename = f"{uuid.uuid4()}-{filename}"
+        filepath = f"user-{user_id}/{unique_filename}"
 
         try:
             s3_response = s3.put_object(
                 Bucket=BUCKET_NAME,
-                Key=filename,
-                Body=body_content,
-                ContentType=content_type
+                Key=filepath,  # Use the path you defined for S3
+                Body=file_data_bytes,
+                ContentType=filetype
             )
 
             insert_query = """
@@ -307,16 +310,14 @@ def uploadFile(event, context):
                 VALUES (%s, %s, %s, %s, %s)
                 RETURNING id, userId, model, filename, filepath, filetype, uploadDate
             """
-            filepath = f"user-{user_id}/{unique_filename}"
-            cur.execute(insert_query, (user_id, model, filename, filepath, content_type))
+            cur.execute(insert_query, (user_id, model, filename, filepath, filetype))
             file_record = cur.fetchone()
             
             conn.commit()
 
             return cors_response(201, {
                 "message": "File uploaded successfully",
-                "file": file_record,
-                "s3Response": s3_response
+                "file": file_record
             })
 
         except ClientError as e:
@@ -329,7 +330,7 @@ def uploadFile(event, context):
     finally:
         if conn:
             conn.close()
-            
+
 def getFile(event, context):
     conn = None
     try:
@@ -367,68 +368,64 @@ def getFile(event, context):
             return cors_response(404, "File not found or unauthorized access")
 
         try:
+            # Print filepath to help with debugging
+            print(f"Attempting to retrieve file from S3: {file_record['filepath']}")
+            
             # Get the actual file content from S3
             response = s3.get_object(
                 Bucket=BUCKET_NAME,
                 Key=file_record['filepath']
             )
             
-            content_type = response.get('ContentType', 'application/octet-stream')
-            file_content = response['Body'].read()
-
-            encoded_content = base64.b64encode(file_content).decode('utf-8')
+            s3_content_type = response.get('ContentType', 'application/octet-stream')
+            print(f"db content type: {file_record['filetype']}")
+            content_type = file_record['filetype'] or s3_content_type
+            print(f"Using content type: {content_type}")
             
-            headers = {
-                'Content-Type': content_type,
+            file_content = response['Body'].read()
+            print(f"File content length: {len(file_content)} bytes")
+            
+            # Default headers for all responses
+            common_headers = {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
                 'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE,HEAD',
                 'Content-Disposition': f'attachment; filename="{file_record["filename"]}"'
             }
             
-            # For text files, decode and return as text
-            if ('text/' in content_type or 
-                content_type in ['application/json', 'application/xml', 'application/javascript']):
-                try:
-                    file_content = file_content.decode('utf-8')
-                    # Return with custom headers for text content
-                    return {
-                        'statusCode': 200,
-                        'body': file_content,
-                        'headers': headers
-                    }
-                except UnicodeDecodeError:
-                    # If we can't decode it as UTF-8, treat as binary
-                    encoded_content = base64.b64encode(file_content).decode('utf-8')
-                    return {
-                        'statusCode': 200,
-                        'body': encoded_content,
-                        'headers': headers,
-                        'isBase64Encoded': True
-                    }
-            else:
-                # For binary files (PDFs, images, etc.), base64 encode and set the flag
-                encoded_content = base64.b64encode(file_content).decode('utf-8')
-                return {
-                    'statusCode': 200,
-                    'body': json.dumps({
-                      'fileId': file_id,
-                      'contentType': content_type,
-                      'content': encoded_content,
-                      'size': response.get('ContentLength', 0),
-                      'lastModified': response.get('LastModified', '').isoformat() if response.get('LastModified') else None
-                    }),
-                    'headers': {
-                        'Content-Type': content_type,
-                        **headers
-                    },
-                    'isBase64Encoded': False
-                }
+            # Use JSON response with base64 encoding for all files for consistency
+            # This ensures API Gateway can handle the response properly
+            encoded_content = base64.b64encode(file_content).decode('utf-8')
+            
+            response_body = {
+                'id': file_record['id'],
+                'filename': file_record['filename'],
+                'filetype': content_type,
+                'content': encoded_content,
+                'size': len(file_content)
+            }
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    **common_headers
+                },
+                'body': json.dumps(response_body, default=str),
+                'isBase64Encoded': False
+            }
 
         except ClientError as e:
+            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+            error_message = e.response.get('Error', {}).get('Message', str(e))
+            print(f"S3 ClientError: {error_code} - {error_message}")
+            return cors_response(500, f"Error retrieving file from S3: {error_code} - {error_message}")
+        except Exception as e:
+            print(f"Unexpected error when retrieving file content: {str(e)}")
             return cors_response(500, f"Error retrieving file content: {str(e)}")
 
     except Exception as e:
+        print(f"Error in getFile handler: {str(e)}")
         return cors_response(500, f"Error retrieving file: {str(e)}")
     finally:
         if conn:

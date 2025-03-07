@@ -79,112 +79,35 @@ export const scrapedFileService = {
       console.log(`Fetching scraped file with ID: ${fileId}`);
       
       // First, fetch just the metadata to determine the response type
-      const headResponse = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/scrapedFiles/${fileId}`, {
-        method: 'HEAD',
+      const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/scrapedFiles/${fileId}`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Origin': window.location.origin
+          'Origin': window.location.origin,
+          'Accept': 'application/json'
         }
       });
       
-      if (!headResponse.ok) {
-        throw new Error(`Failed to fetch file metadata: ${headResponse.status}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file metadata: ${response.status}`);
       }
-      
-      const contentType = headResponse.headers.get('Content-Type');
-      console.log(`File content type: ${contentType}`);
-      
-      // For binary files like PDFs, images, etc., use blob response type
-      if (contentType && 
-          (contentType.includes('image/') || 
-           contentType.includes('application/pdf') ||
-           contentType.includes('application/vnd.openxmlformats-officedocument'))) {
-        
-        const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/scrapedFiles/${fileId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Origin': window.location.origin,
-            'Accept': contentType
-          },
-          // Request as blob for binary data
-          responseType: 'blob'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${response.status}`);
-        }
-        
-        // Convert the blob to base64
-        const blob = await response.blob();
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            // reader.result contains the base64 data URL
-            const base64data = reader.result;
-            // Extract just the base64 part without the prefix
-            const base64Content = base64data.split(',')[1];
-            
-            resolve({
-              success: true,
-              fileContent: base64Content,
-              contentType: contentType,
-              isBase64: true
-            });
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } 
-      // For JSON and text files, use regular text response
-      else {
-        const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/scrapedFiles/${fileId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Origin': window.location.origin
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('Content-Type');
-        
-        // Handle JSON responses
-        if (contentType && contentType.includes('application/json')) {
-          try {
-            const responseData = await response.json();
-            return {
-              success: true,
-              fileData: responseData,
-              contentType: contentType
-            };
-          } catch (e) {
-            // If response isn't valid JSON but has JSON content type, get as text
-            const content = await response.text();
-            return {
-              success: true,
-              fileContent: content,
-              contentType: contentType
-            };
-          }
-        } 
-        // For all other text responses
-        else {
-          const content = await response.text();
-          return {
-            success: true,
-            fileContent: content,
-            contentType: contentType
-          };
-        }
-      }
+
+      const responseData = await response.json();
+
+      return {
+        success: true,
+        fileId: responseData.id,
+        fileContent: responseData.content,
+        contentType: responseData.filetype,
+        filename: responseData.filename,
+        model: responseData.model,
+        size: responseData.size,
+      };
+
     } catch (error) {
       console.error('Error fetching scraped file:', error);
-      throw error;
-    }
+      throw error
+    } 
   },
 
   //delete a scraped file by Id

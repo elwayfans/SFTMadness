@@ -108,13 +108,13 @@ export const Dashboard = ({ onSignOut }) => {
     }
   };
 
-  //password reset handlers - not yet implemented
-  const handlePasswordResetRequest = (email) => {
-    setPasswordResetEmail(email);
-    setShowPasswordResetConfirmation(true);
-  };
+  // //password reset handlers
+  // const handlePasswordResetRequest = (email) => {
+  //   setPasswordResetEmail(email);
+  //   setShowPasswordResetConfirmation(true);
+  // };
 
-  //password reset success handler - not yet implemented
+  //password reset success handler
   const handlePasswordResetSuccess = () => {
     setShowPasswordResetConfirmation(false);
     setActiveTab('profile');

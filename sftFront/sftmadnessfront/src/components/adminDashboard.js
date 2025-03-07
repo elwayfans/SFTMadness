@@ -121,11 +121,11 @@ export const AdminDashboard = ({ onSignOut }) => {
     }
   };
 
-  //password reset handlers
-  const handlePasswordResetRequest = (email) => {
-    setPasswordResetEmail(email);
-    setShowPasswordResetConfirmation(true);
-  };
+  // //password reset handlers
+  // const handlePasswordResetRequest = (email) => {
+  //   setPasswordResetEmail(email);
+  //   setShowPasswordResetConfirmation(true);
+  // };
 
   //password reset success handler
   const handlePasswordResetSuccess = () => {

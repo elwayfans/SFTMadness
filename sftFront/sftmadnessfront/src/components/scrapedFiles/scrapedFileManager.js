@@ -19,8 +19,8 @@ export const ScrapedFileManagement = () => {
   const [fileContent, setFileContent] = useState(null);
   const [contentType, setContentType] = useState('');
   const [retrievedFile, setRetrievedFile] = useState(null);
-  const [setIsBase64] = useState(false); //isBase64 not used in this component
-
+  const [isBase64, setIsBase64] = useState(false);
+  
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
       const file = e.target.files[0];
@@ -60,7 +60,7 @@ export const ScrapedFileManagement = () => {
     setFileContent(null);
     setContentType('');
     setRetrievedFile(null);
-    setIsBase64(false);
+    // setIsBase64(false);
   };
 
   const handleUpload = async (e) => {
@@ -136,31 +136,10 @@ export const ScrapedFileManagement = () => {
       
       if (result.success) {
         setSuccess('File retrieved successfully');
-        setContentType(result.contentType || 'text/plain');
-        
-        if (result.fileContent) {
-          // Always set the raw content even if it's an image
-          setFileContent(result.fileContent);
-          
-          // For image content, create a viewable URL
-          if (result.contentType && result.contentType.includes('image/')) {
-            // Check if the content is already base64 encoded (might be from API)
-            let base64Content = result.fileContent;
-            
-            // If it doesn't start with the base64 prefix, assume it is already encoded
-            if (!base64Content.startsWith('data:')) {
-              // Create data URL with proper mimetype
-              base64Content = `data:${result.contentType};base64,${base64Content}`;
-            }
-            
-            setRetrievedFile(base64Content);
-            setIsBase64(true);
-          }
-        } else if (result.fileData) {
-          // For JSON data
-          setFileContent(JSON.stringify(result.fileData, null, 2));
-          setContentType('application/json');
-        }
+        setContentType(result.contentType || 'application/octet-stream');
+        setFileContent(result.fileContent);
+        setRetrievedFile(result);
+        setIsBase64(true);
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -195,7 +174,7 @@ export const ScrapedFileManagement = () => {
         <div className="mt-4">
           <h4 className="text-lg font-semibold mb-2">File Preview:</h4>
           <img 
-            src={retrievedFile || `data:${contentType};base64,${fileContent}`}
+            src={`data:${contentType};base64,${fileContent}`}
             alt="File preview" 
             className="max-w-full h-auto border rounded"
           />
@@ -207,41 +186,56 @@ export const ScrapedFileManagement = () => {
           </button>
         </div>
       );
-    } else if (contentType.includes('application/json') || contentType.includes('text/')) {
-      return (
-        <div className="mt-4">
-          <h4 className="text-lg font-semibold mb-2">File Content:</h4>
-          <pre className="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96 whitespace-pre-wrap">
-            {fileContent}
-          </pre>
-          <button 
-            onClick={() => downloadTextFile(fileContent, `text${getFileExtension(contentType)}`)}
-            className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Download Text
-          </button>
-        </div>
-      );
     } else if (contentType.includes('application/pdf')) {
       return (
         <div className="mt-4">
-          <h4 className="text-lg font-semibold mb-2">PDF Preview:</h4>
-          <div className="border rounded p-4 bg-gray-100 text-center">
-            <p>PDF document available for download</p>
-            <button 
-              onClick={() => downloadBinaryFile(fileContent, `document${getFileExtension(contentType)}`)}
-              className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Download PDF
-            </button>
-          </div>
-        </div>
-      );
+        <h4 className="text-lg font-semibold mb-2">PDF Preview:</h4>
+        <iframe
+          src={`data:${contentType};base64,${fileContent}`}
+          width="100%"
+          height="500px"
+          title="PDF Viewer"
+          className="border rounded"
+        ></iframe>
+        <button 
+          onClick={() => downloadBinaryFile(fileContent, `document${getFileExtension(contentType)}`)}
+          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Download PDF
+        </button>
+      </div>
+    );
+    } else if (contentType.includes('text/') || contentType.includes('application/json')) {
+      let decodedText;
+    try {
+      decodedText = atob(fileContent);
+    } catch (error) {
+      console.error('Error decoding text content:', error);
+      decodedText = 'Error decoding text content';
+    }
+
+    return (
+      <div className="mt-4">
+        <h4 className="text-lg font-semibold mb-2">File Content:</h4>
+        <pre className="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96 whitespace-pre-wrap">
+          {decodedText}
+        </pre>
+        <button 
+          onClick={() => downloadBinaryFile(fileContent, `text${getFileExtension(contentType)}`)}
+          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Download Text
+        </button>
+      </div>
+    );
     } else {
       return (
         <div className="mt-4">
           <h4 className="text-lg font-semibold mb-2">File Content:</h4>
-          <p>Binary file content available. Content type: {contentType}</p>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <p>Binary file: {contentType}</p>
+            <p>Size: {retrievedFile?.fileSize ? formatFileSize(retrievedFile.fileSize) : 'Unknown'}</p>
+          </div>
           <button 
             onClick={() => downloadBinaryFile(fileContent, `file${getFileExtension(contentType)}`)}
             className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -265,55 +259,86 @@ export const ScrapedFileManagement = () => {
     URL.revokeObjectURL(url);
     document.body.removeChild(a);
   };
-  
+
   const downloadBinaryFile = (base64Content, filename) => {
     try {
-      // First, we need to remove any potential data URL prefix
-      let cleanBase64 = base64Content;
-      if (base64Content.includes('base64,')) {
-        cleanBase64 = base64Content.split('base64,')[1];
+      // For images and binary files, create a blob from the base64 data
+      const byteCharacters = atob(base64Content);
+      const byteNumbers = new Array(byteCharacters.length);
+      
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
       
-      // Convert base64 to binary
-      const byteCharacters = atob(cleanBase64);
-      const byteArrays = [];
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: contentType });
       
-      // Handle UTF-8 characters properly
-      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-        const slice = byteCharacters.slice(offset, offset + 512);
-        
-        const byteNumbers = new Array(slice.length);
-        for (let i = 0; i < slice.length; i++) {
-          byteNumbers[i] = slice.charCodeAt(i);
-        }
-        
-        const byteArray = new Uint8Array(byteNumbers);
-        byteArrays.push(byteArray);
-      }
-      
-      // Create blob and download
-      const blob = new Blob(byteArrays, { type: contentType });
+      // Create a download link
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Clean up
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
     } catch (error) {
-      console.error('Error downloading binary file:', error);
-      alert('Error downloading file. Please try again.');
+      console.error('Error downloading file:', error);
+      alert(`Error downloading file: ${error.message}`);
     }
   };
   
-  // General download function that determines the right method based on content
+  // const downloadBinaryFile = (base64Content, filename) => {
+  //   try {
+  //     //convert base64 to binary
+  //     const byteCharacters = atob(base64Content);
+  //     const byteArrays = [];
+      
+  //     for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+  //       const slice = byteCharacters.slice(offset, offset + 512);
+        
+  //       const byteNumbers = new Array(slice.length);
+  //       for (let i = 0; i < slice.length; i++) {
+  //         byteNumbers[i] = slice.charCodeAt(i);
+  //       }
+        
+  //       const byteArray = new Uint8Array(byteNumbers);
+  //       byteArrays.push(byteArray);
+  //     }
+      
+  //     //create a blob and download
+  //     const blob = new Blob(byteArrays, { type: contentType });
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement('a');
+  //     a.href = url;
+  //     a.download = filename;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     URL.revokeObjectURL(url);
+  //     document.body.removeChild(a);
+  //   } catch (error) {
+  //     console.error('Error downloading binary file:', error);
+  //     alert('Error downloading file. Please try again.');
+  //   }
+  // };
+  
+  //general download function
   const downloadFile = (content, filename) => {
     if (contentType.includes('text/') || contentType.includes('application/json')) {
       downloadTextFile(content, filename);
     } else {
       downloadBinaryFile(content, filename);
     }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' bytes';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
   };
 
   //delete file

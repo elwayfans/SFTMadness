@@ -29,7 +29,7 @@ def cors_response(status_code, body, content_type="application/json"):
     }
 
     if content_type == "application/json":
-        body = json.dumps(body)
+        body = json.dumps(body, default=str)
 
     return {
         'statusCode': status_code,
