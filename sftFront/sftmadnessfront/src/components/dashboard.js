@@ -207,7 +207,7 @@ export const Dashboard = ({ onSignOut }) => {
                 Profile
               </button>
 
-              {/* Password Reset Tab - not yet implemented */}
+              {/* Password Reset Tab */}
               <button
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'password'
@@ -344,18 +344,22 @@ export const Dashboard = ({ onSignOut }) => {
               />
             )}
 
-            {/* Password Reset Component - not yet implemented */}
+            {/* Password Reset Component */}
             {activeTab === 'password' && (
               <>
                 {showPasswordResetConfirmation ? (
                   <ConfirmPasswordResetForm
                     email={passwordResetEmail}
+                    userId={user.id}
                     onSuccess={handlePasswordResetSuccess}
                     onCancel={() => setShowPasswordResetConfirmation(false)}
                   />
                 ) : (
                   <ForgotPasswordForm 
-                    onSuccess={handlePasswordResetRequest}
+                    onSuccess={(email, userId) => {
+                      setPasswordResetEmail(email);
+                      setShowPasswordResetConfirmation(true);
+                    }}
                     defaultEmail={user?.email}
                   />
                 )}

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { userService } from '../../services/api/userService';
 
 //initial form to request password reset
-export const ForgotPasswordForm = ({ onSuccess }) => {
-  const [email, setEmail] = useState('');
+export const ForgotPasswordForm = ({ onSuccess, defaultEmail }) => {
+  const [email, setEmail] = useState(defaultEmail);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -15,7 +15,7 @@ export const ForgotPasswordForm = ({ onSuccess }) => {
     try {
       const result = await userService.forgotPassword(email);
       if (result.success) {
-        onSuccess(email);
+        onSuccess(email, result.userId);
       } else {
         setError('Failed to initiate password reset');
       }

@@ -23,7 +23,7 @@ export const emailService = {
         thread_id: emailData.thread_id || emailData.threadId || null
       };
             
-      const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/testEmail`, {
+      const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/sendEmail`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -50,45 +50,6 @@ export const emailService = {
       throw error;
     }
   },
-
-  // getConversationHistory: async (email, threadId) => {
-  //   try {
-  //     const session = await fetchAuthSession();
-  //     if (!session.tokens?.idToken) {
-  //       throw new Error('Authentication required');
-  //     }
-  //     const token = session.tokens.idToken.toString();
-      
-  //     const response = await fetch(
-  //       `${process.env.REACT_APP_API_ENDPOINT}/email/history?email=${encodeURIComponent(email)}&threadId=${encodeURIComponent(threadId)}`,
-  //       {TOP OR BOTTOM}
-  //       `${process.env.REACT_APP_API_ENDPOINT}/email/history}
-  //       {
-  //         method: 'GET',
-  //         headers: {
-  //           'Authorization': `Bearer ${token}`,
-  //           'Content-Type': 'application/json',
-  //           'Origin': window.location.origin
-  //         }
-  //       }
-  //     );
-      
-  //     if (!response.ok) {
-  //       const errorText = await response.text();
-  //       console.error(`API Error (${response.status}): ${errorText}`);
-  //       throw new Error(`Failed to get conversation history: ${response.status}`);
-  //     }
-      
-  //     const responseData = await response.json();
-  //     return {
-  //       success: true,
-  //       history: responseData.history || []
-  //     };
-  //   } catch (error) {
-  //     console.error('Error getting conversation history:', error);
-  //     throw error;
-  //   }
-  // },
 
   //check if user is authenticated
   isAuthenticated: async () => {

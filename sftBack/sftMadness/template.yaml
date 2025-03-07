@@ -597,23 +597,37 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       # all endpoints in email service
       Events:
-        testEmail:
+        sendEmail:
           Type: Api
           Properties:
             RestApiId: !Ref sft
-            Path: /testEmail
+            Path: /sendEmail
             Method: post
             # if no authorization is specified, uses Cognito Authorizer
-        testEmailOptions:
+        sendEmailOptions:
         # each endpoint has an options method that matches every path
         # this is used for CORS configuration
         # all options methods have no authorization
           Type: Api
           Properties:
             RestApiId: !Ref sft
-            Path: /testEmail
+            Path: /sendEmail
             Method: options
             # uses no authorization
+            Auth:
+              Authorizer: NONE
+        sendPassVerificationEmail:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /passVerificationEmail
+            Method: post
+        sendPassVerificationEmailOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /passVerificationEmail
+            Method: options
             Auth:
               Authorizer: NONE
 
@@ -780,6 +794,34 @@ Resources:
             RestApiId: !Ref sft
             Path: /users/{userId}
             Method: options
+            Auth:
+              Authorizer: NONE
+        resetUserPassword:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/resetPassword/{userId}
+            Method: put
+        resetUserPasswordOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/resetPassword/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getUserByEmail:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/byEmail
+            Method: post
+        getUserByEmailOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/byEmail
+            Method: options 
             Auth:
               Authorizer: NONE
 

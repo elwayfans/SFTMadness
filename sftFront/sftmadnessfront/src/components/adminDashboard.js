@@ -121,13 +121,13 @@ export const AdminDashboard = ({ onSignOut }) => {
     }
   };
 
-  //password reset handlers - not yet implemented
+  //password reset handlers
   const handlePasswordResetRequest = (email) => {
     setPasswordResetEmail(email);
     setShowPasswordResetConfirmation(true);
   };
 
-  //password reset success handler - not yet implemented
+  //password reset success handler
   const handlePasswordResetSuccess = () => {
     setShowPasswordResetConfirmation(false);
     setActiveTab('profile');
@@ -438,18 +438,22 @@ export const AdminDashboard = ({ onSignOut }) => {
               />
             )}
 
-            {/* Password Reset Component - not yet implemented */}
+            {/* Password Reset Component */}
             {activeTab === 'password' && (
               <>
                 {showPasswordResetConfirmation ? (
                   <ConfirmPasswordResetForm
                     email={passwordResetEmail}
+                    userId={user.id}
                     onSuccess={handlePasswordResetSuccess}
                     onCancel={() => setShowPasswordResetConfirmation(false)}
                   />
                 ) : (
                   <ForgotPasswordForm 
-                    onSuccess={handlePasswordResetRequest}
+                    onSuccess={(email, userId) => {
+                      setPasswordResetEmail(email);
+                      setShowPasswordResetConfirmation(true);
+                    }}
                     defaultEmail={user?.email}
                   />
                 )}

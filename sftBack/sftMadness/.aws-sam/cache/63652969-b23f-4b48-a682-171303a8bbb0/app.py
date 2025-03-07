@@ -29,6 +29,9 @@ def cors_response(status_code, body, content_type="application/json"):
         'headers': headers,
     }
 
+s3 = boto3.client('s3')
+BUCKET_NAME = os.environ.get('S3_SCRAPED_BUCKET_NAME')
+
 def lambda_handler(event, context):
     if event['httpMethod'] == 'OPTIONS':
         return cors_response(200, "ok")
@@ -199,10 +202,11 @@ def uploadFile(event, context):
             if not boundary:
                 body = event.get('body', '')
                 if event.get('isBase64Encoded', False):
-                    body = base64.b64decode(body)
-                
-                if isinstance(body, bytes):
-                    body = body.decode('utf-8', errors='replace')
+                    body = base64.b64decode(event.get('body', ''))
+                else:
+                    body_content = event.get('body', '')
+                    if isinstance(body_content, str):
+                        body_content = body_content.encode('utf-8')
                 
                 boundary_matches = re.findall(r'--+[\w-]+', body[:1000])
                 if boundary_matches:
@@ -289,16 +293,13 @@ def uploadFile(event, context):
             return cors_response(400, f"Error processing file upload: {str(e)}")
 
         unique_filename = f"{uuid.uuid4()}-{filename}"
-        
-        s3_client = boto3.client('s3')
-        bucket_name = os.environ['S3_SCRAPED_BUCKET_NAME']
 
         try:
-            s3_response = s3_client.put_object(
-                Bucket=bucket_name,
-                Key=f"user-{user_id}/{unique_filename}",
-                Body=file_content,
-                ContentType=filetype
+            s3_response = s3.put_object(
+                Bucket=BUCKET_NAME,
+                Key=filename,
+                Body=body_content,
+                ContentType=content_type
             )
 
             insert_query = """
@@ -307,7 +308,7 @@ def uploadFile(event, context):
                 RETURNING id, userId, model, filename, filepath, filetype, uploadDate
             """
             filepath = f"user-{user_id}/{unique_filename}"
-            cur.execute(insert_query, (user_id, model, filename, filepath, filetype))
+            cur.execute(insert_query, (user_id, model, filename, filepath, content_type))
             file_record = cur.fetchone()
             
             conn.commit()
@@ -365,22 +366,18 @@ def getFile(event, context):
         if not file_record:
             return cors_response(404, "File not found or unauthorized access")
 
-        # Initialize S3 client
-        s3_client = boto3.client('s3')
-        bucket_name = os.environ['S3_SCRAPED_BUCKET_NAME']
-
         try:
             # Get the actual file content from S3
-            s3_response = s3_client.get_object(
-                Bucket=bucket_name,
+            response = s3.get_object(
+                Bucket=BUCKET_NAME,
                 Key=file_record['filepath']
             )
             
-            # Read the file content
-            file_content = s3_response['Body'].read()
-            content_type = file_record['filetype']
+            content_type = response.get('ContentType', 'application/octet-stream')
+            file_content = response['Body'].read()
+
+            encoded_content = base64.b64encode(file_content).decode('utf-8')
             
-            # Important: Add Content-Disposition header for all files
             headers = {
                 'Content-Type': content_type,
                 'Access-Control-Allow-Origin': '*',
@@ -414,9 +411,18 @@ def getFile(event, context):
                 encoded_content = base64.b64encode(file_content).decode('utf-8')
                 return {
                     'statusCode': 200,
-                    'body': encoded_content,
-                    'headers': headers,
-                    'isBase64Encoded': True  # This flag is critical for API Gateway
+                    'body': json.dumps({
+                      'fileId': file_id,
+                      'contentType': content_type,
+                      'content': encoded_content,
+                      'size': response.get('ContentLength', 0),
+                      'lastModified': response.get('LastModified', '').isoformat() if response.get('LastModified') else None
+                    }),
+                    'headers': {
+                        'Content-Type': content_type,
+                        **headers
+                    },
+                    'isBase64Encoded': False
                 }
 
         except ClientError as e:
@@ -427,7 +433,7 @@ def getFile(event, context):
     finally:
         if conn:
             conn.close()
-            
+
 def deleteFile(event, context):
     conn = None
     try:

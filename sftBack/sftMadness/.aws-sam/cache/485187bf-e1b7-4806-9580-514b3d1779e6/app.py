@@ -8,10 +8,14 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
 import psycopg2
-from psycopg2.extras import Json
 import jwt
 from jwt import algorithms
 import requests
+import string
+import secrets
+import random
+from datetime import datetime, timedelta
+from psycopg2.extras import RealDictCursor
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -120,59 +124,46 @@ def verify_token(token):
 
 #########################################
 def lambda_handler(event, context):
-    """Main Lambda handler."""
     if event['httpMethod'] == 'OPTIONS':
         return cors_response(200, "ok")
     
+    print(f"Event received: {json.dumps(event)}")
+    
+    http_method = event['httpMethod']
+    resource_path = event['resource']
+    
     try:
+        #verify token
         auth_header = event.get('headers', {}).get('Authorization')
+        print(f"Auth header: {auth_header}")
         if not auth_header:
-            return cors_response(401, "No authorization token provided")
-
+            return cors_response(401, "Unauthorized")
         if not auth_header.startswith('Bearer '):
-            return cors_response(401, "Invalid authorization header format. Must start with 'Bearer'")
-
-        token = auth_header.replace('Bearer ', '')
+            return cors_response(401, "Invalid Authorization header format. Must start with 'Bearer '")
+        
+        token = auth_header.split(' ')[-1]
 
         try:
             token_payload = verify_token(token)
-            if is_token_invalidated(token_payload):
-                return cors_response(401, "Token has been invalidated")
+            print(f"Token verified successfully: {json.dumps(token_payload)}")
         except Exception as e:
+            print(f"Token verification failed: {str(e)}")
             return cors_response(401, f"Authentication failed: {str(e)}")
+
+    except Exception as e:
+        return cors_response(401, "Authentication failed")
         
-        # Check if this is an incoming email from SES
-        if event.get('Records', []) and event['Records'][0].get('eventSource') == 'aws:ses':
-            return process_incoming_email(event)
-        
-        # Otherwise, handle direct API calls
-        body = json.loads(event.get('body', '{}'))
-        recipient_email = body.get('email')
-        subject = body.get('subject', 'Message from SFT AI')
-        body_text = body.get('body_text', '')
-        body_html = body.get('body_html', '')
-        thread_id = body.get('thread_id')
-        
-        if not recipient_email:
-            return cors_response(400, "Recipient email is required")
-        
-        message_id = send_email(
-            recipient_email,
-            subject,
-            body_text,
-            body_html,
-            thread_id
-        )
-        
-        return cors_response(200, {
-            'message': 'Email sent successfully',
-            'messageId': message_id
-        })
+    try:
+        if resource_path == '/sendEmail' and http_method == 'POST':
+            return sendEmail(event, context)
+        elif resource_path == '/passVerificationEmail' and http_method == 'POST':
+            return send_password_verification_email(event, context)
+        else:
+            return cors_response(404, "Not Found")
         
     except Exception as e:
-        logger.error(f"Error in lambda_handler: {str(e)}")
         return cors_response(500, str(e))
-    
+
 ####################################
 def get_db_connection():
     return psycopg2.connect(
@@ -183,6 +174,71 @@ def get_db_connection():
         port=os.environ['DB_PORT'],
 
         connect_timeout=5)
+
+#generate random verification code
+def generate_verification_code(length=6):
+    """Generate a random verification code of specified length."""
+    alphabet = string.ascii_uppercase + string.digits
+    return ''.join(secrets.choice(alphabet) for i in range(length))
+
+#store verification code in database
+def store_verification_code(email, code):
+    """Store the verification code in the database with an expiration time."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get user ID from email
+        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
+        
+        if not user:
+            return None
+            
+        # Set expiration time (1 hour from now)
+        expiration_time = datetime.now() + timedelta(hours=1)
+        
+        # Check if a code already exists for this user
+        cur.execute(
+            "SELECT id FROM password_reset_codes WHERE user_id = %s", 
+            (user['id'],)
+        )
+        
+        existing_code = cur.fetchone()
+        
+        if existing_code:
+            # Update existing code
+            cur.execute(
+                """UPDATE password_reset_codes 
+                SET code = %s, created_at = CURRENT_TIMESTAMP, expires_at = %s 
+                WHERE user_id = %s RETURNING id""",
+                (code, expiration_time, user['id'])
+            )
+        else:
+            # Insert new code
+            cur.execute(
+                """INSERT INTO password_reset_codes (user_id, code, created_at, expires_at) 
+                VALUES (%s, %s, CURRENT_TIMESTAMP, %s) RETURNING id""",
+                (user['id'], code, expiration_time)
+            )
+            
+        code_id = cur.fetchone()['id']
+        conn.commit()
+        
+        return {
+            'user_id': user['id'],
+            'code_id': code_id
+        }
+        
+    except Exception as e:
+        print(f"Database error: {str(e)}")
+        if conn:
+            conn.rollback()
+        raise
+    finally:
+        if conn:
+            conn.close()
 
 #######################################
 # Functions
@@ -341,7 +397,8 @@ def process_incoming_email(event):
         logger.error(f"Error processing incoming email: {str(e)}")
         return cors_response(500, "Error processing incoming email")
 
-def send_email(recipient_email, subject, body_text, body_html, thread_id=None):
+#send email
+def sendEmail(recipient_email, subject, body_text, body_html, thread_id=None):
     """Send email using SES."""
     ses = boto3.client('ses', region_name=os.environ['SES_REGION'])
     
@@ -375,3 +432,162 @@ def send_email(recipient_email, subject, body_text, body_html, thread_id=None):
     except ClientError as e:
         logger.error(f"Error sending email: {str(e)}")
         raise
+
+#send verification email
+def send_password_verification_email(event, context):
+    """Handler for sending password reset verification emails"""
+    conn = None
+    try:
+        # Parse request body
+        try:
+            body = json.loads(event.get('body', '{}'))
+        except json.JSONDecodeError as e:
+            return cors_response(400, {"error": f"Invalid JSON: {str(e)}"})
+        
+        email = body.get('email')
+        
+        if not email:
+            return cors_response(400, {"error": "Email is required"})
+        
+        # Generate verification code (6 characters, uppercase letters and digits)
+        verification_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get user ID from email
+        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
+        
+        if not user:
+            return cors_response(404, {"error": "User not found"})
+        
+        user_id = user['id']
+            
+        # Set expiration time (1 hour from now)
+        expiration_time = datetime.now() + timedelta(hours=1)
+        
+        # Check if a code already exists for this user
+        cur.execute(
+            "SELECT id FROM password_reset_codes WHERE user_id = %s", 
+            (user_id,)
+        )
+        
+        existing_code = cur.fetchone()
+        
+        if existing_code:
+            # Update existing code
+            cur.execute(
+                """UPDATE password_reset_codes 
+                SET code = %s, created_at = CURRENT_TIMESTAMP, expires_at = %s 
+                WHERE user_id = %s RETURNING id""",
+                (verification_code, expiration_time, user_id)
+            )
+        else:
+            # Insert new code
+            cur.execute(
+                """INSERT INTO password_reset_codes (user_id, code, created_at, expires_at) 
+                VALUES (%s, %s, CURRENT_TIMESTAMP, %s) RETURNING id""",
+                (user_id, verification_code, expiration_time)
+            )
+            
+        code_id = cur.fetchone()['id']
+        
+        # HTML email content
+        html_content = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background-color: #4a90e2; color: white; padding: 10px 20px; }}
+                .content {{ padding: 20px; border: 1px solid #ddd; }}
+                .code {{ font-size: 24px; font-weight: bold; color: #4a90e2; letter-spacing: 3px; }}
+                .footer {{ margin-top: 20px; font-size: 12px; color: #999; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h2>Password Reset Request</h2>
+                </div>
+                <div class="content">
+                    <p>We received a request to reset your password. Please use the following verification code to complete the process:</p>
+                    <p class="code">{verification_code}</p>
+                    <p>This code will expire in 1 hour.</p>
+                    <p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
+                </div>
+                <div class="footer">
+                    <p>This is an automated message, please do not reply.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Plain text version
+        text_content = f"""
+        Password Reset Request
+        
+        We received a request to reset your password. Please use the following verification code to complete the process:
+        
+        {verification_code}
+        
+        This code will expire in 1 hour.
+        
+        If you didn't request a password reset, please ignore this email or contact support if you have concerns.
+        
+        This is an automated message, please do not reply.
+        """
+        
+        # Send the email using your existing send_email function or SES directly
+        ses_client = boto3.client('ses', region_name=os.environ['SES_REGION'])
+        
+        configuration_set = os.environ.get('SES_CONFIGURATION_SET', '')
+        
+        email_params = {
+            'Source': os.environ['SES_SENDER_EMAIL'],
+            'Destination': {
+                'ToAddresses': [email]
+            },
+            'Message': {
+                'Subject': {
+                    'Data': 'Password Reset Verification Code',
+                    'Charset': 'UTF-8'
+                },
+                'Body': {
+                    'Text': {
+                        'Data': text_content,
+                        'Charset': 'UTF-8'
+                    },
+                    'Html': {
+                        'Data': html_content,
+                        'Charset': 'UTF-8'
+                    }
+                }
+            }
+        }
+        
+        # Add configuration set if specified
+        if configuration_set:
+            email_params['ConfigurationSetName'] = configuration_set
+            
+        response = ses_client.send_email(**email_params)
+        message_id = response['MessageId']
+        
+        conn.commit()
+        
+        return cors_response(200, {
+            "message": "Verification code sent successfully",
+            "userId": user_id,
+            "messageId": message_id
+        })
+        
+    except Exception as e:
+        print(f"Error processing request: {str(e)}")
+        if conn:
+            conn.rollback()
+        return cors_response(500, {"error": f"Internal server error: {str(e)}"})
+    finally:
+        if conn:
+            conn.close()
