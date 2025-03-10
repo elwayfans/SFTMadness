@@ -71,6 +71,10 @@ def lambda_handler(event, context):
             return updateUser(event, context)
         elif resource_path == '/users/{userId}' and http_method == 'DELETE':
             return deleteUser(event, context)
+        elif resource_path == '/users/resetPassword/{userId}' and http_method == 'PUT':
+            return resetUserPassword(event, context)
+        elif resource_path == '/users/byEmail' and http_method == 'POST':
+            return getUserByEmail(event, context)
         else:
             return cors_response(404, "Not Found")
         
@@ -522,6 +526,125 @@ def deleteUser(event, context):
         if conn:
             conn.rollback()
         return cors_response(500, f"Error deleting user: {str(e)}")
+    finally:
+        if conn:
+            conn.close()
+
+def resetUserPassword(event, context):
+    conn = None
+    try:
+        # Get user ID from path parameters
+        user_id = event['pathParameters'].get('userId')
+        if not user_id:
+            return cors_response(400, {"error": "User ID is required"})
+        
+        # Parse request body
+        try:
+            body = json.loads(event.get('body', '{}'))
+        except json.JSONDecodeError as e:
+            return cors_response(400, {"error": f"Invalid JSON: {str(e)}"})
+        
+        verification_code = body.get('verificationCode')
+        new_password = body.get('newPassword')
+        
+        if not verification_code or not new_password:
+            missing = []
+            if not verification_code: missing.append('verificationCode')
+            if not new_password: missing.append('newPassword')
+            return cors_response(400, {"error": f"Missing required fields: {', '.join(missing)}"})
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Verify the reset code
+        cur.execute("""
+            SELECT * FROM password_reset_codes 
+            WHERE user_id = %s 
+            AND code = %s 
+            AND expires_at > CURRENT_TIMESTAMP
+        """, (user_id, verification_code))
+        
+        reset_code = cur.fetchone()
+        
+        if not reset_code:
+            return cors_response(400, {"error": "Invalid or expired verification code"})
+        
+        # Get the user's email for Cognito update
+        cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+        
+        if not user:
+            return cors_response(404, {"error": "User not found"})
+        
+        # Update password in database
+        cur.execute(
+            "UPDATE users SET password = %s WHERE id = %s RETURNING id",
+            (new_password, user_id)
+        )
+        
+        updated = cur.fetchone()
+        
+        if not updated:
+            return cors_response(500, {"error": "Failed to update password in database"})
+        
+        # Update password in Cognito
+        try:
+            cognito_client = boto3.client('cognito-idp')
+            
+            # Set the new password in Cognito
+            cognito_client.admin_set_user_password(
+                UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
+                Username=user['email'],
+                Password=new_password,
+                Permanent=True
+            )
+            
+            # Delete the used reset code
+            cur.execute("DELETE FROM password_reset_codes WHERE user_id = %s", (user_id,))
+            
+            conn.commit()
+            return cors_response(200, {"message": "Password reset successful"})
+            
+        except ClientError as e:
+            # Rollback database changes if Cognito update fails
+            conn.rollback()
+            return cors_response(500, {"error": f"Error updating Cognito password: {str(e)}"})
+        
+    except Exception as e:
+        print(f"Error processing request: {str(e)}")
+        if conn:
+            conn.rollback()
+        return cors_response(500, {"error": f"Internal server error: {str(e)}"})
+    finally:
+        if conn:
+            conn.close()
+
+def getUserByEmail(event, context):
+    conn = None
+    try:
+        try:
+            body = json.loads(event.get('body', '{}'))
+        except json.JSONDecodeError as e:
+            return cors_response(400, {"error": f"Invalid JSON: {str(e)}"})
+        
+        email = body.get('email')
+        if not email:
+            return cors_response(400, {"error": "Email is required"})
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("SELECT id, email, role FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
+
+        if not user:
+            return cors_response(404, {"error": "User not found"})
+        
+        return cors_response(200, {"user": user})
+    
+    except Exception as e:
+        print(f"Error processing request: {str(e)}")
+        return cors_response(500, {"error": f"Internal server error: {str(e)}"})
     finally:
         if conn:
             conn.close()

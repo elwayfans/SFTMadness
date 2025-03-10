@@ -24,6 +24,7 @@ Globals:
         DB_NAME: !Ref DBName
         DB_HOST: !Ref DBHost
         DB_USER: !Ref DBUser
+        # DB_PASSWORD: 'hR8HY:-3RR7mvA.8NOxJ0a*97N9W'
         DB_PASSWORD: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg:SecretString:password}}'
         DB_PORT: !Ref DBPort
 
@@ -33,6 +34,7 @@ Globals:
 
         #ref s3 bucket
         S3_BUCKET_NAME: !Ref FileStorageBucket
+        S3_SCRAPED_BUCKET_NAME: !Ref ScrapedFileStorageBucket
 
         #ref ses parameters
         SES_SENDER_EMAIL: !Ref SESSenderEmail
@@ -221,6 +223,17 @@ Resources:
                 Action:
                   - s3:ListBucket
                 Resource: !Sub 'arn:aws:s3:::${FileStorageBucket}'
+              - Effect: Allow
+                # s3 bucket permissions
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub 'arn:aws:s3:::${ScrapedFileStorageBucket}/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Sub 'arn:aws:s3:::${ScrapedFileStorageBucket}'
         - PolicyName: SESAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -419,7 +432,7 @@ Resources:
               - '*'
             MaxAge: 3600
   
-  BucketPolicy:
+  FileBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref FileStorageBucket
@@ -432,6 +445,53 @@ Resources:
             Action:
               - s3:GetObject
             Resource: !Sub ${FileStorageBucket.Arn}/*
+            Condition:
+              StringEquals:
+                aws:PrincipalArn: !Ref AWS::AccountId
+
+  # s3 bucket configuration for scrapedFile storage
+  ScrapedFileStorageBucket:
+    Type: AWS::S3::Bucket
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub 'sftmadness-scrapedfiles-${AWS::Region}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - '*'
+            MaxAge: 3600
+  
+  ScrapedFileBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ScrapedFileStorageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowPresignedUrlAccess
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+            Resource: !Sub ${ScrapedFileStorageBucket.Arn}/*
             Condition:
               StringEquals:
                 aws:PrincipalArn: !Ref AWS::AccountId
@@ -537,23 +597,37 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       # all endpoints in email service
       Events:
-        testEmail:
+        sendEmail:
           Type: Api
           Properties:
             RestApiId: !Ref sft
-            Path: /testEmail
+            Path: /sendEmail
             Method: post
             # if no authorization is specified, uses Cognito Authorizer
-        testEmailOptions:
+        sendEmailOptions:
         # each endpoint has an options method that matches every path
         # this is used for CORS configuration
         # all options methods have no authorization
           Type: Api
           Properties:
             RestApiId: !Ref sft
-            Path: /testEmail
+            Path: /sendEmail
             Method: options
             # uses no authorization
+            Auth:
+              Authorizer: NONE
+        sendPassVerificationEmail:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /passVerificationEmail
+            Method: post
+        sendPassVerificationEmailOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /passVerificationEmail
+            Method: options
             Auth:
               Authorizer: NONE
 
@@ -722,6 +796,34 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+        resetUserPassword:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/resetPassword/{userId}
+            Method: put
+        resetUserPasswordOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/resetPassword/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getUserByEmail:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/byEmail
+            Method: post
+        getUserByEmailOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/byEmail
+            Method: options 
+            Auth:
+              Authorizer: NONE
 
   AICustoms:
     Type: AWS::Serverless::Function
@@ -811,6 +913,53 @@ Resources:
           Properties:
             RestApiId: !Ref sft
             Path: /files/{fileId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+
+  scrapedFiles:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - PrivateSubnet1RouteTableAssociation
+      - PrivateSubnet2RouteTableAssociation
+      - PrivateSubnet3RouteTableAssociation
+      - NatGateway
+    Properties:
+      CodeUri: scrapedFiles/
+      Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
+      Events:
+        uploadFile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /scrapedFiles
+            Method: post
+        uploadFileOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /scrapedFiles
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getFile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /scrapedFiles/{fileId}
+            Method: get
+        deleteFile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /scrapedFiles/{fileId}
+            Method: delete
+        fileOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /scrapedFiles/{fileId}
             Method: options
             Auth:
               Authorizer: NONE
@@ -1138,6 +1287,11 @@ Outputs:
     Value: !Ref FileStorageBucket
     Export:
       Name: !Sub "${AWS::StackName}-BucketName"
+  ScrapedFileStorageBucketName:
+    Description: "Name of the S3 bucket for scraped file storage"
+    Value: !Ref ScrapedFileStorageBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-ScrapedBucketName"
   EmailLogGroupName:
     Description: CloudWatch Log Group for Email Events
     Value: !Ref EmailLoggingGroup
@@ -1167,6 +1321,9 @@ Outputs:
   filesFunctionArn:
     Description: "files Lambda Function ARN"
     Value: !GetAtt files.Arn
+  scrapedFilesFunctionArn:
+    Description: "scrapedFiles Lambda Function ARN"
+    Value: !GetAtt scrapedFiles.Arn
   schoolContactFunctionArn:
     Description: "schoolContact Lambda Function ARN"
     Value: !GetAtt schoolContact.Arn

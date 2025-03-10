@@ -8,6 +8,8 @@ import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-a
 //update user profile
 //delete user
 //get current user session
+//request password reset
+//reset password
 //users:
 
 export const userService = {
@@ -53,7 +55,7 @@ export const userService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Origin': window.location.origin //needed for CORS on all requests
+          'Origin': window.location.origin
         },
         body: JSON.stringify({
           email,
@@ -276,6 +278,92 @@ export const userService = {
       return true;
     } catch (error) {
       console.error('Error deleting user:', error);
+      throw error;
+    }
+  },
+
+  //request password reset
+  forgotPassword: async (email) => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens.idToken.toString();
+
+      const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/passVerificationEmail`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        },
+        body: JSON.stringify({ email })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error (${response.status}): ${errorText}`);
+        throw new Error(`Failed to request password reset: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      return {
+        success: true,
+        message: responseData.message,
+        userId: responseData.userId
+      };
+    } catch (error) {
+      console.error('Error requesting password reset:', error);
+      throw error;
+    }
+  },
+
+  //reset password with verification code
+  confirmForgotPassword: async (email, verificationCode, newPassword) => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens.idToken.toString();
+
+      const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/users/byEmail`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        },
+        body: JSON.stringify({ email })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error (${response.status}): ${errorText}`);
+        throw new Error(`Failed to find user: ${response.status}`);
+      }
+
+      const userData = await response.json();
+      const userId = userData.user.id;
+      
+      const resetResponse = await fetch(`${process.env.REACT_APP_API_ENDPOINT}/users/resetPassword/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin
+      },
+      body: JSON.stringify({ verificationCode, newPassword })
+      });
+
+      if (!resetResponse.ok) {
+        const errorText = await resetResponse.text();
+        console.error(`API Error (${resetResponse.status}): ${errorText}`);
+        throw new Error(`Failed to reset password: ${resetResponse.status}`);
+      }
+
+      const resetData = await resetResponse.json();
+      return {
+        success: true,
+        message: resetData.message
+      };
+    } catch (error) {
+      console.error('Error resetting password:', error);
       throw error;
     }
   },

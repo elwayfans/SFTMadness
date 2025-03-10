@@ -16,6 +16,8 @@ import { CreateContact } from './schoolContact/createSchoolContact';
 
 import { FileManagement } from './files/fileManager';
 
+import { ScrapedFileManagement } from './scrapedFiles/scrapedFileManager';
+
 import { Calender } from './events/calender';
 
 import { EmailForm } from './email/emailForm';
@@ -145,13 +147,13 @@ export const AdminDashboard = ({ onSignOut }) => {
     }
   };
 
-  //password reset handlers - not yet implemented
-  const handlePasswordResetRequest = (email) => {
-    setPasswordResetEmail(email);
-    setShowPasswordResetConfirmation(true);
-  };
+  // //password reset handlers
+  // const handlePasswordResetRequest = (email) => {
+  //   setPasswordResetEmail(email);
+  //   setShowPasswordResetConfirmation(true);
+  // };
 
-  //password reset success handler - not yet implemented
+  //password reset success handler
   const handlePasswordResetSuccess = () => {
     setShowPasswordResetConfirmation(false);
     setActiveTab('profile');
@@ -353,6 +355,16 @@ export const AdminDashboard = ({ onSignOut }) => {
               </Button>
               <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
+                  activeTab === 'scrapedFiles'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                onClick={() => setActiveTab('scrapedFiles')}
+              >
+                Scraped Files
+              </button>
+              <button
+                className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'create-contact'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -506,18 +518,22 @@ export const AdminDashboard = ({ onSignOut }) => {
               />
             )}
 
-            {/* Password Reset Component - not yet implemented */}
+            {/* Password Reset Component */}
             {activeTab === 'password' && (
               <>
                 {showPasswordResetConfirmation ? (
                   <ConfirmPasswordResetForm
                     email={passwordResetEmail}
+                    userId={user.id}
                     onSuccess={handlePasswordResetSuccess}
                     onCancel={() => setShowPasswordResetConfirmation(false)}
                   />
                 ) : (
                   <ForgotPasswordForm 
-                    onSuccess={handlePasswordResetRequest}
+                    onSuccess={(email, userId) => {
+                      setPasswordResetEmail(email);
+                      setShowPasswordResetConfirmation(true);
+                    }}
                     defaultEmail={user?.email}
                   />
                 )}
@@ -535,6 +551,11 @@ export const AdminDashboard = ({ onSignOut }) => {
             {/* File Management Component */}
             {activeTab === 'files' && (
               <FileManagement />
+            )}
+
+            {/* Scraped File Management Component */}
+            {activeTab === 'scrapedFiles' && (
+              <ScrapedFileManagement />
             )}
             
             {/* School Contact Components */}

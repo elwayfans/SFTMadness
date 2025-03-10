@@ -5,7 +5,7 @@ codeuri = "/Users/kylierhodus/Documents/GitHub/SFTMadness/sftBack/sftMadness/ema
 runtime = "python3.12"
 architecture = "x86_64"
 handler = "app.lambda_handler"
-source_hash = "40daecbb02c97f216105b2f37df941d112a069e0bdb54cd57182f82944ea7982"
+source_hash = "41a2c3e1458715c3b21fa1187891c4e3f93d65d40f36bc375d71734c2f1d56c9"
 manifest_hash = ""
 packagetype = "Zip"
 functions = ["email"]
@@ -45,7 +45,7 @@ codeuri = "/Users/kylierhodus/Documents/GitHub/SFTMadness/sftBack/sftMadness/use
 runtime = "python3.12"
 architecture = "x86_64"
 handler = "app.lambda_handler"
-source_hash = "eff3656c9b795619491927b30733e994b52c5d8f26a4263bfdcad5dcedd960c0"
+source_hash = "b169715decb75a96542d57d7bd2a7861d32750fcce29f39426a348e989806287"
 manifest_hash = ""
 packagetype = "Zip"
 functions = ["users"]
@@ -130,12 +130,22 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["usersByCognito"]
 
+[function_build_definitions.63652969-b23f-4b48-a682-171303a8bbb0]
+codeuri = "/Users/kylierhodus/Documents/GitHub/SFTMadness/sftBack/sftMadness/scrapedFiles"
+runtime = "python3.12"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+source_hash = "3bde6c1c97b5571a72519232094d86b2f47344ec6d66c69f9b044cfcf01f2c43"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["scrapedFiles"]
+
 [layer_build_definitions.ae7700db-c501-4239-9921-0f0e7d9fc7ac]
 layer_name = "DependenciesLayer"
 codeuri = "/Users/kylierhodus/Documents/GitHub/SFTMadness/sftBack/sftMadness"
 build_method = "python3.12"
 compatible_runtimes = ["python3.12"]
 architecture = "x86_64"
-source_hash = "8078f7b95e4d6beb530da1abc713e51572ee1c696ac60a952ed9ec5e81b8d415"
+source_hash = "3d0f229ee1d420bc85e962f0c52c4c6fd67c0e777aafcfd218163484d3b05cfe"
 manifest_hash = ""
 layer = "DependenciesLayer"
