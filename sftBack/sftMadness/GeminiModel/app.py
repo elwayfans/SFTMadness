@@ -8,10 +8,6 @@ import boto3
 import jwt
 from psycopg2.extras import RealDictCursor
 from google import genai
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
-from SchoolScraper.SchoolScraper.spiders.school_spider import SchoolSpider
-from SchoolScraper.SchoolScraper.pipelines import ListCollectorPipeline
 
 def cors_response(status_code, body, content_type="application/json"):
     headers = {
@@ -270,47 +266,6 @@ class GeminiTrainingData:
         finally:
             if conn:
                 conn.close()
-
-    def Start_Scraper(self):
-        """
-        This function initializes and runs the Scrapy spider to scrape data from the specified URLs.
-
-        Args:
-            arg1: self, this allows for the call of variables that are instantiated within the class.
-
-        Returns:
-            This function does not return anything. Instead, it sets a class variable with the scraped data.
-        """
-        # Initialize the pipeline
-        pipeline = ListCollectorPipeline()
-
-        # Configure settings
-        settings = get_project_settings()
-        # Add Playwright settings
-        settings.set("DOWNLOAD_HANDLERS", {
-            "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-            "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-        })
-
-        settings.set("TWISTED_REACTOR", "twisted.internet.asyncioreactor.AsyncioSelectorReactor")
-
-        # Enable the pipeline
-        settings.set("ITEM_PIPELINES", {
-            "SchoolScraper.pipelines.ListCollectorPipeline": 300,
-        })
-
-        # Define start URLs and allowed domains
-        start_urls = ["https://www.neumont.edu/",
-                      "https://www.neumont.edu/degrees"]
-        allowed_domains = ["neumont.edu"]
-
-        # Create and run the crawler
-        process = CrawlerProcess(settings)
-        process.crawl(SchoolSpider, start_urls=start_urls, allowed_domains=allowed_domains)
-        process.start()
-
-        # Access the collected items
-        self.scraped_data = pipeline.items
 
     def Generate_Data(self):
         """
