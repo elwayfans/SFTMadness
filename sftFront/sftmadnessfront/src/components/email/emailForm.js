@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { emailService } from '../../services/api/emailService';
-
+import '../../components/users/users.css'
 //email form component
 export const EmailForm = () => {
   const [emailForm, setEmailForm] = useState({
@@ -108,7 +108,7 @@ export const EmailForm = () => {
 
   //email form
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Send Email</h2>
 
       {error && (

@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 
 import React, { useState, useEffect } from 'react';
 import { signOut } from 'aws-amplify/auth';
@@ -32,6 +30,30 @@ import { AdminCreateUser } from './admins/createUser';
 import { AdminUpdateRole } from './admins/updateUserRole';
 import { AdminLogs } from './admins/adminLogs';
 
+//button compents/Style
+import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Grow from '@mui/material/Grow';
+import Paper from '@mui/material/Paper';
+import Popper from '@mui/material/Popper';
+import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
+import './adminDashboard.css';
+
+import { createTheme } from '@mui/material/styles';
+import { ThemeProvider } from 'styled-components';
+
+
+//for drop down options
+const map = new Map();
+map.set("delete", "Delete Account");
+map.set("password", "Reset Password");
+map.set("logs", "Conversation Logs");
+map.set("customs", "AI Settings");
+const options = ["customs", 'logs','password', 'delete'];
+
 //admin dashboard
 export const AdminDashboard = ({ onSignOut }) => {
   const [user, setUser] = useState(null);
@@ -49,6 +71,7 @@ export const AdminDashboard = ({ onSignOut }) => {
 
   //admin state
   const [selectedUserId, setSelectedUserId] = useState(null);
+
 
   useEffect(() => {
     fetchUser();
@@ -190,6 +213,34 @@ export const AdminDashboard = ({ onSignOut }) => {
     setActiveTab('admin-users');
   };
 
+  //drop down btn function
+  const [open, setOpen] = React.useState(false);
+  const anchorRef = React.useRef(null);
+  const [selectedIndex, setSelectedIndex] = React.useState(1);
+
+  const handleClick = () => {
+    console.info(`You clicked ${options[selectedIndex]}`);
+    setActiveTab(options[selectedIndex]);
+  };
+
+  const handleMenuItemClick = (event, index) => {
+    setSelectedIndex(index);
+    setOpen(false);
+  };
+
+  const handleToggle = () => {
+    setOpen((prevOpen) => !prevOpen);
+  };
+
+  const handleClose = (event) => {
+    if (anchorRef.current && anchorRef.current.contains(event.target)) {
+      return;
+    }
+
+    setOpen(false);
+  };
+
+
   //loading state
   if (loading) {
     return (
@@ -211,14 +262,13 @@ export const AdminDashboard = ({ onSignOut }) => {
               <h1 className="text-2xl font-bold text-blue-600">
                 Admin Dashboard
               </h1>
-              <p className="text-gray-600">Welcome, {displayName}</p>
+              <p className="text-gray-600" >Welcome, {displayName}</p>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            <Button color='secondary'
+              onClick={handleSignOut}              
             >
               Sign out
-            </button>
+            </Button>
           </div>
 
           {error && (
@@ -233,159 +283,185 @@ export const AdminDashboard = ({ onSignOut }) => {
               <div className="border-b-2 border-purple-500 px-2 py-1 mb-3 w-full">
                 <h3 className="text-purple-700 font-semibold">Administration</h3>
               </div>
-              <button
-                className={`py-2 px-3 border-b-2 font-medium text-sm ${
-                  activeTab === 'admin-users'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+            
+            <ButtonGroup className='BntGroup1'>
+              <Button
                 onClick={() => setActiveTab('admin-users')}
+                variant="contained"
+                
               >
                 Manage Users
-              </button>
+              </Button>
               
-              <button
+              <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'admin-create-user'
                     ? 'border-purple-500 text-purple-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
                 onClick={() => setActiveTab('admin-create-user')}
+                variant="contained"
               >
                 Create User
-              </button>
-              <button
+              </Button>
+              <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'admin-roles'
                     ? 'border-purple-500 text-purple-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
                 onClick={() => setActiveTab('admin-roles')}
+                variant="contained"
               >
                 Manage Roles
-              </button>
-              <button
+              </Button>
+              <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'admin-logs'
                     ? 'border-purple-500 text-purple-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
                 onClick={() => setActiveTab('admin-logs')}
+                variant="contained"
               >
                 Admin Logs
-              </button>
-
+              </Button>
+              </ButtonGroup>
               {/* Standard (customer) Tabs */}
               <div className="border-b-2 border-blue-500 px-2 py-1 mb-3 mt-4 w-full">
                 <h3 className="text-blue-700 font-semibold">Standard Features</h3>
               </div>
-              <button
-                className={`py-2 px-3 border-b-2 font-medium text-sm ${
-                  activeTab === 'profile'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+             
+            <ButtonGroup size='small'  color='warning' className='BtnGroup2'>
+              <Button
+                variant="contained"
                 onClick={() => setActiveTab('profile')}
               >
                 Profile
-              </button>
-              <button
-                className={`py-2 px-3 border-b-2 font-medium text-sm ${
-                  activeTab === 'password'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                onClick={() => setActiveTab('password')}
-              >
-                Reset Password
-              </button>
-              <button
-                className={`py-2 px-3 border-b-2 font-medium text-sm ${
-                  activeTab === 'delete'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                onClick={() => setActiveTab('delete')}
-              >
-                Delete Account
-              </button>
-              <button
+              </Button>
+              
+              <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'files'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                variant="contained"
                 onClick={() => setActiveTab('files')}
               >
                 Files
-              </button>
-              <button
+              </Button>
+              <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'create-contact'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                variant="contained"
                 onClick={() => {
                   setActiveTab('create-contact');
                   setShowContactIdInput(false);
                 }}
               >
                 Create Contact
-              </button>
-              <button
+              </Button>
+              <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'view-contact'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                variant="contained"
                 onClick={() => {
                   setActiveTab('view-contact');
                   setShowContactIdInput(true);
                 }}
               >
                 View Contact
-              </button>
-              <button
+              </Button>
+              <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'events'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                variant="contained"
                 onClick={() => setActiveTab('events')}
               >
                 Events
-              </button>
-              <button
+              </Button>
+              <Button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'email'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                variant="contained"
                 onClick={() => setActiveTab('email')}
               >
                 Email
-              </button>
-              <button
-                className={`py-2 px-3 border-b-2 font-medium text-sm ${
-                  activeTab === 'customs'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                onClick={() => setActiveTab('customs')}
+              </Button>
+
+              <ButtonGroup
+             variant="contained"
+             ref={anchorRef}
+             aria-label="Button group with a nested menu"
+             size='small'
+             color='warning'
+             className='btnDropDownGroup'
+            >
+              <Button onClick={handleClick}>{map.get(options[selectedIndex])}</Button>
+              <Button
+                size='small'
+                aria-controls={open ? 'split-button-menu' : undefined}
+                aria-expanded={open ? 'true' : undefined}
+                aria-label="select merge strategy"
+                aria-haspopup="menu"
+                onClick={handleToggle}
               >
-                AI Settings
-              </button>
-              <button
-                className={`py-2 px-3 border-b-2 font-medium text-sm ${
-                  activeTab === 'logs'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                onClick={() => setActiveTab('logs')}
-              >
-                Conversation Logs
-              </button>
-            </nav>
+                <ArrowDropDownIcon/>
+              </Button>
+            </ButtonGroup>
+            <Popper
+              sx={{ zIndex: 1 }}
+              open={open}
+              anchorEl={anchorRef.current}
+              role={undefined}
+              transition
+              disablePortal
+            >
+              {({TransitionProps, placement})=> (
+                <Grow
+                  {...TransitionProps}
+                  style={{transformOrigin:
+                    placement === 'bottom' ? 'center top' : 'center bottom',
+                }}
+                >
+                  <Paper>
+                    <ClickAwayListener onClickAway={handleClose}>
+                    <MenuList id="split-button-menu" autoFocusItem>
+                  {options.map((option, index) => (
+                    <MenuItem
+                      key={option}
+                      selected={index === selectedIndex}
+                      onClick={(event) => handleMenuItemClick(event, index)}
+                    >
+                      {map.get(option)}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+                    </ClickAwayListener>
+                  </Paper>
+                </Grow>
+              )}
+
+            </Popper>
+            </ButtonGroup>
+            
+           
+            
+            
+          </nav>
           </div>
 
           {/* ***************************************************** */}

@@ -230,6 +230,7 @@ export const AdminDashboard = ({ onSignOut }) => {
               <div className="border-b-2 border-purple-500 px-2 py-1 mb-3 w-full">
                 <h3 className="text-purple-700 font-semibold">Administration</h3>
               </div>
+              
               <button
                 className={`py-2 px-3 border-b-2 font-medium text-sm ${
                   activeTab === 'admin-users'

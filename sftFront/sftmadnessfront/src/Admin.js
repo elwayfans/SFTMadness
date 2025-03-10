@@ -2,7 +2,6 @@ import AdminRegister from "./components/AdminRegister";
 import AdminLogIn from "./components/AdminLogin";
 import React, { useState, useEffect } from 'react';
 
-import AdminDashboard from "./components/adminDashboard";
 
 function Admin()
 {
@@ -28,7 +27,7 @@ function Admin()
                         }}>
                       Log In
                     </button>
-                <AdminDashboard/>
+                
                 </>
                 
                 

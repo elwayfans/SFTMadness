@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { userService } from '../../services/api/userService';
+import './users.css'
+import { Button } from '@mui/material';
 
 export const UserProfileForm = ({ user, onProfileUpdate }) => {
   const [profile, setProfile] = useState({
@@ -68,7 +70,7 @@ export const UserProfileForm = ({ user, onProfileUpdate }) => {
 };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Your Profile</h2>
 
       {error && (
@@ -120,14 +122,17 @@ export const UserProfileForm = ({ user, onProfileUpdate }) => {
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={updating}
           className={`w-full py-2 px-4 rounded text-white font-semibold
             ${updating ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+          size='small'
+          variant='contained'
+          color='warning'
         >
           {updating ? 'Updating...' : 'Update Profile'}
-        </button>
+        </Button>
       </form>
     </div>
   );

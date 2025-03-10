@@ -2,6 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { adminsService } from '../../services/api/adminsService';
 import { userService } from '../../services/api/userService';
 
+
+//MUI and style imports
+import DeleteIcon from '@mui/icons-material/Delete';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+import './adminUsersList.css';
+import './admin.css';
+
 //admin user list component
 export const AdminUsersList = ({ onUserSelect }) => {
   const [users, setUsers] = useState([]);
@@ -153,7 +162,7 @@ export const AdminUsersList = ({ onUserSelect }) => {
 
   //admin user list form
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="MainContent">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
         
@@ -202,7 +211,7 @@ export const AdminUsersList = ({ onUserSelect }) => {
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto">   
             <table className="min-w-full bg-white">
               <thead className="bg-gray-100">
                 <tr>
@@ -253,19 +262,25 @@ export const AdminUsersList = ({ onUserSelect }) => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
-                        <button
+                        <Button
+                        variant='contained'
                           onClick={() => onUserSelect(user.id)}
                           className="text-blue-600 hover:text-blue-800"
                         >
                           View
-                        </button>
+                        </Button>
                         {user.id !== currentUserId ? (
-                          <button
+                          <Button
+                            variant="contained"
+                            color='error'
+                            size='small'
+                            
                             onClick={() => handleDeleteUser(user.id)}
                             className="text-red-600 hover:text-red-800"
                           >
                             Delete
-                          </button>
+                            <DeleteIcon/>
+                          </Button>
                         ) : (
                           <span className="text-gray-400 cursor-not-allowed" title="You cannot delete your own account here">
                             Delete
@@ -282,12 +297,12 @@ export const AdminUsersList = ({ onUserSelect }) => {
           {/* Pagination Controls */}
           <div className="flex justify-between items-center mt-6">
             <div>
-              <p className="text-sm text-gray-600">
+              <p>
                 Showing {pagination.offset + 1} to {Math.min(pagination.offset + users.length, pagination.total)} of {pagination.total} users
               </p>
             </div>
             <div className="flex space-x-2">
-              <button
+              <Button
                 onClick={handlePrevPage}
                 disabled={pagination.offset === 0}
                 className={`px-3 py-1 rounded text-sm ${
@@ -295,10 +310,12 @@ export const AdminUsersList = ({ onUserSelect }) => {
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                 }`}
+                variant='contained'
+                size='small'
               >
                 Previous
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleNextPage}
                 disabled={!pagination.hasMore}
                 className={`px-3 py-1 rounded text-sm ${
@@ -306,9 +323,12 @@ export const AdminUsersList = ({ onUserSelect }) => {
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                 }`}
+                variant='contained'
+                color='warning'
+                size='small'
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         </>

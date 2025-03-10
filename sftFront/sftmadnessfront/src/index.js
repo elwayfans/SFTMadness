@@ -12,7 +12,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Navbar1/>
-    <Admin/>
+    <App/>
   </React.StrictMode>
 );
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { userService } from '../../services/api/userService';
+import { Button } from '@mui/material';
 
 //initial form to request password reset
 export const ForgotPasswordForm = ({ onSuccess }) => {
@@ -29,9 +30,9 @@ export const ForgotPasswordForm = ({ onSuccess }) => {
   
   //form to request password reset
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Reset Password</h2>
-      <p className="mb-4 text-gray-600">
+      <p className="">
         Enter your email address and we'll send you a code to reset your password.
       </p>
       
@@ -53,14 +54,17 @@ export const ForgotPasswordForm = ({ onSuccess }) => {
           />
         </div>
         
-        <button
+        <Button
           type="submit"
           disabled={loading}
           className={`w-full py-2 px-4 rounded text-white font-semibold
             ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+          color='success'
+          variant='contained'
+          size='small'
         >
           {loading ? 'Sending...' : 'Send Reset Code'}
-        </button>
+        </Button>
       </form>
     </div>
   );

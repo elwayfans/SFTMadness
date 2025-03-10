@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { eventService } from '../../services/api/eventsService';
+import { Button } from '@mui/material';
+import SvgIcon from '@mui/material/SvgIcon';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 //event management component
 export const Calender = () => {
@@ -287,7 +290,7 @@ export const Calender = () => {
 
   //calender form
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Event Management</h2>
 
       {error && (
@@ -313,8 +316,7 @@ export const Calender = () => {
             placeholder="Enter event ID"
             className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
           />
-          <button
-            type="button"
+          <Button
             onClick={() => {
               if (eventIdInput.trim()) {
                 fetchEventById(eventIdInput.trim());
@@ -324,9 +326,11 @@ export const Calender = () => {
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             disabled={loading}
+            variant='contained'
+            size='small'
           >
             {loading ? 'Loading...' : 'Fetch Event'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -404,13 +408,16 @@ export const Calender = () => {
                     placeholder="Add attendee email"
                     className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={handleAddAttendee}
                     className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                    variant='contained'
+                    size='small'
+                    color='warning'
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 
                 {eventForm.attendees.length > 0 && (
@@ -452,14 +459,17 @@ export const Calender = () => {
               )}
               
               <div className="flex space-x-2">
-                <button
+                <Button
                   type="submit"
                   disabled={loading}
                   className={`py-2 px-4 rounded text-white font-semibold flex-1
                     ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+                  variant='contained'
+                  size='small'
+                  color='warning'
                 >
                   {loading ? 'Processing...' : isEditing ? 'Update Event' : 'Schedule Event'}
-                </button>
+                </Button>
                 
                 {isEditing && (
                   <button
@@ -530,20 +540,26 @@ export const Calender = () => {
               </div>
               
               <div className="flex space-x-2">
-                <button
+                <Button
                   type="submit"
                   className="py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold flex-1"
+                  size='small'
+                  variant='contained'
+
                 >
                   Apply Filters
-                </button>
+                </Button>
                 
-                <button
+                <Button
                   type="button"
                   onClick={resetFilters}
-                  className="py-2 px-4 bg-gray-300 hover:bg-gray-400 rounded text-gray-800 font-semibold flex-1"
+                  className=""
+                  variant='contained'
+                  color='warning'
+                  size='small'
                 >
-                  Reset
-                </button>
+                  Reset Filter 
+                </Button>
               </div>
             </form>
           </div>
@@ -597,30 +613,54 @@ export const Calender = () => {
                     </div>
                     
                     <div className="mt-3 flex space-x-2">
-                      <button
+                      <Button
                         onClick={() => fetchEventById(event.id)}
                         className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded"
+                        variant='contained'
+                        size='small'
                       >
+                        {/** for the icone */}
+                        <SvgIcon>
+     
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                      >
+                          <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205L12 12m6.894 5.785l-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864l-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495"
+                          />
+                        </svg>
+                      </SvgIcon>
                         Edit
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => deleteEvent(event.id)}
                         className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded"
+                        variant='contained'
+                        color='error'
+                        size='small'
                       >
+                        <DeleteIcon />
                         Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
             
-            <button
+            <Button
               onClick={fetchEvents}
               className="mt-4 w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded text-gray-800 font-semibold"
+              
             >
               Refresh Events
-            </button>
+            </Button>
           </div>
         </div>
       </div>
