@@ -154,13 +154,15 @@ def handle_scrape(event, context):
     try:
         body = json.loads(event['body'])
         user_id = body.get('user_id')
+        filename = body.get('filename')
+        filetype = body.get('filetype')
 
-        if not user_id:
-            return cors_response(400, "User ID is required")
+        if not user_id or not filename or not filetype:
+            return cors_response(400, "User ID, filename, and filetype are required")
 
         scraper = Scraper(user_id)
         scraper.Start_Scraper()
-        scraper.Save_Scraped_Data()
+        scraper.Save_Scraped_Data(filename, filetype)
 
         return cors_response(200, {
             "message": "Scraping completed successfully",
@@ -215,12 +217,14 @@ class Scraper:
         # Access the collected items
         self.scraped_data = pipeline.items
 
-    def Save_Scraped_Data(self):
+    def Save_Scraped_Data(self, filename, filetype):
         """
-        This function saves the scraped data to the database.
+        This function saves the scraped data to the scrapedfiles table in the database.
 
         Args:
             arg1: self, this allows for the call of variables that are instantiated within the class.
+            arg2: filename, the name of the file to be saved.
+            arg3: filetype, the type of the file to be saved.
 
         Returns:
             This function does not return anything.
@@ -233,12 +237,28 @@ class Scraper:
             # Convert scraped data to JSON
             scraped_data_json = json.dumps(self.scraped_data)
             
-            # Insert scraped data into the database
+            # Generate a unique filepath
+            unique_filename = f"{self.user_id}/{filename}"
+            filepath = f"user-{unique_filename}"
+            
+            # Initialize S3 client
+            s3_client = boto3.client('s3')
+            bucket_name = os.environ['S3_BUCKET_NAME']
+            
+            # Upload file content to S3
+            s3_client.put_object(
+                Bucket=bucket_name,
+                Key=filepath,
+                Body=scraped_data_json,
+                ContentType=filetype
+            )
+            
+            # Insert scraped data into the scrapedfiles table
             insert_query = """
-                INSERT INTO scraped_information (userid, data)
-                VALUES (%s, %s)
+                INSERT INTO scrapedfiles (userid, filename, filepath, filetype, uploaddate)
+                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
             """
-            cur.execute(insert_query, (self.user_id, scraped_data_json))
+            cur.execute(insert_query, (self.user_id, filename, filepath, filetype))
             conn.commit()
             
         except Exception as e:
