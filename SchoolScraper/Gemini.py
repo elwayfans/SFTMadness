@@ -1,6 +1,6 @@
 from google import genai
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
+# from scrapy.crawler import CrawlerProcess
+# from scrapy.utils.project import get_project_settings
 from SchoolScraper.spiders.school_spider import SchoolSpider
 from SchoolScraper.pipelines import ListCollectorPipeline
 import psycopg2
