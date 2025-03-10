@@ -165,7 +165,8 @@ def handle_generate_data(event, context):
 
         return cors_response(200, {
             "message": "Training data generated successfully",
-            "data": response.text
+            "data": response.text,
+            "message_history": gemini_training.message_history  # Return the message history for saving
         })
 
     except Exception as e:
@@ -178,12 +179,15 @@ def handle_save_data(event, context):
     try:
         body = json.loads(event['body'])
         user_id = body.get('user_id')
+        filename = body.get('filename')
+        filetype = body.get('filetype')
+        message_history = body.get('message_history')  # Get the message history from the request body
 
-        if not user_id:
-            return cors_response(400, "User ID is required")
+        if not user_id or not filename or not filetype or not message_history:
+            return cors_response(400, "User ID, filename, filetype, and message_history are required")
 
         gemini_training = GeminiTrainingData(user_id)
-        gemini_training.Save_Data()
+        gemini_training.Save_Data(filename, filetype, message_history)
 
         return cors_response(200, {
             "message": "Training data saved successfully"
@@ -191,7 +195,7 @@ def handle_save_data(event, context):
 
     except Exception as e:
         return cors_response(500, str(e))
-    
+
 def handle_load_data(event, context):
     """
     Endpoint handler for loading training data when visiting the webpage.
@@ -353,54 +357,55 @@ class GeminiTrainingData:
         self.gemini_response = response.text
         return response
 
-    def Save_Data(self, filename, filetype):
-        """
-        This function is used to save the training data to the scrapecdfiles table in order to be called at a later date.
-
-        Args:
-            arg1: self, this allows for the call of variables that are instantiated within the class.
-            arg2: filename, the name of the file to be saved.
-            arg3: filetype, the type of the file to be saved.
-
-        Returns:
-            This function does not return anything.
-        """
-        conn = None
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            
-            # Convert message history to JSON
-            training_data_json = json.dumps(self.message_history)
-            
-            # Generate a unique filepath
-            unique_filename = f"{self.user_id}/{filename}"
-            filepath = f"user-{unique_filename}"
-            
-            # Initialize S3 client
-            s3_client = boto3.client('s3')
-            bucket_name = os.environ['S3_BUCKET_NAME']
-            
-            # Upload file content to S3
-            s3_client.put_object(
-                Bucket=bucket_name,
-                Key=filepath,
-                Body=training_data_json,
-                ContentType=filetype
-            )
-            
-            # Insert file into the scrapecdfiles table
-            insert_query = """
-                INSERT INTO scrapecdfiles (userId, filename, filepath, filetype)
-                VALUES (%s, %s, %s, %s)
+    def Save_Data(self, filename, filetype, message_history):
             """
-            cur.execute(insert_query, (self.user_id, filename, filepath, filetype))
-            conn.commit()
-            
-        except Exception as e:
-            if conn:
-                conn.rollback()
-            raise Exception(f"Error saving training data to database: {str(e)}")
-        finally:
-            if conn:
-                conn.close()
+            This function is used to save the training data to the scrapecdfiles table in order to be called at a later date.
+
+            Args:
+                arg1: self, this allows for the call of variables that are instantiated within the class.
+                arg2: filename, the name of the file to be saved.
+                arg3: filetype, the type of the file to be saved.
+                arg4: message_history, the generated data to be saved.
+
+            Returns:
+                This function does not return anything.
+            """
+            conn = None
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                
+                # Convert message history to JSON
+                training_data_json = json.dumps(message_history)
+                
+                # Generate a unique filepath
+                unique_filename = f"{self.user_id}/{filename}"
+                filepath = f"user-{unique_filename}"
+                
+                # Initialize S3 client
+                s3_client = boto3.client('s3')
+                bucket_name = os.environ['S3_BUCKET_NAME']
+                
+                # Upload file content to S3
+                s3_client.put_object(
+                    Bucket=bucket_name,
+                    Key=filepath,
+                    Body=training_data_json,
+                    ContentType=filetype
+                )
+                
+                # Insert file into the scrapecdfiles table
+                insert_query = """
+                    INSERT INTO scrapecdfiles (userId, filename, filepath, filetype)
+                    VALUES (%s, %s, %s, %s)
+                """
+                cur.execute(insert_query, (self.user_id, filename, filepath, filetype))
+                conn.commit()
+                
+            except Exception as e:
+                if conn:
+                    conn.rollback()
+                raise Exception(f"Error saving training data to database: {str(e)}")
+            finally:
+                if conn:
+                    conn.close()
