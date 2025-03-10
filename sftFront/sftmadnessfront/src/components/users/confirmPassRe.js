@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { userService } from '../../services/api/userService';
 
 //form to confirm password reset
-export const ConfirmPasswordResetForm = ({ email, onSuccess, onCancel }) => {
+export const ConfirmPasswordResetForm = ({ email, userId, onSuccess, onCancel }) => {
     const [formData, setFormData] = useState({
       code: '',
       newPassword: '',
@@ -54,7 +54,7 @@ export const ConfirmPasswordResetForm = ({ email, onSuccess, onCancel }) => {
       <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Confirm Password Reset</h2>
         <p className="mb-4 text-gray-600">
-          Enter the code sent to {email} and your new password.
+          Enter the code sent to <span className="font-semibold">{email}</span> and your new password.
         </p>
         
         {error && (
@@ -73,6 +73,7 @@ export const ConfirmPasswordResetForm = ({ email, onSuccess, onCancel }) => {
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               required
+              placeholder="Enter the 6-digit code"
             />
           </div>
           
@@ -85,6 +86,8 @@ export const ConfirmPasswordResetForm = ({ email, onSuccess, onCancel }) => {
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               required
+              minLength="8"
+              placeholder="At least 8 characters"
             />
           </div>
           
@@ -97,6 +100,8 @@ export const ConfirmPasswordResetForm = ({ email, onSuccess, onCancel }) => {
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               required
+              minLength="8"
+              placeholder="Re-enter your new password"
             />
           </div>
           
