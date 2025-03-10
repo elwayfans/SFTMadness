@@ -6,7 +6,7 @@ from SchoolScraper.pipelines import ListCollectorPipeline
 import psycopg2
 import os
 
-client = genai.Client(api_key="AIzaSyDC5YXVeiU3UPnKJZ2ev_HKTQtV20zSIDc")
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 class GeminiTrainingData:
     message_history = []
