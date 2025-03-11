@@ -1244,6 +1244,33 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+  
+  WebsiteScraper:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - PrivateSubnet1RouteTableAssociation
+      - PrivateSubnet2RouteTableAssociation
+      - PrivateSubnet3RouteTableAssociation
+      - NatGateway
+    Properties:
+      CodeUri: website_scraper/
+      Handler: app.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
+      Events:
+        handlescrape:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /website_scraper/scrape/
+            Method: post
+        scrapeOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /website_scraper/scrape/
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   # Application Insights Resource Group
   ApplicationResourceGroup:
@@ -1339,3 +1366,6 @@ Outputs:
   adminsFunctionArn:
     Description: "admins Lambda Function ARN"
     Value: !GetAtt admins.Arn
+  scrapeFunctionArn:
+    Description: "website scrape Lambda function ARN"
+    Value: !GetAtt WebsiteScraper.Arn

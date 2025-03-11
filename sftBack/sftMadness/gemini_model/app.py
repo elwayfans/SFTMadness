@@ -7,6 +7,7 @@ from jwt import algorithms
 import boto3
 import jwt
 from psycopg2.extras import RealDictCursor
+import tiktoken
 from google import genai
 
 def cors_response(status_code, body, content_type="application/json"):
