@@ -19,6 +19,11 @@ export const CustomsManager = () => {
     friendliness: 50,
     formality: 50,
     accent: '',
+    verbosity: 50,
+    humor: 50,
+    technicalLevel: 50,
+    preferredGreeting: '',
+    signatureClosing: '',
     instructions: ''
   });
 
@@ -41,6 +46,11 @@ export const CustomsManager = () => {
           friendliness: result.friendliness || 50,
           formality: result.formality || 50,
           accent: result.accent || '',
+          verbosity: result.verbosity || 50,
+          humor: result.humor || 50,
+          technicalLevel: result.technicalLevel || 50,
+          preferredGreeting: result.preferredGreeting || '',
+          signatureClosing: result.signatureClosing || '',
           instructions: result.instructions || ''
         });
         setIsEditing(true);
@@ -161,6 +171,11 @@ export const CustomsManager = () => {
       friendliness: 50,
       formality: 50,
       accent: '',
+      verbosity: 50,
+      humor: 50,
+      technicalLevel: 50,
+      preferredGreeting: '',
+      signatureClosing: '',
       instructions: ''
     });
   };
@@ -219,6 +234,7 @@ export const CustomsManager = () => {
         </div>
       </div>
 
+      {/* Form */}
       <form onSubmit={isEditing ? updateCustoms : createCustoms} className="space-y-6">
         <div>
           <label className="block text-gray-700 mb-2 font-medium">Model Name <span className="text-red-500">*</span></label>
@@ -233,6 +249,7 @@ export const CustomsManager = () => {
           />
         </div>
 
+        {/* Model Logo URL */}
         <div>
           <label className="block text-gray-700 mb-2 font-medium">Model Logo URL</label>
           <input
@@ -246,6 +263,7 @@ export const CustomsManager = () => {
           <p className="text-xs text-gray-500 mt-1">Enter a URL to an image that represents your model</p>
         </div>
 
+        {/* Introduction */}
         <div>
           <label className="block text-gray-700 mb-2 font-medium">Introduction</label>
           <textarea
@@ -258,6 +276,7 @@ export const CustomsManager = () => {
           ></textarea>
         </div>
 
+        {/* Friendliness slider */}
         <div>
           <label className="block text-gray-700 mb-2 font-medium">
             Friendliness: {customsForm.friendliness}%
@@ -278,6 +297,7 @@ export const CustomsManager = () => {
           </div>
         </div>
 
+        {/* Formality slider */}
         <div>
           <label className="block text-gray-700 mb-2 font-medium">
             Formality: {customsForm.formality}%
@@ -297,6 +317,7 @@ export const CustomsManager = () => {
           </div>
         </div>
 
+        {/* Accent/Dialect */}
         <div>
           <label className="block text-gray-700 mb-2 font-medium">Accent/Dialect</label>
           <select
@@ -314,6 +335,93 @@ export const CustomsManager = () => {
           </select>
         </div>
 
+        {/* Verbosity slider */}
+        <div>
+          <label className="block text-gray-700 mb-2 font-medium">
+            Verbosity: {customsForm.verbosity}%
+          </label>
+          <input
+            type="range"
+            name="verbosity"
+            min="0"
+            max="100"
+            value={customsForm.verbosity}
+            onChange={handleChange}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-gray-500 px-1">
+            <span>Concise</span>
+            <span>Detailed</span>
+          </div>
+        </div>
+
+        {/* Humor slider */}
+        <div>
+          <label className="block text-gray-700 mb-2 font-medium">
+            Humor: {customsForm.humor}%
+          </label>
+          <input
+            type="range"
+            name="humor"
+            min="0"
+            max="100"
+            value={customsForm.humor}
+            onChange={handleChange}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-gray-500 px-1">
+            <span>Serious</span>
+            <span>Humorous</span>
+          </div>
+        </div>
+
+        {/* Technical Level slider */}
+        <div>
+          <label className="block text-gray-700 mb-2 font-medium">
+            Technical Level: {customsForm.technicalLevel}%
+          </label>
+          <input
+            type="range"
+            name="technicalLevel"
+            min="0"
+            max="100"
+            value={customsForm.technicalLevel}
+            onChange={handleChange}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-gray-500 px-1">
+            <span>Simplified</span>
+            <span>Technical</span>
+          </div>
+        </div>
+
+        {/* Preferred Greeting */}
+        <div>
+          <label className="block text-gray-700 mb-2 font-medium">Preferred Greeting</label>
+          <textarea
+            name="preferredGreeting"
+            value={customsForm.preferredGreeting}
+            onChange={handleChange}
+            rows="2"
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            placeholder="How the AI should greet users (e.g., 'Hello! How can I assist you today?')"
+          ></textarea>
+        </div>
+
+        {/* Signature Closing */}
+        <div>
+          <label className="block text-gray-700 mb-2 font-medium">Signature Closing</label>
+          <textarea
+            name="signatureClosing"
+            value={customsForm.signatureClosing}
+            onChange={handleChange}
+            rows="2"
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            placeholder="How the AI should end its responses (e.g., 'Best regards, Your Assistant')"
+          ></textarea>
+        </div>
+
+        {/* Special Instructions */}
         <div>
           <label className="block text-gray-700 mb-2 font-medium">Special Instructions</label>
           <textarea
@@ -410,6 +518,53 @@ export const CustomsManager = () => {
               <div className="col-span-1 md:col-span-2">
                 <b className="">Introduction:</b>
                 <p className="text-md bg-white p-2 rounded border mt-1">{customs.introduction}</p>
+              </div>
+            )}
+
+            <div>
+              <p className="text-sm font-medium text-gray-600">Verbosity:</p>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full" 
+                  style={{ width: `${customs.verbosity}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-right mt-1">{customs.verbosity}%</p>
+            </div>
+                      
+            <div>
+              <p className="text-sm font-medium text-gray-600">Humor:</p>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full" 
+                  style={{ width: `${customs.humor}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-right mt-1">{customs.humor}%</p>
+            </div>
+                      
+            <div>
+              <p className="text-sm font-medium text-gray-600">Technical Level:</p>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full" 
+                  style={{ width: `${customs.technicalLevel}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-right mt-1">{customs.technicalLevel}%</p>
+            </div>
+                      
+            {customs.preferredGreeting && (
+              <div className="col-span-1 md:col-span-2">
+                <p className="text-sm font-medium text-gray-600">Preferred Greeting:</p>
+                <p className="text-md bg-white p-2 rounded border mt-1">{customs.preferredGreeting}</p>
+              </div>
+            )}
+            
+            {customs.signatureClosing && (
+              <div className="col-span-1 md:col-span-2">
+                <p className="text-sm font-medium text-gray-600">Signature Closing:</p>
+                <p className="text-md bg-white p-2 rounded border mt-1 whitespace-pre-line">{customs.signatureClosing}</p>
               </div>
             )}
             

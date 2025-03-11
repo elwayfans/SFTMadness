@@ -1,0 +1,14 @@
+{
+    "Parameters": {
+        "PublicSubnetIds": [
+            "subnet-063f8345eae6ee1fb",
+            "subnet-0080e532897fb818c",
+            "subnet-07bd535080d84df96"
+        ],
+        "PrivateSubnetIds": [
+            "subnet-0769680591b9ab0bd",
+            "subnet-03b6b6e8ef85ce4a1",
+            "subnet-02ea3cc8e531c03cd"
+        ]
+    }
+}
