@@ -151,11 +151,6 @@ def verify_token(token):
 def setCustoms(event, context):
     conn = None
     try:
-        # Get user ID from path parameters
-        # user_id = event['pathParameters'].get('userId')
-        # if not user_id:
-        #     return cors_response(400, "User ID is required")
-
         # Parse request body
         try:
             body = json.loads(event.get('body', {}))
@@ -183,6 +178,11 @@ def setCustoms(event, context):
         friendliness = body.get('friendliness')
         formality = body.get('formality')
         accent = body.get('accent')
+        verbosity = body.get('verbosity')
+        humor = body.get('humor')
+        technicalLevel = body.get('technicalLevel')
+        preferredGreeting = body.get('preferredGreeting')
+        signatureClosing = body.get('signatureClosing')
         instructions = body.get('instructions')
 
         # Validate required fields
@@ -194,6 +194,12 @@ def setCustoms(event, context):
             return cors_response(400, "Friendliness must be between 0 and 100")
         if formality is not None and not (0 <= formality <= 100):
             return cors_response(400, "Formality must be between 0 and 100")
+        if verbosity is not None and not (0 <= verbosity <= 100):
+            return cors_response(400, "Verbosity must be between 0 and 100")
+        if humor is not None and not (0 <= humor <= 100):
+            return cors_response(400, "Humor must be between 0 and 100")
+        if technicalLevel is not None and not (0 <= technicalLevel <= 100):
+            return cors_response(400, "Technical level must be between 0 and 100")
 
         # Check if customs already exist for this user
         cur.execute(
@@ -209,14 +215,16 @@ def setCustoms(event, context):
         insert_query = """
             INSERT INTO customs (
                 userId, modelName, modelLogo, introduction,
-                friendliness, formality, accent, instructions
+                friendliness, formality, accent, verbosity, humor, 
+                technicalLevel, preferredGreeting, signatureClosing, instructions
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
         """
         cur.execute(insert_query, (
             user_id, model_name, model_logo, introduction,
-            friendliness, formality, accent, instructions
+            friendliness, formality, accent, verbosity, humor,
+            technicalLevel, preferredGreeting, signatureClosing, instructions
         ))
         new_customs = cur.fetchone()
         
@@ -235,11 +243,6 @@ def setCustoms(event, context):
 def getCustoms(event, context):
     conn = None
     try:
-    #     # Get user ID from path parameters
-    #     user_id = event['pathParameters'].get('userId')
-    #     if not user_id:
-    #         return cors_response(400, "User ID is required")
-
         # Get requester's ID from token for authorization
         auth_header = event.get('headers', {}).get('Authorization')
         token = auth_header.split(' ')[-1]
@@ -279,11 +282,6 @@ def getCustoms(event, context):
 def updateCustoms(event, context):
     conn = None
     try:
-        # Get user ID from path parameters
-        # user_id = event['pathParameters'].get('userId')
-        # if not user_id:
-        #     return cors_response(400, "User ID is required")
-
         # Parse request body
         try:
             body = json.loads(event.get('body', {}))
@@ -304,10 +302,6 @@ def updateCustoms(event, context):
             return cors_response(404, "User not found")
         user_id = db_user['id']
 
-        # # Verify authorization
-        # if str(requester_id) != str(user_id):
-        #     return cors_response(403, "Unauthorized to update customs for this user")
-
         # Extract updateable fields
         updateable_fields = {
             'modelName': body.get('modelName'),
@@ -316,6 +310,11 @@ def updateCustoms(event, context):
             'friendliness': body.get('friendliness'),
             'formality': body.get('formality'),
             'accent': body.get('accent'),
+            'verbosity': body.get('verbosity'),
+            'humor': body.get('humor'),
+            'technicalLevel': body.get('technicalLevel'),
+            'preferredGreeting': body.get('preferredGreeting'),
+            'signatureClosing': body.get('signatureClosing'),
             'instructions': body.get('instructions')
         }
 
@@ -330,6 +329,12 @@ def updateCustoms(event, context):
             return cors_response(400, "Friendliness must be between 0 and 100")
         if 'formality' in update_fields and not (0 <= update_fields['formality'] <= 100):
             return cors_response(400, "Formality must be between 0 and 100")
+        if 'verbosity' in update_fields and not (0 <= update_fields['verbosity'] <= 100):
+            return cors_response(400, "Verbosity must be between 0 and 100")
+        if 'humor' in update_fields and not (0 <= update_fields['humor'] <= 100):
+            return cors_response(400, "Humor must be between 0 and 100")
+        if 'technicalLevel' in update_fields and not (0 <= update_fields['technicalLevel'] <= 100):
+            return cors_response(400, "Technical level must be between 0 and 100")
 
         # Verify customs exist
         cur.execute(
@@ -368,11 +373,6 @@ def updateCustoms(event, context):
 def deleteCustoms(event, context):
     conn = None
     try:
-        # # Get user ID from path parameters
-        # user_id = event['pathParameters'].get('userId')
-        # if not user_id:
-        #     return cors_response(400, "User ID is required")
-
         # Get requester's ID from token for authorization
         auth_header = event.get('headers', {}).get('Authorization')
         token = auth_header.split(' ')[-1]
@@ -386,10 +386,6 @@ def deleteCustoms(event, context):
         if not db_user:
             return cors_response(404, "User not found")
         user_id = db_user['id']
-
-        # # Verify authorization
-        # if str(requester_id) != str(user_id):
-        #     return cors_response(403, "Unauthorized to delete customs for this user")
 
         # Delete customs
         delete_query = """
