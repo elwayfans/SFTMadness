@@ -22,7 +22,7 @@ export const ScrapedFileManagement = () => {
   const [fileContent, setFileContent] = useState(null);
   const [contentType, setContentType] = useState('');
   const [retrievedFile, setRetrievedFile] = useState(null);
-  const [isBase64, setIsBase64] = useState(false);
+  const [setIsBase64] = useState(false); //_isBase64
   
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
