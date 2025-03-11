@@ -590,14 +590,14 @@ export const Calender = () => {
                       </span>
                     </div>
                     
-                    <p className="text-sm text-gray-600 mt-1">Type: {event.type}</p>
+                    <p className="">Type: {event.type}</p>
                     
                     <div className="mt-2 text-sm">
-                      <p className="text-gray-600">
+                      <p className="">
                         <span className="font-medium">Contact:</span> {event.contactId}
                         {event.contact && ` (${event.contact.email})`}
                       </p>
-                      <p className="text-gray-600">
+                      <p className="">
                         <span className="font-medium">Scheduled:</span> {formatDateTime(event.scheduledDate)}
                       </p>
                       {Array.isArray(event.attendees) && event.attendees.length > 0 && (

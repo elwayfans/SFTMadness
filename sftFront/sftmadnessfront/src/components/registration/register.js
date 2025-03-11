@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { userService } from "../../services/api/userService";
 import { ConfirmSignUp } from "./confirmRegistration";
+import { Button } from "@mui/material";
 
 //form for registering a new user
 export const RegisterForm = ({ onSuccess }) => {
@@ -163,14 +164,15 @@ export const RegisterForm = ({ onSuccess }) => {
             />
           </div>
   
-          <button
+          <Button
             type="submit"
             disabled={loading}
             className={`w-full py-2 px-4 rounded text-white font-semibold
               ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+              variant="contained"
           >
             {loading ? 'Registering...' : 'Register'}
-          </button>
+          </Button>
         </form>
       </div>
     );

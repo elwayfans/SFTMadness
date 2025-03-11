@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { customsService } from '../../services/api/customsService';
+import { Button } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Slider from '@mui/material/Slider';
+import Box from '@mui/material/Box';
 
 //customs manager component
 export const CustomsManager = () => {
@@ -163,7 +167,7 @@ export const CustomsManager = () => {
 
   //customs form
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">AI Model Customization</h2>
 
       {error && (
@@ -183,29 +187,34 @@ export const CustomsManager = () => {
           <h3 className="text-lg font-semibold">
             {isEditing ? 'Update Your AI Model Settings' : 'Create New AI Model Settings'}
           </h3>
-          <p className="text-sm text-gray-600">
+          <b className="">
             Customize how your AI model appears and behaves
-          </p>
+          </b>
         </div>
         <div className="flex space-x-2">
-          <button
+          <Button
+          size='small'
+           variant='contained'
             type="button"
             onClick={fetchCustoms}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded"
             disabled={loading}
           >
             {loading ? 'Loading...' : 'Refresh'}
-          </button>
+          </Button>
           
           {isEditing && (
-            <button
+            <Button
               type="button"
+              variant='contained'
+              size='small'
+              color='error'
               onClick={deleteCustoms}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded"
               disabled={loading}
             >
-              {loading ? 'Loading...' : 'Delete'}
-            </button>
+              {loading ? 'Loading...' : 'Delete'} <DeleteIcon/>
+            </Button>
           )}
         </div>
       </div>
@@ -253,15 +262,16 @@ export const CustomsManager = () => {
           <label className="block text-gray-700 mb-2 font-medium">
             Friendliness: {customsForm.friendliness}%
           </label>
-          <input
+          <Box width={300}>
+          <Slider
             type="range"
             name="friendliness"
-            min="0"
-            max="100"
+            
             value={customsForm.friendliness}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
+          </Box>
           <div className="flex justify-between text-xs text-gray-500 px-1">
             <span>Formal</span>
             <span>Friendly</span>
@@ -272,15 +282,15 @@ export const CustomsManager = () => {
           <label className="block text-gray-700 mb-2 font-medium">
             Formality: {customsForm.formality}%
           </label>
-          <input
+          <Box width={300}>
+          <Slider
             type="range"
             name="formality"
-            min="0"
-            max="100"
             value={customsForm.formality}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
+          </Box>
           <div className="flex justify-between text-xs text-gray-500 px-1">
             <span>Casual</span>
             <span>Professional</span>
@@ -317,22 +327,27 @@ export const CustomsManager = () => {
         </div>
 
         <div className="flex justify-between pt-4">
-          <button
+          <Button
+          variant='contained'
+          size='small'
             type="button"
             onClick={resetForm}
             className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded text-gray-800 font-semibold"
           >
             Reset Form
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="submit"
+            variant='contained'
+            size='small'
+            color='success'
             disabled={loading}
             className={`px-6 py-2 rounded text-white font-semibold
               ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
             {loading ? 'Processing...' : isEditing ? 'Update Customs' : 'Create Customs'}
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -341,7 +356,7 @@ export const CustomsManager = () => {
           <h3 className="text-lg font-semibold mb-4">Current Settings</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-600">Model Name:</p>
+              <b className="">Model Name:</b>
               <p className="text-md">{customs.modelName}</p>
             </div>
             
@@ -363,7 +378,7 @@ export const CustomsManager = () => {
             )}
             
             <div>
-              <p className="text-sm font-medium text-gray-600">Friendliness:</p>
+              <b className="">Friendliness:</b>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
                   className="bg-blue-600 h-2.5 rounded-full" 
@@ -374,10 +389,10 @@ export const CustomsManager = () => {
             </div>
             
             <div>
-              <p className="text-sm font-medium text-gray-600">Formality:</p>
+              <b className="">Formality:</b>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
-                  className="bg-blue-600 h-2.5 rounded-full" 
+                  className="bg-blue-600 h-2.5 rounded-ful" 
                   style={{ width: `${customs.formality}%` }}
                 ></div>
               </div>
@@ -386,21 +401,21 @@ export const CustomsManager = () => {
             
             {customs.accent && (
               <div>
-                <p className="text-sm font-medium text-gray-600">Accent:</p>
+                <b className="">Accent:</b>
                 <p className="text-md capitalize">{customs.accent}</p>
               </div>
             )}
 
             {customs.introduction && (
               <div className="col-span-1 md:col-span-2">
-                <p className="text-sm font-medium text-gray-600">Introduction:</p>
+                <b className="">Introduction:</b>
                 <p className="text-md bg-white p-2 rounded border mt-1">{customs.introduction}</p>
               </div>
             )}
             
             {customs.instructions && (
               <div className="col-span-1 md:col-span-2">
-                <p className="text-sm font-medium text-gray-600">Special Instructions:</p>
+                <b className="">Special Instructions:</b>
                 <p className="text-md bg-white p-2 rounded border mt-1 whitespace-pre-line">{customs.instructions}</p>
               </div>
             )}

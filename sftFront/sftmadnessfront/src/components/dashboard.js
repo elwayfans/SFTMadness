@@ -21,6 +21,9 @@ import { EmailForm } from './email/emailForm';
 import { CustomsManager } from './customs/customForm';
 
 import { ConversationLogs } from './conversationLogs/conversationLogs';
+import { Button, ButtonGroup } from '@mui/material';
+
+import './adminDashboard.css';
 
 //customer dashboard
 export const Dashboard = ({ onSignOut }) => {
@@ -172,11 +175,11 @@ export const Dashboard = ({ onSignOut }) => {
   const displayName = user?.username || user?.email || 'User';
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-blue-600">
+            <h1 className="header">
               Welcome, {displayName}
             </h1>
             {/* Profile Tab */}
@@ -193,10 +196,12 @@ export const Dashboard = ({ onSignOut }) => {
               {error}
             </div>
           )}
-
-          <div className="border-b border-gray-200 mb-6">
-            <nav className="flex flex-wrap space-x-4">
-              <button
+ 
+          <div className="">
+            <nav className="">
+              <ButtonGroup color='warning'  className='BntGroup1' size='small'>
+              <Button
+              variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'profile'
                     ? 'border-blue-500 text-blue-600'
@@ -205,10 +210,11 @@ export const Dashboard = ({ onSignOut }) => {
                 onClick={() => setActiveTab('profile')}
               >
                 Profile
-              </button>
+              </Button>
 
               {/* Password Reset Tab */}
-              <button
+              <Button
+              variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'password'
                     ? 'border-blue-500 text-blue-600'
@@ -217,8 +223,9 @@ export const Dashboard = ({ onSignOut }) => {
                 onClick={() => setActiveTab('password')}
               >
                 Reset Password
-              </button>
-              <button
+              </Button>
+              <Button
+              variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'delete'
                     ? 'border-blue-500 text-blue-600'
@@ -227,10 +234,11 @@ export const Dashboard = ({ onSignOut }) => {
                 onClick={() => setActiveTab('delete')}
               >
                 Delete Account
-              </button>
+              </Button>
               
               {/* File Management Tab */}
-              <button
+              <Button
+              variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'files'
                     ? 'border-blue-500 text-blue-600'
@@ -239,10 +247,11 @@ export const Dashboard = ({ onSignOut }) => {
                 onClick={() => setActiveTab('files')}
               >
                 Files
-              </button>
+              </Button>
 
               {/* Scraped File Management Tab */}
-              <button
+              <Button
+              variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'scrapedFiles'
                     ? 'border-blue-500 text-blue-600'
@@ -251,10 +260,11 @@ export const Dashboard = ({ onSignOut }) => {
                 onClick={() => setActiveTab('scrapedFiles')}
               >
                 Scraped Files
-              </button>
+              </Button>
               
               {/* School Contact Tab */}
-              <button
+              <Button
+              variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'create-contact'
                     ? 'border-blue-500 text-blue-600'
@@ -266,8 +276,9 @@ export const Dashboard = ({ onSignOut }) => {
                 }}
               >
                 Create Contact
-              </button>
-              <button
+              </Button>
+              <Button
+              variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'view-contact'
                     ? 'border-blue-500 text-blue-600'
@@ -279,10 +290,11 @@ export const Dashboard = ({ onSignOut }) => {
                 }}
               >
                 View Contact
-              </button>
+              </Button>
 
               {/* Calender Tab */}
-              <button
+              <Button
+              variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'events'
                     ? 'border-blue-500 text-blue-600'
@@ -291,10 +303,11 @@ export const Dashboard = ({ onSignOut }) => {
                 onClick={() => setActiveTab('events')}
               >
                 Events
-              </button>
+              </Button>
               
               {/* Email Tab */}
-              <button
+              <Button
+              variant='contained'
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'email'
                   ? 'border-blue-500 text-blue-600'
@@ -303,10 +316,11 @@ export const Dashboard = ({ onSignOut }) => {
               onClick={() => setActiveTab('email')}
             >
               Email
-            </button>
+            </Button>
 
             {/* Customs Tab */}
-            <button
+            <Button
+            variant='contained'
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'customs'
                 ? 'border-blue-500 text-blue-600'
@@ -315,19 +329,21 @@ export const Dashboard = ({ onSignOut }) => {
             onClick={() => setActiveTab('customs')}
             >
               AI Settings
-            </button>
+            </Button>
 
             {/* Conversation Logs Tab */}
-            <button
+            <Button
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'logs'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
+              variant='contained'
               onClick={() => setActiveTab('logs')}
             >
               Conversation Logs
-            </button>
+            </Button>
+            </ButtonGroup>
             </nav>
           </div>
 

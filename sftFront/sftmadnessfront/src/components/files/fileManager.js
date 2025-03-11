@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import fileService from '../../services/api/filesService';
+import { Button } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 //file management component
 export const FileManagement = () => {
@@ -144,7 +146,7 @@ export const FileManagement = () => {
 
   //file management form
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">File Management</h2>
 
       {error && (
@@ -197,14 +199,17 @@ export const FileManagement = () => {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={uploading || !selectedFile}
             className={`w-full py-2 px-4 rounded text-white font-semibold
               ${uploading || !selectedFile ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+              variant='contained'
+              color='success'
+              size='small'
           >
             {uploading ? 'Uploading...' : 'Upload File'}
-          </button>
+          </Button>
         </form>
       </div>
 
@@ -224,23 +229,29 @@ export const FileManagement = () => {
           </div>
 
           <div className="flex space-x-2">
-            <button
+            <Button
+              color='secondary'
+              variant='contained'
+              size='small'
               onClick={handleDownload}
               disabled={downloading || !fileId.trim()}
               className={`flex-1 py-2 px-4 rounded text-white font-semibold
                 ${downloading || !fileId.trim() ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
             >
               {downloading ? 'Downloading...' : 'Download'}
-            </button>
+            </Button>
             
-            <button
+            <Button
               onClick={handleDelete}
+              variant='contained'
+              size='small'
+              color='error'
               disabled={deleting || !fileId.trim()}
               className={`flex-1 py-2 px-4 rounded text-white font-semibold
                 ${deleting || !fileId.trim() ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'}`}
             >
-              {deleting ? 'Deleting...' : 'Delete'}
-            </button>
+              {deleting ? 'Deleting...' : 'Delete'}<DeleteIcon/>
+            </Button>
           </div>
         </div>
       </div>
