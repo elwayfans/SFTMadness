@@ -337,18 +337,18 @@ export const CustomsManager = () => {
 
         {/* Verbosity slider */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">
+          <label className="">
             Verbosity: {customsForm.verbosity}%
           </label>
-          <input
+          <Box width={300}>
+          <Slider
             type="range"
             name="verbosity"
-            min="0"
-            max="100"
             value={customsForm.verbosity}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
+          </Box>
           <div className="flex justify-between text-xs text-gray-500 px-1">
             <span>Concise</span>
             <span>Detailed</span>
@@ -360,15 +360,15 @@ export const CustomsManager = () => {
           <label className="block text-gray-700 mb-2 font-medium">
             Humor: {customsForm.humor}%
           </label>
-          <input
+          <Box width={300}>
+          <Slider
             type="range"
             name="humor"
-            min="0"
-            max="100"
             value={customsForm.humor}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
+          </Box>
           <div className="flex justify-between text-xs text-gray-500 px-1">
             <span>Serious</span>
             <span>Humorous</span>
@@ -380,16 +380,16 @@ export const CustomsManager = () => {
           <label className="block text-gray-700 mb-2 font-medium">
             Technical Level: {customsForm.technicalLevel}%
           </label>
-          <input
+          <Box width={300}>
+          <Slider
             type="range"
             name="technicalLevel"
-            min="0"
-            max="100"
             value={customsForm.technicalLevel}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
-          <div className="flex justify-between text-xs text-gray-500 px-1">
+          </Box>
+          <div className="">
             <span>Simplified</span>
             <span>Technical</span>
           </div>
