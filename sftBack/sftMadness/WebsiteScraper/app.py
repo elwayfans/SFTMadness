@@ -141,8 +141,6 @@ def verify_token(token):
         raise Exception('Token has expired')
     except jwt.InvalidTokenError:
         raise Exception('Invalid token')
-    
-
 
 ####################
 # Scraper functions
@@ -153,7 +151,7 @@ def handle_scrape(event, context):
     """
     try:
         body = json.loads(event['body'])
-        user_id = body.get('user_id')
+        user_id = body.get('user_Id')
         filename = body.get('filename')
         filetype = body.get('filetype')
 
