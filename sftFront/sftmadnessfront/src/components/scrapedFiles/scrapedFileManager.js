@@ -19,8 +19,8 @@ export const ScrapedFileManagement = () => {
   const [fileContent, setFileContent] = useState(null);
   const [contentType, setContentType] = useState('');
   const [retrievedFile, setRetrievedFile] = useState(null);
-  const [setIsBase64] = useState(false); //_isBase64
-  
+  const [, setIsBase64] = useState(false);
+
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
       const file = e.target.files[0];
@@ -60,7 +60,7 @@ export const ScrapedFileManagement = () => {
     setFileContent(null);
     setContentType('');
     setRetrievedFile(null);
-    // setIsBase64(false);
+    setIsBase64(false);
   };
 
   const handleUpload = async (e) => {
@@ -179,7 +179,7 @@ export const ScrapedFileManagement = () => {
             className="max-w-full h-auto border rounded"
           />
           <button 
-            onClick={() => downloadFile(fileContent, `image${getFileExtension(contentType)}`)}
+            onClick={() => downloadBinaryFile(fileContent, `${retrievedFile.filename || 'image'}${getFileExtension(contentType)}`)}
             className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
             Download Image
@@ -189,45 +189,54 @@ export const ScrapedFileManagement = () => {
     } else if (contentType.includes('application/pdf')) {
       return (
         <div className="mt-4">
-        <h4 className="text-lg font-semibold mb-2">PDF Preview:</h4>
-        <iframe
-          src={`data:${contentType};base64,${fileContent}`}
-          width="100%"
-          height="500px"
-          title="PDF Viewer"
-          className="border rounded"
-        ></iframe>
-        <button 
-          onClick={() => downloadBinaryFile(fileContent, `document${getFileExtension(contentType)}`)}
-          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Download PDF
-        </button>
-      </div>
-    );
+          <h4 className="text-lg font-semibold mb-2">PDF Preview:</h4>
+          <iframe
+            src={`data:${contentType};base64,${fileContent}`}
+            width="100%"
+            height="500px"
+            title="PDF Viewer"
+            className="border rounded"
+          ></iframe>
+          <button 
+            onClick={() => downloadBinaryFile(fileContent, `${retrievedFile.filename || 'document'}${getFileExtension(contentType)}`)}
+            className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Download PDF
+          </button>
+        </div>
+      );
     } else if (contentType.includes('text/') || contentType.includes('application/json')) {
       let decodedText;
-    try {
-      decodedText = atob(fileContent);
-    } catch (error) {
-      console.error('Error decoding text content:', error);
-      decodedText = 'Error decoding text content';
-    }
-
-    return (
-      <div className="mt-4">
-        <h4 className="text-lg font-semibold mb-2">File Content:</h4>
-        <pre className="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96 whitespace-pre-wrap">
-          {decodedText}
-        </pre>
-        <button 
-          onClick={() => downloadBinaryFile(fileContent, `text${getFileExtension(contentType)}`)}
-          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Download Text
-        </button>
-      </div>
-    );
+      try {
+        // Properly decode base64 text and handle UTF-8 encoding
+        const binaryString = atob(fileContent);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // Use TextDecoder to properly decode UTF-8 content
+        const decoder = new TextDecoder('utf-8');
+        decodedText = decoder.decode(bytes);
+      } catch (error) {
+        console.error('Error decoding text content:', error);
+        decodedText = 'Error decoding text content';
+      }
+  
+      return (
+        <div className="mt-4">
+          <h4 className="text-lg font-semibold mb-2">File Content:</h4>
+          <pre className="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96 whitespace-pre-wrap">
+            {decodedText}
+          </pre>
+          <button 
+            onClick={() => downloadTextFile(decodedText, `${retrievedFile.filename || 'text'}${getFileExtension(contentType)}`)}
+            className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Download Text
+          </button>
+        </div>
+      );
     } else {
       return (
         <div className="mt-4">
@@ -237,7 +246,7 @@ export const ScrapedFileManagement = () => {
             <p>Size: {retrievedFile?.fileSize ? formatFileSize(retrievedFile.fileSize) : 'Unknown'}</p>
           </div>
           <button 
-            onClick={() => downloadBinaryFile(fileContent, `file${getFileExtension(contentType)}`)}
+            onClick={() => downloadBinaryFile(fileContent, `${retrievedFile.filename || 'file'}${getFileExtension(contentType)}`)}
             className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
             Download File
@@ -249,7 +258,7 @@ export const ScrapedFileManagement = () => {
   
   // Add these helper functions for proper file downloading
   const downloadTextFile = (content, filename) => {
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -292,44 +301,25 @@ export const ScrapedFileManagement = () => {
     }
   };
   
-  // const downloadBinaryFile = (base64Content, filename) => {
-  //   try {
-  //     //convert base64 to binary
-  //     const byteCharacters = atob(base64Content);
-  //     const byteArrays = [];
-      
-  //     for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-  //       const slice = byteCharacters.slice(offset, offset + 512);
-        
-  //       const byteNumbers = new Array(slice.length);
-  //       for (let i = 0; i < slice.length; i++) {
-  //         byteNumbers[i] = slice.charCodeAt(i);
-  //       }
-        
-  //       const byteArray = new Uint8Array(byteNumbers);
-  //       byteArrays.push(byteArray);
-  //     }
-      
-  //     //create a blob and download
-  //     const blob = new Blob(byteArrays, { type: contentType });
-  //     const url = URL.createObjectURL(blob);
-  //     const a = document.createElement('a');
-  //     a.href = url;
-  //     a.download = filename;
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     URL.revokeObjectURL(url);
-  //     document.body.removeChild(a);
-  //   } catch (error) {
-  //     console.error('Error downloading binary file:', error);
-  //     alert('Error downloading file. Please try again.');
-  //   }
-  // };
-  
   //general download function
   const downloadFile = (content, filename) => {
     if (contentType.includes('text/') || contentType.includes('application/json')) {
-      downloadTextFile(content, filename);
+      // For text files, first decode the base64 properly
+      try {
+        const binaryString = atob(content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const decoder = new TextDecoder('utf-8');
+        const decodedText = decoder.decode(bytes);
+        downloadTextFile(decodedText, filename);
+      } catch (error) {
+        console.error('Error decoding text for download:', error);
+        // Fallback to binary download if decoding fails
+        downloadBinaryFile(content, filename);
+      }
     } else {
       downloadBinaryFile(content, filename);
     }
@@ -495,9 +485,9 @@ return (
     <div className="mt-8 p-4 border rounded-lg">
       {renderFileContent()}
     </div>
-  )}
-</div>
-);
+    )}
+  </div>
+  );
 };
 
 export default ScrapedFileManagement;

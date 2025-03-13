@@ -349,6 +349,7 @@ def uploadFile(event, context):
         if conn:
             conn.close()
             
+# NEEDS TO BE FIXED ################################################################
 def getFile(event, context):
     conn = None
     try:

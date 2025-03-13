@@ -1,31 +1,72 @@
 # sftMadness
+## ALL COMMANDS TO RUN ARE IN 'QUOTES'
 
---sam stack delete describe deploy
-sam validate
-sam build --use-container
-sam deploy  | sam deploy --guided (disable rollback => n)
+- install AWS CLI and AWS Sam:
+https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html - aws install link
+https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html - sam install link
 
-aws cloudformation delete-stack --stack-name sftMadness
-aws cloudformation describe-stacks --stack-name sftMadness --query 'Stacks[0].StackStatus'
-
---if delete fails => find out why
-aws cloudformation describe-stack-events --stack-name sftMadness --query 'StackEvents[?ResourceStatus==`DELETE_FAILED`].[LogicalResourceId,ResourceStatusReason]'
-
---if delete fails => retain security group and delete again
-aws cloudformation delete-stack --stack-name sftMadness --retain-resources LambdaSecurityGroup
-
---remove built dependencies
-rm -rf .aws-sam/build
-
---force remove S3 bucket to allow deletion of stack
-aws s3 rb s3://sftmadness-files-us-east-2-908027415563 --force
-
--download dependencies from requirement.txt to layers folder
-pip3 install -r requirements.txt -t layers/dependencies/python
-
---deploy with admin IAM Role:
+- configure AWS Sam profile to connect to AWS account under the admin profile:
 aws configure --profile admin
-sam deploy --profile admin
+  - this will ask you to procide an access key - this may change if you update the admin role in AWS - you will find the new one in AWS IAM -> users -> admin
+  - current access key: AKIA5G2VGZQF3S4I2SOQ
+  - then will ask for a secret access key - can also update, found in the same place
+  - current secret key: wSEy3vQn6ead0EzyONPgNimigLK9mnw45z/WTKdT
+
+- install any other needed dependencies on your machine, these can all be found in the requirements.txt file (except for tiktoken)
+
+- checks if template.yaml file is valid (reports any issues)
+  - always run this before building or deploying
+'sam validate'
+
+- builds the project, you must have Docker desktop installed and running - this will build an image in Docker
+'sam build --use-container'
+
+- deploys project to API Gateway (should always use admin profile)
+'sam deploy'  | 'sam deploy --guided' (disable rollback => n)
+
+- deploy with admin IAM Role:
+'aws configure --profile admin'
+'sam deploy --profile admin'
+
+- 'sam deploy --guided' - will ask additional questions
+inputs will all be the same as whats presented in the [brackets]: copy and paste these one at a time and enter
+then for the y/n questions, answer Y to the first few, N to disabling rollback, then again copy the [] to enter 'samconfig.toml' as the output dir
+then press enter twice for the last two settings, after this it will start to deploy and you should see a green success message at the end 
+
+- if a stack is unable to update or create (failing or in update_rollback state)
+'aws cloudformation delete-stack --stack-name sftMadness'
+
+- describes status of stack if deleting, updated, or deletion failed, etc
+'aws cloudformation describe-stacks --stack-name sftMadness --query 'Stacks[0].StackStatus''
+
+- better debugging status for stack
+- if delete fails => find out why
+'aws cloudformation describe-stack-events --stack-name sftMadness --query 'StackEvents[?ResourceStatus==`DELETE_FAILED`].[LogicalResourceId,ResourceStatusReason]''
+
+- if delete fails => retain security group and try delete again
+'aws cloudformation delete-stack --stack-name sftMadness --retain-resources LambdaSecurityGroup'
+
+- remove any built dependencies from dependency layer
+- use this if having any trouble with building, this will clear the cache and usually helps solve the issue
+'rm -rf .aws-sam/build'
+
+- force remove S3 bucket to allow deletion of stack
+- if delete fails again, try force removing the S3 bucket
+'aws s3 rb s3://sftmadness-files-us-east-2-908027415563 --force'
+  - this is only an example for one of the S3 buckets, there are two
+  - be sure to grab the exact iD from the S3 buckets in AWS and by getting the Id from the correct bucket you want to delete
+
+- download dependencies from requirement.txt to layers folder
+  - not needed, but this is another way to require dependencies if the build is not working
+  - you will need to make another dir in the project to match this
+'pip3 install -r requirements.txt -t layers/dependencies/python'
+
+
+
+
+
+
+
 
 
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.

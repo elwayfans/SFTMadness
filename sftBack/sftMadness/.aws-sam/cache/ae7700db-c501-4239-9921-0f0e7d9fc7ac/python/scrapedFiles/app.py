@@ -229,6 +229,7 @@ def uploadFile(event, context):
             file_data = None
             filename = None
             filetype = None
+            file_content_type = None  # Added variable to store the file's actual content type
 
             print(f"Found {len(parts)} parts in the multipart request")
             
@@ -252,7 +253,14 @@ def uploadFile(event, context):
                 
                 headers_lower = headers.lower()
                 
+                # Extract the file's content type from its part headers
                 if 'name="file"' in headers_lower or "name='file'" in headers_lower:
+                    # Look for Content-Type in this part's headers
+                    content_type_match = re.search(r'content-type:\s*([\w\/\-\.+]+)', headers_lower)
+                    if content_type_match:
+                        file_content_type = content_type_match.group(1).strip()
+                        print(f"Detected file Content-Type: {file_content_type}")
+                    
                     file_data = content
                     if '--' in file_data:
                         file_data = file_data.split('--')[0]
@@ -265,6 +273,13 @@ def uploadFile(event, context):
                 elif 'name="filename"' in headers_lower or "name='filename'" in headers_lower:
                     filename = content.split('--')[0].strip()
                     print(f"Found filename: {filename}")
+                    # Try to determine content type from filename if not found in headers
+                    if not file_content_type and filename:
+                        import mimetypes
+                        guessed_type = mimetypes.guess_type(filename)[0]
+                        if guessed_type:
+                            file_content_type = guessed_type
+                            print(f"Guessed Content-Type from filename: {file_content_type}")
                 elif 'name="filetype"' in headers_lower or "name='filetype'" in headers_lower:
                     filetype = content.split('--')[0].strip()
                     print(f"Found filetype: {filetype}")
@@ -277,10 +292,21 @@ def uploadFile(event, context):
                 
             if not filename:
                 return cors_response(400, "Filename parameter is required")
-                
-            if not filetype:
-                filetype = "application/octet-stream"  # Default if not provided
-                print(f"Using default filetype: {filetype}")
+            
+            # Use the detected content type from the file part, or the provided filetype,
+            # or fallback to guessing from filename, or use the default as last resort
+            content_type_to_use = file_content_type or filetype
+            
+            if not content_type_to_use:
+                # If we still don't have a content type, try to guess from the filename
+                import mimetypes
+                guessed_type = mimetypes.guess_type(filename)[0]
+                if guessed_type:
+                    content_type_to_use = guessed_type
+                else:
+                    content_type_to_use = "application/octet-stream"  # Default if nothing else works
+            
+            print(f"Using content type for S3: {content_type_to_use}")
 
             # Convert file_data to bytes for S3 upload if it's a string
             if isinstance(file_data, str):
@@ -302,15 +328,24 @@ def uploadFile(event, context):
                 Bucket=BUCKET_NAME,
                 Key=filepath,  # Use the path you defined for S3
                 Body=file_data_bytes,
-                ContentType=filetype
+                ContentType=content_type_to_use  # Use the properly detected content type
             )
+            
+            # Log the S3 response
+            print(f"S3 upload response: {s3_response}")
+            
+            # You can check if the upload was successful
+            if s3_response and 'ResponseMetadata' in s3_response and s3_response['ResponseMetadata']['HTTPStatusCode'] == 200:
+                print(f"File successfully uploaded to S3: {filepath}")
+            else:
+                print(f"Warning: Unexpected S3 response: {s3_response}")
 
             insert_query = """
                 INSERT INTO scrapedFiles (userId, model, filename, filepath, filetype)
                 VALUES (%s, %s, %s, %s, %s)
                 RETURNING id, userId, model, filename, filepath, filetype, uploadDate
             """
-            cur.execute(insert_query, (user_id, model, filename, filepath, filetype))
+            cur.execute(insert_query, (user_id, model, filename, filepath, content_type_to_use))  # Save the correct content type
             file_record = cur.fetchone()
             
             conn.commit()
@@ -331,19 +366,16 @@ def uploadFile(event, context):
         if conn:
             conn.close()
 
+# NEEDS TO BE FIXED ################################################################
 def getFile(event, context):
     conn = None
     try:
-        # Handle OPTIONS request for CORS
-        if event['httpMethod'] == 'OPTIONS':
-            return cors_response(200, "ok")
-            
-        # Get file ID from path parameters
+        # Get the file ID from path parameters
         file_id = event['pathParameters'].get('fileId')
         if not file_id:
             return cors_response(400, "File ID is required")
-
-        # Get user ID from token
+            
+        # Get user information from the token
         auth_header = event.get('headers', {}).get('Authorization')
         token = auth_header.split(' ')[-1]
         token_payload = verify_token(token)
@@ -357,78 +389,92 @@ def getFile(event, context):
             return cors_response(404, "User not found")
         user_id = db_user['id']
 
-        # Get file metadata from database
+        # Make sure to query for files that belong to the requesting user
         cur.execute(
             "SELECT * FROM scrapedFiles WHERE id = %s AND userId = %s",
             (file_id, user_id)
         )
         file_record = cur.fetchone()
-
+        
         if not file_record:
-            return cors_response(404, "File not found or unauthorized access")
-
-        try:
-            # Print filepath to help with debugging
-            print(f"Attempting to retrieve file from S3: {file_record['filepath']}")
+            print(f"File not found in DB: id={file_id}, userId={user_id}")
+            return cors_response(404, "File not found")
             
-            # Get the actual file content from S3
-            response = s3.get_object(
+        filepath = file_record['filepath']
+        content_type = file_record['filetype']  # Get the stored content type
+        
+        print(f"Retrieving file from S3: {filepath}")
+        print(f"Using content type: {content_type}")
+        
+        # Get file from S3
+        try:
+            s3_response = s3.get_object(
                 Bucket=BUCKET_NAME,
-                Key=file_record['filepath']
+                Key=filepath
             )
             
-            s3_content_type = response.get('ContentType', 'application/octet-stream')
-            print(f"db content type: {file_record['filetype']}")
-            content_type = file_record['filetype'] or s3_content_type
-            print(f"Using content type: {content_type}")
+            # Log S3 response for debugging
+            print(f"S3 response metadata: {s3_response['ResponseMetadata']}")
+            print(f"S3 content type: {s3_response.get('ContentType')}")
             
-            file_content = response['Body'].read()
-            print(f"File content length: {len(file_content)} bytes")
+            # Get the file content
+            file_content = s3_response['Body'].read()
+            file_size = len(file_content)
+            print(f"Retrieved file size: {file_size} bytes")
             
-            # Default headers for all responses
-            common_headers = {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE,HEAD',
-                'Content-Disposition': f'attachment; filename="{file_record["filename"]}"'
-            }
+            # Determine if this is a binary file type that should be base64 encoded
+            binary_types = [
+                'image/', 'audio/', 'video/', 'application/pdf', 
+                'application/octet-stream', 'application/zip'
+            ]
             
-            # Use JSON response with base64 encoding for all files for consistency
-            # This ensures API Gateway can handle the response properly
-            encoded_content = base64.b64encode(file_content).decode('utf-8')
+            is_binary = any(content_type.startswith(binary_type) for binary_type in binary_types)
             
-            response_body = {
-                'id': file_record['id'],
-                'filename': file_record['filename'],
-                'filetype': content_type,
-                'content': encoded_content,
-                'size': len(file_content)
-            }
+            # If it's a binary type, return as base64 encoded
+            if is_binary:
+                # Create a base64 encoded response
+                file_content_base64 = base64.b64encode(file_content).decode('utf-8')
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': content_type,
+                        'Content-Disposition': f'inline; filename="{file_record["filename"]}"',
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                        'Access-Control-Allow-Methods': 'GET,OPTIONS'
+                    },
+                    'body': file_content_base64,
+                    'isBase64Encoded': True
+                }
+            else:
+                # For text-based files, don't use base64 encoding
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': content_type,
+                        'Content-Disposition': f'inline; filename="{file_record["filename"]}"',
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                        'Access-Control-Allow-Methods': 'GET,OPTIONS'
+                    },
+                    'body': file_content.decode('utf-8'),
+                    'isBase64Encoded': False
+                }
             
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    **common_headers
-                },
-                'body': json.dumps(response_body, default=str),
-                'isBase64Encoded': False
-            }
-
         except ClientError as e:
             error_code = e.response.get('Error', {}).get('Code', 'Unknown')
             error_message = e.response.get('Error', {}).get('Message', str(e))
             print(f"S3 ClientError: {error_code} - {error_message}")
             return cors_response(500, f"Error retrieving file from S3: {error_code} - {error_message}")
-        except Exception as e:
-            print(f"Unexpected error when retrieving file content: {str(e)}")
-            return cors_response(500, f"Error retrieving file content: {str(e)}")
-
+            
     except Exception as e:
-        print(f"Error in getFile handler: {str(e)}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"Error retrieving file: {str(e)}\n{traceback_str}")
         return cors_response(500, f"Error retrieving file: {str(e)}")
     finally:
-        if conn:
+        if 'conn' in locals() and conn:
             conn.close()
 
 def deleteFile(event, context):

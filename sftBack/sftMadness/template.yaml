@@ -24,7 +24,6 @@ Globals:
         DB_NAME: !Ref DBName
         DB_HOST: !Ref DBHost
         DB_USER: !Ref DBUser
-        # DB_PASSWORD: 'hR8HY:-3RR7mvA.8NOxJ0a*97N9W'
         DB_PASSWORD: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg:SecretString:password}}'
         DB_PORT: !Ref DBPort
 
@@ -122,10 +121,14 @@ Resources:
     Properties:
       StageName: Prod
       # cors configuration
+      BinaryMediaTypes:
+        - '*/*'
+        - 'image/*'
+        - 'application/octet-stream'
       Cors:
         AllowMethods: "'POST, GET, OPTIONS, PUT, DELETE'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Accept,Origin'"
-        AllowOrigin: "'*'" #"'http://localhost:3000'"
+        AllowOrigin: "'*'"
         MaxAge: "'7200'"
         # AllowCredentials: true
       # authorizer configuration

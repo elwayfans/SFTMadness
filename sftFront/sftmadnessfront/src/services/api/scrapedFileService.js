@@ -89,19 +89,30 @@ export const scrapedFileService = {
       });
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error (${response.status}): ${errorText}`);
         throw new Error(`Failed to fetch file metadata: ${response.status}`);
       }
 
       const responseData = await response.json();
 
+      //debugging log
+      console.log('File metadata received:', { 
+        id: responseData.id,
+        filename: responseData.filename,
+        contentType: responseData.contentType,
+        fileSize: responseData.fileSize,
+        contentLength: responseData.fileContent ? responseData.fileContent.length : 0
+      });
+
       return {
         success: true,
         fileId: responseData.id,
-        fileContent: responseData.content,
-        contentType: responseData.filetype,
+        fileContent: responseData.fileContent,
+        contentType: responseData.contentType,
         filename: responseData.filename,
         model: responseData.model,
-        size: responseData.size,
+        size: responseData.fileSize,
       };
 
     } catch (error) {
