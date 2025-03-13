@@ -30,7 +30,6 @@ def cors_response(status_code, body, content_type="application/json"):
     }
 
 def lambda_handler(event, context):
-    print("inside file handler")
     if event['httpMethod'] == 'OPTIONS':
         return cors_response(200, "ok")
     
@@ -131,7 +130,7 @@ def verify_token(token):
             audience=os.environ['COGNITO_CLIENT_ID'],
             options={"verify_exp": True}
         )
-
+    
         if is_token_invalidated(payload):
             raise Exception('Token has been invalidated')
         

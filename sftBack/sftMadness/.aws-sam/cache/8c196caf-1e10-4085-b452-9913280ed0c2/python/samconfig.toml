@@ -1,0 +1,36 @@
+# More information about the configuration file can be found here:
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html
+version = 0.1
+
+[default.global.parameters]
+stack_name = "sftMadness"
+region="us-east-2"
+
+[default.build.parameters]
+cached = true
+parallel = true
+use_container = true
+
+[default.validate.parameters]
+lint = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+s3_prefix = "sftMadness"
+parameter_overrides = "Env=\"dev\" DBName=\"postgres\" DBHost=\"sftdb.cxgciccggthy.us-east-2.rds.amazonaws.com\" DBUser=\"postgres\" DBPort=\"5432\" VpcId=\"vpc-0e7cfddc215e8fab1\" InternetGatewayId=\"igw-01b1c4450f85d1a83\" PublicSubnetIds=\"subnet-063f8345eae6ee1fb,subnet-0080e532897fb818c,subnet-07bd535080d84df96\" PrivateSubnetIds=\"subnet-0769680591b9ab0bd,subnet-03b6b6e8ef85ce4a1,subnet-02ea3cc8e531c03cd\" SESSenderEmail=\"krhodus@student.neumont.edu\" SESDomain=\"sftai.net\" SESRegion=\"us-east-2\" SESConfigurationSet=\"sftMadnessConfigSet\" CreateEmailIdentity=\"false\""
+disable_rollback = false
+image_repositories = []
+
+[default.package.parameters]
+resolve_s3 = true
+
+[default.sync.parameters]
+watch = true
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"

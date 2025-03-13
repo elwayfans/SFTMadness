@@ -96,7 +96,7 @@ def is_token_invalidated(token_payload):
             """, (jti,))
             
             return cur.fetchone()[0]
-
+        
 def verify_token(token):
     # Get the JWT token from the Authorization header
     if not token:
@@ -132,7 +132,7 @@ def verify_token(token):
             audience=os.environ['COGNITO_CLIENT_ID'],
             options={"verify_exp": True}
         )
-
+    
         if is_token_invalidated(payload):
             raise Exception('Token has been invalidated')
         

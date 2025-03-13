@@ -128,7 +128,7 @@ def verify_token(token):
             audience=os.environ['COGNITO_CLIENT_ID'],
             options={"verify_exp": True}
         )
-
+    
         if is_token_invalidated(payload):
             raise Exception('Token has been invalidated')
         
