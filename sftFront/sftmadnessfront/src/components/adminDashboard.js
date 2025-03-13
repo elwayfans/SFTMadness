@@ -44,9 +44,6 @@ import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import './adminDashboard.css';
 
-import { createTheme } from '@mui/material/styles';
-import { ThemeProvider } from 'styled-components';
-
 
 //for drop down options
 const map = new Map();
@@ -261,13 +258,16 @@ export const AdminDashboard = ({ onSignOut }) => {
         <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-blue-600">
+              <h1 className="HeaderAdminDash">
                 Admin Dashboard
               </h1>
               <p className="text-gray-600" >Welcome, {displayName}</p>
             </div>
-            <Button color='secondary'
-              onClick={handleSignOut}              
+            <Button 
+              color='secondary'
+              onClick={handleSignOut}    
+              variant='contained'
+              className='SignOutBtn'          
             >
               Sign out
             </Button>

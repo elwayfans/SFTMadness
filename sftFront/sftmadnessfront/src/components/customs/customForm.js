@@ -4,6 +4,7 @@ import { Button } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Slider from '@mui/material/Slider';
 import Box from '@mui/material/Box';
+import "./customForm.css"
 
 //customs manager component
 export const CustomsManager = () => {
@@ -265,7 +266,9 @@ export const CustomsManager = () => {
 
         {/* Introduction */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">Introduction</label>
+          <div>
+          <b className="block text-gray-700 mb-2 font-medium">Introduction</b>
+          </div>
           <textarea
             name="introduction"
             value={customsForm.introduction}
@@ -276,8 +279,30 @@ export const CustomsManager = () => {
           ></textarea>
         </div>
 
+
+          {/* Accent/Dialect */}
+          <div>
+          <b className="block text-gray-700 mb-2 font-medium">Accent/Dialect: </b>
+          <select
+            name="accent"
+            value={customsForm.accent}
+            onChange={handleChange}
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">No specific accent</option>
+            <option value="american">American English</option>
+            <option value="british">British English</option>
+            <option value="australian">Australian English</option>
+            <option value="canadian">Canadian English</option>
+            <option value="indian">Indian English</option>
+          </select>
+        </div>
+
         {/* Friendliness slider */}
         <div>
+        <div className="flex justify-between text-xs text-gray-500 px-1">
+            <b>Formal/Friendly:</b>
+          </div>
           <label className="block text-gray-700 mb-2 font-medium">
             Friendliness: {customsForm.friendliness}%
           </label>
@@ -291,10 +316,7 @@ export const CustomsManager = () => {
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
           </Box>
-          <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Formal</span>
-            <span>Friendly</span>
-          </div>
+          
         </div>
 
         {/* Formality slider */}
@@ -312,32 +334,19 @@ export const CustomsManager = () => {
           />
           </Box>
           <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Casual</span>
-            <span>Professional</span>
+            
           </div>
         </div>
 
-        {/* Accent/Dialect */}
-        <div>
-          <label className="block text-gray-700 mb-2 font-medium">Accent/Dialect</label>
-          <select
-            name="accent"
-            value={customsForm.accent}
-            onChange={handleChange}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">No specific accent</option>
-            <option value="american">American English</option>
-            <option value="british">British English</option>
-            <option value="australian">Australian English</option>
-            <option value="canadian">Canadian English</option>
-            <option value="indian">Indian English</option>
-          </select>
-        </div>
+      
 
         {/* Verbosity slider */}
         <div>
           <label className="">
+          <div className="flex justify-between text-xs text-gray-500 px-1">
+            <b>Concise/Detailed:</b>
+          
+          </div>
             Verbosity: {customsForm.verbosity}%
           </label>
           <Box width={300}>
@@ -349,14 +358,14 @@ export const CustomsManager = () => {
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
           </Box>
-          <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Concise</span>
-            <span>Detailed</span>
-          </div>
+         
         </div>
 
         {/* Humor slider */}
         <div>
+        <div className="flex justify-between text-xs text-gray-500 px-1">
+            <b>Serious/Humorous: </b>
+          </div>
           <label className="block text-gray-700 mb-2 font-medium">
             Humor: {customsForm.humor}%
           </label>
@@ -369,14 +378,14 @@ export const CustomsManager = () => {
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
           </Box>
-          <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Serious</span>
-            <span>Humorous</span>
-          </div>
+          
         </div>
 
         {/* Technical Level slider */}
         <div>
+        <div className="">
+            <b>Simplified/Technical:</b>
+          </div>
           <label className="block text-gray-700 mb-2 font-medium">
             Technical Level: {customsForm.technicalLevel}%
           </label>
@@ -389,28 +398,28 @@ export const CustomsManager = () => {
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
           </Box>
-          <div className="">
-            <span>Simplified</span>
-            <span>Technical</span>
-          </div>
+         
         </div>
 
         {/* Preferred Greeting */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">Preferred Greeting</label>
+          <b className="">Preferred Greeting: </b>
+          <div>
           <textarea
             name="preferredGreeting"
             value={customsForm.preferredGreeting}
             onChange={handleChange}
             rows="2"
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            className="Preferred_Txt"
             placeholder="How the AI should greet users (e.g., 'Hello! How can I assist you today?')"
           ></textarea>
+          </div>
         </div>
 
         {/* Signature Closing */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">Signature Closing</label>
+          <b className="block text-gray-700 mb-2 font-medium">Signature Closing: </b>
+          <div>
           <textarea
             name="signatureClosing"
             value={customsForm.signatureClosing}
@@ -419,11 +428,13 @@ export const CustomsManager = () => {
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             placeholder="How the AI should end its responses (e.g., 'Best regards, Your Assistant')"
           ></textarea>
+          </div>
         </div>
 
         {/* Special Instructions */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">Special Instructions</label>
+          <b className="block text-gray-700 mb-2 font-medium">Special Instructions: </b>
+          <div>
           <textarea
             name="instructions"
             value={customsForm.instructions}
@@ -432,6 +443,7 @@ export const CustomsManager = () => {
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             placeholder="Any special instructions for how the AI should behave or respond"
           ></textarea>
+          </div>
         </div>
 
         <div className="flex justify-between pt-4">

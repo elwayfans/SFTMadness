@@ -179,27 +179,29 @@ export const Dashboard = ({ onSignOut }) => {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="header">
+            <h1 className="text-blue-600">
               Welcome, {displayName}
             </h1>
             {/* Profile Tab */}
-            <button
+            <Button
+            variant='contained'
+            color='secondary'
               onClick={handleSignOut}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              className="SignOutBtn"
             >
               Sign out
-            </button>
+            </Button>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+            <div className="">
               {error}
             </div>
           )}
  
           <div className="">
             <nav className="">
-              <ButtonGroup color='warning'  className='BntGroup1' size='small'>
+              <ButtonGroup color='warning'  className='BtnGroup3' size='small'>
               <Button
               variant='contained'
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
