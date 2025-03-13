@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { customsService } from '../../services/api/customsService';
+import { Button } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Slider from '@mui/material/Slider';
+import Box from '@mui/material/Box';
+import "./customForm.css"
 
 //customs manager component
 export const CustomsManager = () => {
@@ -178,7 +183,7 @@ export const CustomsManager = () => {
 
   //customs form
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">AI Model Customization</h2>
 
       {error && (
@@ -198,29 +203,34 @@ export const CustomsManager = () => {
           <h3 className="text-lg font-semibold">
             {isEditing ? 'Update Your AI Model Settings' : 'Create New AI Model Settings'}
           </h3>
-          <p className="text-sm text-gray-600">
+          <b className="">
             Customize how your AI model appears and behaves
-          </p>
+          </b>
         </div>
         <div className="flex space-x-2">
-          <button
+          <Button
+          size='small'
+           variant='contained'
             type="button"
             onClick={fetchCustoms}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded"
             disabled={loading}
           >
             {loading ? 'Loading...' : 'Refresh'}
-          </button>
+          </Button>
           
           {isEditing && (
-            <button
+            <Button
               type="button"
+              variant='contained'
+              size='small'
+              color='error'
               onClick={deleteCustoms}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded"
               disabled={loading}
             >
-              {loading ? 'Loading...' : 'Delete'}
-            </button>
+              {loading ? 'Loading...' : 'Delete'} <DeleteIcon/>
+            </Button>
           )}
         </div>
       </div>
@@ -256,7 +266,9 @@ export const CustomsManager = () => {
 
         {/* Introduction */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">Introduction</label>
+          <div>
+          <b className="block text-gray-700 mb-2 font-medium">Introduction</b>
+          </div>
           <textarea
             name="introduction"
             value={customsForm.introduction}
@@ -267,49 +279,10 @@ export const CustomsManager = () => {
           ></textarea>
         </div>
 
-        {/* Friendliness slider */}
-        <div>
-          <label className="block text-gray-700 mb-2 font-medium">
-            Friendliness: {customsForm.friendliness}%
-          </label>
-          <input
-            type="range"
-            name="friendliness"
-            min="0"
-            max="100"
-            value={customsForm.friendliness}
-            onChange={handleChange}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          />
-          <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Formal</span>
-            <span>Friendly</span>
-          </div>
-        </div>
 
-        {/* Formality slider */}
-        <div>
-          <label className="block text-gray-700 mb-2 font-medium">
-            Formality: {customsForm.formality}%
-          </label>
-          <input
-            type="range"
-            name="formality"
-            min="0"
-            max="100"
-            value={customsForm.formality}
-            onChange={handleChange}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          />
-          <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Casual</span>
-            <span>Professional</span>
-          </div>
-        </div>
-
-        {/* Accent/Dialect */}
-        <div>
-          <label className="block text-gray-700 mb-2 font-medium">Accent/Dialect</label>
+          {/* Accent/Dialect */}
+          <div>
+          <b className="block text-gray-700 mb-2 font-medium">Accent/Dialect: </b>
           <select
             name="accent"
             value={customsForm.accent}
@@ -325,82 +298,128 @@ export const CustomsManager = () => {
           </select>
         </div>
 
-        {/* Verbosity slider */}
+        {/* Friendliness slider */}
+        <div>
+        <div className="flex justify-between text-xs text-gray-500 px-1">
+            <b>Formal/Friendly:</b>
+          </div>
+          <label className="block text-gray-700 mb-2 font-medium">
+            Friendliness: {customsForm.friendliness}%
+          </label>
+          <Box width={300}>
+          <Slider
+            type="range"
+            name="friendliness"
+            
+            value={customsForm.friendliness}
+            onChange={handleChange}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          </Box>
+          
+        </div>
+
+        {/* Formality slider */}
         <div>
           <label className="block text-gray-700 mb-2 font-medium">
+            Formality: {customsForm.formality}%
+          </label>
+          <Box width={300}>
+          <Slider
+            type="range"
+            name="formality"
+            value={customsForm.formality}
+            onChange={handleChange}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          </Box>
+          <div className="flex justify-between text-xs text-gray-500 px-1">
+            
+          </div>
+        </div>
+
+      
+
+        {/* Verbosity slider */}
+        <div>
+          <label className="">
+          <div className="flex justify-between text-xs text-gray-500 px-1">
+            <b>Concise/Detailed:</b>
+          
+          </div>
             Verbosity: {customsForm.verbosity}%
           </label>
-          <input
+          <Box width={300}>
+          <Slider
             type="range"
             name="verbosity"
-            min="0"
-            max="100"
             value={customsForm.verbosity}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
-          <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Concise</span>
-            <span>Detailed</span>
-          </div>
+          </Box>
+         
         </div>
 
         {/* Humor slider */}
         <div>
+        <div className="flex justify-between text-xs text-gray-500 px-1">
+            <b>Serious/Humorous: </b>
+          </div>
           <label className="block text-gray-700 mb-2 font-medium">
             Humor: {customsForm.humor}%
           </label>
-          <input
+          <Box width={300}>
+          <Slider
             type="range"
             name="humor"
-            min="0"
-            max="100"
             value={customsForm.humor}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
-          <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Serious</span>
-            <span>Humorous</span>
-          </div>
+          </Box>
+          
         </div>
 
         {/* Technical Level slider */}
         <div>
+        <div className="">
+            <b>Simplified/Technical:</b>
+          </div>
           <label className="block text-gray-700 mb-2 font-medium">
             Technical Level: {customsForm.technicalLevel}%
           </label>
-          <input
+          <Box width={300}>
+          <Slider
             type="range"
             name="technicalLevel"
-            min="0"
-            max="100"
             value={customsForm.technicalLevel}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
-          <div className="flex justify-between text-xs text-gray-500 px-1">
-            <span>Simplified</span>
-            <span>Technical</span>
-          </div>
+          </Box>
+         
         </div>
 
         {/* Preferred Greeting */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">Preferred Greeting</label>
+          <b className="">Preferred Greeting: </b>
+          <div>
           <textarea
             name="preferredGreeting"
             value={customsForm.preferredGreeting}
             onChange={handleChange}
             rows="2"
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            className="Preferred_Txt"
             placeholder="How the AI should greet users (e.g., 'Hello! How can I assist you today?')"
           ></textarea>
+          </div>
         </div>
 
         {/* Signature Closing */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">Signature Closing</label>
+          <b className="block text-gray-700 mb-2 font-medium">Signature Closing: </b>
+          <div>
           <textarea
             name="signatureClosing"
             value={customsForm.signatureClosing}
@@ -409,11 +428,13 @@ export const CustomsManager = () => {
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             placeholder="How the AI should end its responses (e.g., 'Best regards, Your Assistant')"
           ></textarea>
+          </div>
         </div>
 
         {/* Special Instructions */}
         <div>
-          <label className="block text-gray-700 mb-2 font-medium">Special Instructions</label>
+          <b className="block text-gray-700 mb-2 font-medium">Special Instructions: </b>
+          <div>
           <textarea
             name="instructions"
             value={customsForm.instructions}
@@ -422,25 +443,31 @@ export const CustomsManager = () => {
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             placeholder="Any special instructions for how the AI should behave or respond"
           ></textarea>
+          </div>
         </div>
 
         <div className="flex justify-between pt-4">
-          <button
+          <Button
+          variant='contained'
+          size='small'
             type="button"
             onClick={resetForm}
             className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded text-gray-800 font-semibold"
           >
             Reset Form
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="submit"
+            variant='contained'
+            size='small'
+            color='success'
             disabled={loading}
             className={`px-6 py-2 rounded text-white font-semibold
               ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
             {loading ? 'Processing...' : isEditing ? 'Update Customs' : 'Create Customs'}
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -449,7 +476,7 @@ export const CustomsManager = () => {
           <h3 className="text-lg font-semibold mb-4">Current Settings</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-600">Model Name:</p>
+              <b className="">Model Name:</b>
               <p className="text-md">{customs.modelName}</p>
             </div>
             
@@ -471,7 +498,7 @@ export const CustomsManager = () => {
             )}
             
             <div>
-              <p className="text-sm font-medium text-gray-600">Friendliness:</p>
+              <b className="">Friendliness:</b>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
                   className="bg-blue-600 h-2.5 rounded-full" 
@@ -482,10 +509,10 @@ export const CustomsManager = () => {
             </div>
             
             <div>
-              <p className="text-sm font-medium text-gray-600">Formality:</p>
+              <b className="">Formality:</b>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
-                  className="bg-blue-600 h-2.5 rounded-full" 
+                  className="bg-blue-600 h-2.5 rounded-ful" 
                   style={{ width: `${customs.formality}%` }}
                 ></div>
               </div>
@@ -494,14 +521,14 @@ export const CustomsManager = () => {
             
             {customs.accent && (
               <div>
-                <p className="text-sm font-medium text-gray-600">Accent:</p>
+                <b className="">Accent:</b>
                 <p className="text-md capitalize">{customs.accent}</p>
               </div>
             )}
 
             {customs.introduction && (
               <div className="col-span-1 md:col-span-2">
-                <p className="text-sm font-medium text-gray-600">Introduction:</p>
+                <b className="">Introduction:</b>
                 <p className="text-md bg-white p-2 rounded border mt-1">{customs.introduction}</p>
               </div>
             )}
@@ -555,7 +582,7 @@ export const CustomsManager = () => {
             
             {customs.instructions && (
               <div className="col-span-1 md:col-span-2">
-                <p className="text-sm font-medium text-gray-600">Special Instructions:</p>
+                <b className="">Special Instructions:</b>
                 <p className="text-md bg-white p-2 rounded border mt-1 whitespace-pre-line">{customs.instructions}</p>
               </div>
             )}

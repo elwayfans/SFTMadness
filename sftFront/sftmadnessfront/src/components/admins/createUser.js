@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { adminsService } from '../../services/api/adminsService';
+import Button from '@mui/material/Button';
+import { green } from '@mui/material/colors';
+import Icon from '@mui/material/Icon';
+import './admin.css'
 
 //admin create user component
 export const AdminCreateUser = ({ onSuccess }) => {
@@ -104,7 +108,7 @@ export const AdminCreateUser = ({ onSuccess }) => {
 
   //create user form
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Create New User</h2>
 
       {error && (
@@ -210,14 +214,16 @@ export const AdminCreateUser = ({ onSuccess }) => {
         </div>
 
         <div className="pt-4">
-          <button
+          <Button
             type="submit"
             disabled={loading}
             className={`w-full py-2 px-4 rounded text-white font-semibold
               ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+              variant='contained'
           >
             {loading ? 'Creating...' : 'Create User'}
-          </button>
+            
+          </Button>
         </div>
       </form>
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { userService } from '../../services/api/userService';
+import { Button } from '@mui/material';
 
 //form for logging in an existing user
 export const LoginForm = ({ onSuccess }) => {
@@ -61,14 +62,16 @@ export const LoginForm = ({ onSuccess }) => {
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
           className={`w-full py-2 px-4 rounded text-white font-semibold
             ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+          variant='contained'
+          color='success'
         >
           {loading ? 'Logging in...' : 'Login'}
-        </button>
+        </Button>
       </form>
     </div>
   );

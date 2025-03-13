@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { conversationLogsService } from '../../services/api/conversationLogsService';
+import Button from '@mui/material/Button';
+import '../users/users.css'
 
 //conversation logs component
 export const ConversationLogs = () => {
@@ -223,7 +225,7 @@ export const ConversationLogs = () => {
   
   //conversation logs form
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Conversation Logs</h2>
 
       {error && (
@@ -300,14 +302,16 @@ export const ConversationLogs = () => {
                 ></textarea>
               </div>
               
-              <button
+              <Button
                 type="submit"
+                size='small'
+                variant='contained'
                 disabled={loading}
                 className={`w-full py-2 px-4 rounded text-white font-semibold
                   ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
                 {loading ? 'Creating...' : 'Log Conversation'}
-              </button>
+              </Button>
             </form>
           </div>
           
@@ -367,7 +371,7 @@ export const ConversationLogs = () => {
               </div>
               
               <div className="pt-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => setFilters({
                     contactId: '',
@@ -376,9 +380,12 @@ export const ConversationLogs = () => {
                     endDate: ''
                   })}
                   className="w-full py-2 px-4 bg-gray-300 hover:bg-gray-400 rounded text-gray-800 font-semibold"
+                  variant='contained'
+                  size='small'
+                  color='warning'
                 >
                   Reset Filters
-                </button>
+                </Button>
               </div>
             </div>
           </div>

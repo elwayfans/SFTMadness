@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { emailService } from '../../services/api/emailService';
-
+import '../../components/users/users.css'
+import { Button } from '@mui/material';
 //email form component
 export const EmailForm = () => {
   const [emailForm, setEmailForm] = useState({
@@ -108,7 +109,7 @@ export const EmailForm = () => {
 
   //email form
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Send Email</h2>
 
       {error && (
@@ -151,15 +152,18 @@ export const EmailForm = () => {
         </div>
 
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="Swap Content btn">
             <label className="block text-gray-700">Message Content <span className="text-red-500">*</span></label>
-            <button
+            <Button
               type="button"
               onClick={toggleHtmlEditor}
               className="text-sm text-blue-600 hover:text-blue-800"
+              variant='contained'
+              size='small'
+              color='warning'
             >
               {showHtmlEditor ? 'Switch to Plain Text' : 'Switch to HTML Editor'}
-            </button>
+            </Button>
           </div>
 
           {!showHtmlEditor ? (
@@ -212,22 +216,27 @@ export const EmailForm = () => {
         </div>
 
         <div className="flex justify-between pt-4">
-          <button
+          <Button
+          variant='contained'
+          size='small'
             type="button"
             onClick={resetForm}
             className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded text-gray-800 font-semibold"
           >
             Reset Form
-          </button>
+          </Button>
 
-          <button
+          <Button
+          variant='contained'
+          size='small'
+          color='success'
             type="submit"
             disabled={loading}
             className={`px-6 py-2 rounded text-white font-semibold
               ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
             {loading ? 'Sending...' : 'Send Email'}
-          </button>
+          </Button>
         </div>
       </form>
 

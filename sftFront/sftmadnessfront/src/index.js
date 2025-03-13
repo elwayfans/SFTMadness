@@ -4,11 +4,15 @@ import './aws-config';
 import App from './App';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
+import Navbar1 from './components/navbar1';
+import Admin from './Admin'
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <Navbar1/>
+    <App/>
   </React.StrictMode>
 );
 

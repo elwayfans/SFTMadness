@@ -6,8 +6,9 @@ import { Dashboard } from './components/dashboard';
 import { AdminDashboard } from './components/adminDashboard';
 import { userService } from './services/api/userService';
 import { adminsService } from './services/api/adminsService';
+import { Button } from '@mui/material';
 
-function App() {
+function App() { 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
@@ -98,9 +99,9 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8">
+      <div className="MainContent">
         <div className="max-w-md mx-auto">
-          <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">
+          <h1 className="">
             SFT Madness
           </h1>
           
@@ -143,18 +144,22 @@ function App() {
             <>
               <LoginForm onSuccess={handleLoginSuccess} />
               <div className="flex justify-between mt-4">
-                <button
+                <Button
                   onClick={() => setShowForgotPassword(true)}
                   className="text-blue-600 hover:text-blue-800"
+                  variant='contained'
+                  color='warning'
                 >
                   Forgot password?
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setShowRegister(true)}
                   className="text-blue-600 hover:text-blue-800"
+                  variant='contained'
+                  
                 >
                   Register here
-                </button>
+                </Button>
               </div>
             </>
           )}

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { userService } from '../../services/api/userService';
+import './users.css'
+import { Button } from '@mui/material';
 
 //form to delete user account
 export const DeleteAccountForm = ({ onSuccess, user }) => {
@@ -47,10 +49,10 @@ export const DeleteAccountForm = ({ onSuccess, user }) => {
   };
   
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-red-600">Delete Account</h2>
       <div className="mb-4 p-3 bg-red-50 text-red-700 rounded">
-        <p className="font-bold">Warning:</p>
+        <h3 className="font-bold">Warning:</h3>
         <p>This action cannot be undone. All of your data will be permanently deleted.</p>
       </div>
       
@@ -74,14 +76,17 @@ export const DeleteAccountForm = ({ onSuccess, user }) => {
           />
         </div>
         
-        <button
+        <Button
           type="submit"
           disabled={loading}
           className={`w-full py-2 px-4 rounded text-white font-semibold
             ${loading ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'}`}
+          variant='contained'
+          color='error'
+          size='small'
         >
           {loading ? 'Deleting...' : 'Permanently Delete Account'}
-        </button>
+        </Button>
       </form>
     </div>
   );

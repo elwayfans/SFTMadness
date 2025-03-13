@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { adminsService } from '../../services/api/adminsService';
+import './admin.css'
+import { Button } from '@mui/material';
 
 //admin logs component
 export const AdminLogs = () => {
@@ -180,7 +182,7 @@ export const AdminLogs = () => {
 
   //admin logs form
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Admin Activity Logs</h2>
       
       {error && (
@@ -254,12 +256,15 @@ export const AdminLogs = () => {
       </div>
       
       <div className="mb-6 flex justify-end">
-        <button
+        <Button
           onClick={handleResetFilters}
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded"
+          variant='contained'
+          color='warning'
+          size='small'
         >
           Reset Filters
-        </button>
+        </Button>
       </div>
       
       {loading && logs.length === 0 ? (
@@ -319,7 +324,7 @@ export const AdminLogs = () => {
               </p>
             </div>
             <div className="flex space-x-2">
-              <button
+              <Button
                 onClick={handlePrevPage}
                 disabled={pagination.offset === 0}
                 className={`px-3 py-1 rounded text-sm ${
@@ -327,10 +332,12 @@ export const AdminLogs = () => {
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                 }`}
+                variant='contained'
+                size='small'
               >
                 Previous
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleNextPage}
                 disabled={!pagination.hasMore}
                 className={`px-3 py-1 rounded text-sm ${
@@ -338,9 +345,12 @@ export const AdminLogs = () => {
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                 }`}
+                variant='contained'
+                color='warning'
+                size='small'
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         </>

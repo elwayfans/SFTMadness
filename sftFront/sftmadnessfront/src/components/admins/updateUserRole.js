@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { adminsService } from '../../services/api/adminsService';
 import { userService } from '../../services/api/userService';
+import './admin.css'
+import './update.css'
+import { Button } from '@mui/material';
 
 //admin update user role component
 export const AdminUpdateRole = ({ onSuccess }) => {
@@ -111,7 +114,7 @@ export const AdminUpdateRole = ({ onSuccess }) => {
 
   //user role form
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Manage User Roles</h2>
 
       {error && (
@@ -126,7 +129,7 @@ export const AdminUpdateRole = ({ onSuccess }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="Heading">
         {/* User Selection */}
         <div>
           <h3 className="text-lg font-semibold mb-4 border-b pb-2">Select User</h3>
@@ -189,7 +192,7 @@ export const AdminUpdateRole = ({ onSuccess }) => {
         </div>
         
         {/* Role Management */}
-        <div>
+        <div className='updatePage'>
           <h3 className="text-lg font-semibold mb-4 border-b pb-2">Update Role</h3>
           
           {!selectedUser ? (
@@ -200,9 +203,9 @@ export const AdminUpdateRole = ({ onSuccess }) => {
             <div className="bg-gray-50 p-4 rounded">
               <div className="mb-4">
                 <h4 className="font-medium">Selected User</h4>
-                <p className="text-lg text-blue-600">
+                <p>
                   {selectedUser.email}
-                  {selectedUser.id === currentUserId && (
+                  {selectedUser.id === currentUserId && (     
                     <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
                       You
                     </span>
@@ -228,7 +231,7 @@ export const AdminUpdateRole = ({ onSuccess }) => {
               <div className="mt-6">
                 <h4 className="font-medium mb-3">Change Role To</h4>
                 <div className="flex space-x-3">
-                  <button
+                  <Button
                     onClick={() => handleRoleChange('customer')}
                     disabled={
                       loading || 
@@ -246,11 +249,13 @@ export const AdminUpdateRole = ({ onSuccess }) => {
                         ? "You cannot demote yourself from admin role" 
                         : ""
                     }
+                    variant='contained'
+                    color='warning'
                   >
                     Customer
-                  </button>
+                  </Button>
                   
-                  <button
+                  <Button
                     onClick={() => handleRoleChange('admin')}
                     disabled={loading || selectedUser.role === 'admin'}
                     className={`px-4 py-2 rounded text-sm font-medium ${
@@ -258,9 +263,10 @@ export const AdminUpdateRole = ({ onSuccess }) => {
                         ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                         : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                     }`}
+                    variant='contained'
                   >
                     Administrator
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

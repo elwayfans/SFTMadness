@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { schoolContactService } from '../../services/api/schoolContactService.js';
+import { Button } from '@mui/material';
 
 //form to create a new school contact
 export const CreateContact = ({ onSuccess }) => {
@@ -56,7 +57,7 @@ export const CreateContact = ({ onSuccess }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="MainContent">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Create School Contact</h2>
 
       {error && (
@@ -96,14 +97,16 @@ export const CreateContact = ({ onSuccess }) => {
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={creating}
           className={`w-full py-2 px-4 rounded text-white font-semibold
             ${creating ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+          variant='contained'
+          size='small'
         >
           {creating ? 'Creating...' : 'Create Contact'}
-        </button>
+        </Button>
       </form>
     </div>
   );

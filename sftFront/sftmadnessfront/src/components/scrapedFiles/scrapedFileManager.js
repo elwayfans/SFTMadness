@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import scrapedFileService from '../../services/api/scrapedFileService';
+import DeleteIcon from '@mui/icons-material/Delete';
+import '../users/users.css'
+import { Button } from '@mui/material';
 
 //file management component
 export const ScrapedFileManagement = () => {
@@ -171,7 +174,7 @@ export const ScrapedFileManagement = () => {
   
     if (contentType.includes('image/')) {
       return (
-        <div className="mt-4">
+        <div className="MainContent">
           <h4 className="text-lg font-semibold mb-2">File Preview:</h4>
           <img 
             src={`data:${contentType};base64,${fileContent}`}
@@ -188,23 +191,23 @@ export const ScrapedFileManagement = () => {
       );
     } else if (contentType.includes('application/pdf')) {
       return (
-        <div className="mt-4">
-          <h4 className="text-lg font-semibold mb-2">PDF Preview:</h4>
-          <iframe
-            src={`data:${contentType};base64,${fileContent}`}
-            width="100%"
-            height="500px"
-            title="PDF Viewer"
-            className="border rounded"
-          ></iframe>
-          <button 
-            onClick={() => downloadBinaryFile(fileContent, `${retrievedFile.filename || 'document'}${getFileExtension(contentType)}`)}
-            className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Download PDF
-          </button>
-        </div>
-      );
+        <div className="MainContent">
+        <h4 className="text-lg font-semibold mb-2">PDF Preview:</h4>
+        <iframe
+          src={`data:${contentType};base64,${fileContent}`}
+          width="100%"
+          height="500px"
+          title="PDF Viewer"
+          className="border rounded"
+        ></iframe>
+        <button 
+          onClick={() => downloadBinaryFile(fileContent, `document${getFileExtension(contentType)}`)}
+          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Download PDF
+        </button>
+      </div>
+    );
     } else if (contentType.includes('text/') || contentType.includes('application/json')) {
       let decodedText;
       try {
@@ -237,9 +240,30 @@ export const ScrapedFileManagement = () => {
           </button>
         </div>
       );
+    try {
+      decodedText = atob(fileContent);
+    } catch (error) {
+      console.error('Error decoding text content:', error);
+      decodedText = 'Error decoding text content';
+    }
+
+    return (
+      <div className="MainContent">
+        <h4 className="text-lg font-semibold mb-2">File Content:</h4>
+        <pre className="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96 whitespace-pre-wrap">
+          {decodedText}
+        </pre>
+        <button 
+          onClick={() => downloadBinaryFile(fileContent, `text${getFileExtension(contentType)}`)}
+          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Download Text
+        </button>
+      </div>
+    );
     } else {
       return (
-        <div className="mt-4">
+        <div className="MainContent">
           <h4 className="text-lg font-semibold mb-2">File Content:</h4>
           <div className="bg-gray-100 p-4 rounded-lg">
             <p>Binary file: {contentType}</p>
@@ -361,7 +385,7 @@ export const ScrapedFileManagement = () => {
   };
 
 return (
-<div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+<div className="MainContent">
   <h2 className="text-2xl font-bold mb-6 text-gray-800">Scraped File Management</h2>
 
   {error && (
@@ -376,7 +400,7 @@ return (
     </div>
   )}
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <div className="">
     {/* File Upload Section */}
     <div className="mb-8">
       <h3 className="text-xl font-semibold mb-4 text-gray-700">Upload Scraped File</h3>
@@ -431,14 +455,17 @@ return (
           </>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={uploading || !selectedFile || !model.trim()}
+          variant='contained'
+          color='success'
+          size='small'
           className={`w-full py-2 px-4 rounded text-white font-semibold
             ${uploading || !selectedFile || !model.trim() ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
         >
           {uploading ? 'Uploading...' : 'Upload File'}
-        </button>
+        </Button>
       </form>
     </div>
 
@@ -458,23 +485,29 @@ return (
         </div>
 
         <div className="flex space-x-2">
-          <button
+          <Button
             onClick={handleGetFile}
             disabled={fetching || !fileId.trim()}
+            variant='contained'
+            size='small'
             className={`flex-1 py-2 px-4 rounded text-white font-semibold
               ${fetching || !fileId.trim() ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
             {fetching ? 'Fetching...' : 'Get File'}
-          </button>
+          </Button>
           
-          <button
+          <Button
             onClick={handleDelete}
             disabled={deleting || !fileId.trim()}
             className={`flex-1 py-2 px-4 rounded text-white font-semibold
               ${deleting || !fileId.trim() ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'}`}
+              variant='contained'
+              size='small'
+              color='warning'
+                     
           >
-            {deleting ? 'Deleting...' : 'Delete'}
-          </button>
+            {deleting ? 'Deleting...' : 'Delete'}<DeleteIcon/>
+          </Button>
         </div>
       </div>
     </div>
