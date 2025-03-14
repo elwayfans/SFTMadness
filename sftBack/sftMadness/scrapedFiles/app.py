@@ -370,12 +370,10 @@ def uploadFile(event, context):
 def getFile(event, context):
     conn = None
     try:
-        # Get the file ID from path parameters
         file_id = event['pathParameters'].get('fileId')
         if not file_id:
             return cors_response(400, "File ID is required")
             
-        # Get user information from the token
         auth_header = event.get('headers', {}).get('Authorization')
         token = auth_header.split(' ')[-1]
         token_payload = verify_token(token)
@@ -389,7 +387,6 @@ def getFile(event, context):
             return cors_response(404, "User not found")
         user_id = db_user['id']
 
-        # Make sure to query for files that belong to the requesting user
         cur.execute(
             "SELECT * FROM scrapedFiles WHERE id = %s AND userId = %s",
             (file_id, user_id)
@@ -401,28 +398,26 @@ def getFile(event, context):
             return cors_response(404, "File not found")
             
         filepath = file_record['filepath']
-        content_type = file_record['filetype']  # Get the stored content type
+        content_type = file_record['filetype']  #get stored content type
         
         print(f"Retrieving file from S3: {filepath}")
         print(f"Using content type: {content_type}")
         
-        # Get file from S3
         try:
             s3_response = s3.get_object(
                 Bucket=BUCKET_NAME,
                 Key=filepath
             )
             
-            # Log S3 response for debugging
             print(f"S3 response metadata: {s3_response['ResponseMetadata']}")
             print(f"S3 content type: {s3_response.get('ContentType')}")
             
-            # Get the file content
+            #get file content
             file_content = s3_response['Body'].read()
             file_size = len(file_content)
             print(f"Retrieved file size: {file_size} bytes")
             
-            # Determine if this is a binary file type that should be base64 encoded
+            # determine if base64 encoding is needed
             binary_types = [
                 'image/', 'audio/', 'video/', 'application/pdf', 
                 'application/octet-stream', 'application/zip'
@@ -430,9 +425,8 @@ def getFile(event, context):
             
             is_binary = any(content_type.startswith(binary_type) for binary_type in binary_types)
             
-            # If it's a binary type, return as base64 encoded
+            #if binary type, return as base64 encoded
             if is_binary:
-                # Create a base64 encoded response
                 file_content_base64 = base64.b64encode(file_content).decode('utf-8')
                 
                 return {
@@ -448,7 +442,7 @@ def getFile(event, context):
                     'isBase64Encoded': True
                 }
             else:
-                # For text-based files, don't use base64 encoding
+                #for text-based files, don't use base64 encoding
                 return {
                     'statusCode': 200,
                     'headers': {
