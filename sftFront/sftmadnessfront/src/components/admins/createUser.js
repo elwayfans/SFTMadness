@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { adminsService } from '../../services/api/adminsService';
 import Button from '@mui/material/Button';
-import { green } from '@mui/material/colors';
-import Icon from '@mui/material/Icon';
 import './admin.css'
 
 //admin create user component

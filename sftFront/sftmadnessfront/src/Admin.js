@@ -1,12 +1,11 @@
 import AdminRegister from "./components/AdminRegister";
 import AdminLogIn from "./components/AdminLogin";
-import React, { useState, useEffect } from 'react';
-
+import React, { useState } from 'react';
 
 function Admin()
 {
     const [showAdminRegister, setShowAdminRegister] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated] = useState(false);
     
     if(!isAuthenticated){
         return(

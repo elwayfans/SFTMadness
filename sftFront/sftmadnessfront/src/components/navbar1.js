@@ -1,11 +1,6 @@
 import React, { Fragment } from 'react'
-
-import PropTypes, { element } from 'prop-types'
-import {Link} from 'react-router-dom'
+import PropTypes from 'prop-types'
 import './navbar.css'
-
-
-
 
 const Navbar1 = (props) => {
   return (

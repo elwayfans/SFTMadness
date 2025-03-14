@@ -1,6 +1,8 @@
 # sftMadness
 ## ALL COMMANDS TO RUN ARE IN 'QUOTES'
 
+- all in the backend (cd /sftBack/sftMadness)
+
 - install AWS CLI and AWS Sam:
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html - aws install link
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html - sam install link
@@ -65,7 +67,10 @@ then press enter twice for the last two settings, after this it will start to de
 
 
 
-
+- in the frontend (cd /sftFront/sftmadnessfront), you will need to install
+  - react native
+  - aws amplify
+  - and mui : 'npm install @mui/material @mui/icons-material @emotion/react @emotion/styled'
 
 
 

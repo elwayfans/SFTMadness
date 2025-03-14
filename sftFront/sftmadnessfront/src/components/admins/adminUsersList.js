@@ -6,8 +6,6 @@ import { userService } from '../../services/api/userService';
 //MUI and style imports
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Autocomplete from '@mui/material/Autocomplete';
 import './adminUsersList.css';
 import './admin.css';
 
