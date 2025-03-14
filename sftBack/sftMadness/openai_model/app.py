@@ -143,6 +143,9 @@ def verify_token(token):
 #model functions
 
 def handle_chat(event, context):
+    """
+    Endpoint handler for having OpenAi generate a response to a user message.
+    """
     try:
         body = json.loads(event['body'])
         user_message = body.get('message')
