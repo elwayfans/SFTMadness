@@ -1,11 +1,11 @@
 /*
-add both the about us and contact us as one page
+✔add both the about us and contact us as one page
 
-about us:
+✔about us:
     should give a brief description of what source for training does to
         help a school and the benefits that the ai will bring to the school
 
-Contact us:
+✔Contact us:
     create a form that allows a user to enter the following details (* = required)
         *first and last name
         *email
