@@ -4,18 +4,20 @@ To do list:
 Hook up routes 
 Make navbar ----
 */
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import './components/navbar/NavBar.js'
-import './components/about_contact_us/Info.js'
+import NavBar from './components/navbar/NavBar.js'
+import Info from './components/about_contact_us/Info.js'
+import Home from './components/home/Home.js'
 
 function App() {
   return (
     <Router>
+      <NavBar />
       <div>
-        <NavBar />
         <Routes>
-          <Route path="/" exact element={<Home />} />
-          <Route path="/aboutus" exact element={<Info />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/aboutus" element={<Info />} />
         </Routes>
       </div>
     </Router>

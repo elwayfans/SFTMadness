@@ -82,12 +82,12 @@ const Info = () => {
             </div>
             <h1 className='contactUsTitle'>Contact Us</h1>
             <div className='contactUsBody'>
-                <h3>Your Form</h3>
                 <form onSubmit={handleSubmit} className='contactForm'>
                     <input type="text" name="firstName" placeholder="First Name" value={formData.fname} onChange={handleChange} />
                     <input type="text" name="lastName" placeholder="Last Name" value={formData.lname} onChange={handleChange} />
                     <input type="email" name="email" placeholder="Your Email" value={formData.email} onChange={handleChange} />
                     <input type="number" name="number" placeholder="Your Number" value={formData.number} onChange={handleChange} />
+                    <input type="text" name="school" placeholder="School Name" value={formData.school} onChange={handleChange} />
                     <textarea name="message" placeholder="Your Message" value={formData.message} onChange={handleChange}></textarea>
 
                     {error && <p className="error">{error}</p>}
