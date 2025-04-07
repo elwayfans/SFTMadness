@@ -1,7 +1,49 @@
 /*
-
-
-
-
+Classnames for styling:
+    aboutContactUs
+    aboutUsTitle
+    aboutUsBody
+    contactUsTitle
+    contactUsBody
+    contactForm
+    error
+    success
 
 */
+body {
+    background-color: #ffffff;
+}
+
+.aboutContactUs {
+    background-color: #EDC49B;
+}
+
+.aboutUsTitle {
+    color: #000000;
+}
+
+.aboutUsBody {
+    color: #000000;
+}
+
+.contactUsTitle {
+    color: #000000;
+}
+
+.contactUsBody {
+    background-color: #1999D2;
+}
+
+.contactForm {
+    color: #000000;
+}
+
+.error {
+    background-color: rgb(228, 71, 71);
+    color: #ffffff;
+}
+
+.success {
+    background-color: greenyellow;
+    color: #ffffff;
+}
