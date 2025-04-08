@@ -9,11 +9,18 @@ body {
     font-family: 'Arial', sans-serif;
 }
 
+.images {
+    position: absolute;
+    left: 20px;
+    width: auto;
+    height: 80px;
+}
+
 .homeBody {
     background-color: #fbe7d6;
     text-align: center;
     padding: 40px 20px;
-    min-height: 790px;
+    min-height: 760px;
     max-width: 800px;
     margin: 0 auto;
 }
