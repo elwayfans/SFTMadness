@@ -14,26 +14,25 @@ const Home = () => {
     return (
         <div className='homeBody'>
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus
-                imperdiet, nulla et dictum interdum, nisi lorem egestas odio, vitae
-                scelerisque enim ligula venenatis dolor. Maecenas nisl est, ultrices
-                nec congue eget, auctor vitae massa. Fusce luctus vestibulum augue ut
-                aliquet. Nunc sagittis dictum nisi, sed ullamcorper ipsum dignissim ac.
-                In at libero sed nunc venenatis imperdiet sed ornare turpis. Donec vitae
-                dui eget tellus gravida venenatis. Integer fringilla congue eros non fermentum.
+                Since 1992, we've been leading the charge in transforming how
+                prospective students find, learn, and enroll in programs. In
+                today's competitive educational landscape, schools are constantly
+                striving to attract more students. <br /><br />
+                Yet, many overlook a critical aspect: The admissions process.<br /><br />
+                It's here that interested students often get stuck in inefficient
+                stages, leading to missed opportunities, lower conversion rates and
+                lower enrollment.<br /><br />
+                That's where we come in.
             </p>
             <div>
                 <button onClick={() => navigate('/login')}>Login</button>
                 <button onClick={() => navigate('/register')} >Register</button>
             </div>
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus
-                imperdiet, nulla et dictum interdum, nisi lorem egestas odio, vitae
-                scelerisque enim ligula venenatis dolor. Maecenas nisl est, ultrices
-                nec congue eget, auctor vitae massa. Fusce luctus vestibulum augue ut
-                aliquet. Nunc sagittis dictum nisi, sed ullamcorper ipsum dignissim ac.
-                In at libero sed nunc venenatis imperdiet sed ornare turpis. Donec vitae
-                dui eget tellus gravida venenatis. Integer fringilla congue eros non fermentum.
+                We're dedicated to making the world a better place, one student at a time.
+                By helping schools, supporting employees, and guiding students toward success,
+                we're contributing to a greater mission of positive change.<br /><br />
+                We're committed to helping you win and drive real engagement with your audience.
             </p>
         </div>
     )

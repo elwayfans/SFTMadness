@@ -16,13 +16,13 @@ body {
     min-height: auto;
     max-width: 800px;
     margin: 0 auto;
-    padding-bottom: 15.35%;
+    padding-bottom: 2.65%;
 }
 
 .homeBody p {
     color: #000000;
     margin: 40px 0;
-    font-size: 1rem;
+    font-size: 18px;
     line-height: 1.6;
     max-width: 600px;
     margin-left: auto;

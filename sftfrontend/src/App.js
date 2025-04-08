@@ -9,6 +9,7 @@ import './App.css';
 import NavBar from './components/navbar/NavBar.js'
 import Info from './components/about_contact_us/Info.js'
 import Home from './components/home/Home.js'
+import Register from './components/authentication/Register.js'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/aboutus" element={<Info />} />
+          <Route path="/signup" element={<Register />} /> 
         </Routes>
       </div>
     </Router>
