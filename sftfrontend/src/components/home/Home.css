@@ -9,20 +9,14 @@ body {
     font-family: 'Arial', sans-serif;
 }
 
-.images {
-    position: absolute;
-    left: 20px;
-    width: auto;
-    height: 80px;
-}
-
 .homeBody {
     background-color: #fbe7d6;
     text-align: center;
     padding: 40px 20px;
-    min-height: 760px;
+    min-height: auto;
     max-width: 800px;
     margin: 0 auto;
+    padding-bottom: 15.35%;
 }
 
 .homeBody p {

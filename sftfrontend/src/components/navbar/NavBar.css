@@ -23,6 +23,13 @@ nav ul {
     gap: 15px;
 }
 
+.images {
+    position: absolute;
+    left: 20px;
+    width: auto;
+    height: 80px;
+}
+
 .flex-container {
     display: flex;
     margin: 5px;
