@@ -43,11 +43,10 @@ const Info = () => {
         setError('');
         setSuccess('');
 
-        if ( !formData.email || !formData.number || !formData.school || !formData.message) {
+        if (!formData.fname || !formData.lname || !formData.email || !formData.number || !formData.school || !formData.message) {
             setError('Please fill in all fields!');
             return;
         }
-        // !formData.fname || !formData.lname ||
 
         if (!/\S+@\S+\.\S+/.test(formData.email)) {
             setError('Please enter a vaild email address!')
@@ -55,15 +54,20 @@ const Info = () => {
         }
 
         console.log('Form submitted:', formData);
-        setSuccess("Thank you for reaching out! We'll get back to you soon.");
 
-        setFormData({
-            // fname: '',
-            // lname: '',
-            email: '',
-            number: '',
-            school: '',
-            message: ''
+        emailjs.sendForm('sft_madness', 'template_e75kbyh', e.target, 'z932Wh6TFHeq4_Ccs')
+        .then((result) => {
+            setSuccess("Thank you for reaching out! We'll get back to you soon.");
+            setFormData({
+                fname: '',
+                lname: '',
+                email: '',
+                number: '',
+                school: '',
+                message: ''
+            });
+        }, (error) => {
+            setError('There was an issue sending your message. Please try again later.');
         });
     };
 
@@ -85,8 +89,8 @@ const Info = () => {
             <h1 className='contactUsTitle'>Contact Us</h1>
             <div className='contactUsBody'>
                 <form onSubmit={handleSubmit} className='contactForm'>
-                    {/* <input type="text" name="fName" placeholder="First Name" value={formData.fname} onChange={handleChange} /> */}
-                    {/* <input type="text" name="lName" placeholder="Last Name" value={formData.lname} onChange={handleChange} /> */}
+                    <input type="text" name="fName" placeholder="First Name" value={formData.fname} onChange={handleChange} />
+                    <input type="text" name="lName" placeholder="Last Name" value={formData.lname} onChange={handleChange} />
                     <input type="email" name="email" placeholder="Your Email" value={formData.email} onChange={handleChange} />
                     <input type="number" name="number" placeholder="Your Number" value={formData.number} onChange={handleChange} />
                     <input type="text" name="school" placeholder="School Name" value={formData.school} onChange={handleChange} />
