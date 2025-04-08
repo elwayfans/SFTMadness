@@ -17,9 +17,9 @@ function NavBar() {
       <ul>
         <li>
           <Link className='flex-container' to="/">Home</Link>
+          <Link className='flex-container' to="/aboutus">About Us</Link>
           <Link className='flex-container' to="/signup">Sign Up</Link>
           <Link className='flex-container' to="/login">Login</Link>
-          <Link className='flex-container' to="/aboutus">About Us</Link>
         </li>
       </ul>
     </nav>
