@@ -58,8 +58,8 @@ const Info = () => {
         setSuccess("Thank you for reaching out! We'll get back to you soon.");
 
         setFormData({
-            fname: '',
-            lname: '',
+            // fname: '',
+            // lname: '',
             email: '',
             number: '',
             school: '',
@@ -85,8 +85,8 @@ const Info = () => {
             <h1 className='contactUsTitle'>Contact Us</h1>
             <div className='contactUsBody'>
                 <form onSubmit={handleSubmit} className='contactForm'>
-                    <input type="text" name="firstName" placeholder="First Name" value={formData.fname} onChange={handleChange} />
-                    <input type="text" name="lastName" placeholder="Last Name" value={formData.lname} onChange={handleChange} />
+                    {/* <input type="text" name="fName" placeholder="First Name" value={formData.fname} onChange={handleChange} /> */}
+                    {/* <input type="text" name="lName" placeholder="Last Name" value={formData.lname} onChange={handleChange} /> */}
                     <input type="email" name="email" placeholder="Your Email" value={formData.email} onChange={handleChange} />
                     <input type="number" name="number" placeholder="Your Number" value={formData.number} onChange={handleChange} />
                     <input type="text" name="school" placeholder="School Name" value={formData.school} onChange={handleChange} />
