@@ -33,7 +33,7 @@ const Info = () => {
     const handleChange = (e) => {
         setFormData({
             ...formData,
-            [e.target.fname]: e.target.value
+            [e.target.name]: e.target.value
         });
     };
 

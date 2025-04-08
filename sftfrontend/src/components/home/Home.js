@@ -1,12 +1,13 @@
 /*
 ✖add information box at top
 
-✖add login and registration button in middle
+✔add login and registration button in middle
 
 ✖add information box at bottom
 */
 import React from 'react'
 import { useNavigate } from "react-router-dom"
+import './Home.css'
 
 const Home = () => {
     const navigate = useNavigate();
