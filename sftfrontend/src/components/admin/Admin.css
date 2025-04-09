@@ -5,3 +5,80 @@
 
 
 */
+
+.sft-profile-container {
+    display: flex;
+    justify-content: center;
+    background-color: #fbe8d3;
+    padding: 2rem;
+    flex-wrap: wrap;
+    width: 800px;
+    margin: 0 auto;
+    height: 777px;
+}
+
+.sft-info {
+    background-color: #fbe8d3;
+    padding: 1rem;
+    width: 300px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sft-info img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid black;
+    margin-bottom: 1rem;
+}
+
+.sft-info h2 {
+    font-size: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.sft-info p {
+    margin: 0.25rem 0;
+}
+
+.contacts-section {
+    background-color: #a3e6ff;
+    padding: 1.5rem;
+    flex: 1;
+    min-width: 300px;
+}
+
+.contacts-section h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+}
+
+.contact-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2f4fb2;
+    color: white;
+    padding: 0.8rem 1rem;
+    border: 2px solid black;
+    border-radius: 5px;
+    margin-bottom: 0.8rem;
+}
+
+.contact-card:hover {
+    background-color: #1e3a8a;
+    cursor: pointer;
+}
+
+.contact-card .contact-name {
+    font-weight: 500;
+}
+
+.contact-card .contact-icon {
+    width: 30px;
+    height: 30px;
+}

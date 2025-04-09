@@ -106,6 +106,19 @@ const Register = () => {
             {errors.email}
           </span>
         )}
+        
+        <label>Phone Number:</label>
+        <input
+          name="number"
+          placeholder="Phone Number"
+          value={formData.number}
+          onChange={handleChange}
+        />
+        {errors.number && (
+          <span style={{ color: "red", fontSize: "0.875rem" }}>
+            {errors.number}
+          </span>
+        )}
 
         <label>Password:</label>
         <input
@@ -135,18 +148,6 @@ const Register = () => {
           </span>
         )}
 
-        <label>Phone Number:</label>
-        <input
-          name="number"
-          placeholder="Phone Number"
-          value={formData.number}
-          onChange={handleChange}
-        />
-        {errors.number && (
-          <span style={{ color: "red", fontSize: "0.875rem" }}>
-            {errors.number}
-          </span>
-        )}
 
         <label>Role:</label>
         <select name="role" value={formData.role} onChange={handleChange}>
