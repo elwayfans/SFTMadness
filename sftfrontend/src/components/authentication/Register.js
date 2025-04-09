@@ -44,14 +44,14 @@ const Register = () => {
                 <input type="text" name="lName" placeholder="Last Name" value={formData.lname} onChange={handleChange} />
                 <label>Email:</label>
                 <input type="email" name="email" placeholder="Your Email" value={formData.email} onChange={handleChange} />
+                <label>Phone Number:</label>
+                <input type="number" name="number" placeholder="Your Number" value={formData.number} onChange={handleChange} />
                 <label>Password:</label>
                 <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} />
                 <label>Confirm Password:</label>
                 <input type="password" name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} />
                 <label>School:</label>
                 <input type="text" name="school" placeholder="School Name" value={formData.school} onChange={handleChange} />
-                <label>Phone Number:</label>
-                <input type="number" name="number" placeholder="Your Number" value={formData.number} onChange={handleChange} />
                 <button className='registerbtn' type="submit">Register</button>
             </form>
         </div>

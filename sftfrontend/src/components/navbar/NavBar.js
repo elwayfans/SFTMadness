@@ -8,7 +8,6 @@ Admin (SFT/ schools)
 import React from 'react';
 import './NavBar.css'
 import { Link } from 'react-router-dom';
-// import logo from '../../public/sft.png';
 
 function NavBar() {
   return (
