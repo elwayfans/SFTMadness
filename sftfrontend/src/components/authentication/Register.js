@@ -8,54 +8,181 @@
     verify password
 ✖add register button at bottom
 */
-import React, { useState } from 'react'
-import './Auth.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./Auth.css";
 
 const Register = () => {
-    const [formData, setFormData] = useState({
-        fname: '',
-        lname: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        school: '',
-        number: ''
-    })
+  const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
+  const [formData, setFormData] = useState({
+    fname: "",
+    lname: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    number: "",
+    role: "",
+    school: "",
+  });
 
-    const handleSubmit = (e) => {
+  const [errors, setErrors] = useState({});
 
-    };
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-    return (
-        <div className='signUp'>
-            <h1 className='signUpTitle'>Sign Up</h1>
+  const formValidate = () => {
+    const newErrors = {};
+    if (!formData.fname) newErrors.fname = "First name is required.";
+    if (!formData.lname) newErrors.lname = "Last name is required.";
+    if (!formData.email) newErrors.email = "Email is required.";
+    if (!formData.password) newErrors.password = "Password is required";
+    if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match. ";
+    if (!formData.number) newErrors.number = "Phone number is required.";
+    if (!formData.role) newErrors.role = "Please select a role.";
+    if (formData.role === "School staff" && !formData.school)
+      newErrors.school = "School Name is required";
+    return newErrors;
+  };
 
-            <form onSubmit={handleSubmit} className='signUpForm'>
-                <label>First Name:</label>
-                <input type="text" name="fName" placeholder="First Name" value={formData.fname} onChange={handleChange} />
-                <label>Last Name:</label>
-                <input type="text" name="lName" placeholder="Last Name" value={formData.lname} onChange={handleChange} />
-                <label>Email:</label>
-                <input type="email" name="email" placeholder="Your Email" value={formData.email} onChange={handleChange} />
-                <label>Password:</label>
-                <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} />
-                <label>Confirm Password:</label>
-                <input type="password" name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} />
-                <label>School:</label>
-                <input type="text" name="school" placeholder="School Name" value={formData.school} onChange={handleChange} />
-                <label>Phone Number:</label>
-                <input type="number" name="number" placeholder="Your Number" value={formData.number} onChange={handleChange} />
-                <button className='registerbtn' type="submit">Register</button>
-            </form>
-        </div>
-    );
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationErrors = formValidate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+    } else {
+      setErrors({});
+      console.log("Form submitted", formData);
+      navigate("/login");
+    }
+  };
+
+  return (
+    <div className="signUp">
+      <h1 className="signUpTitle">Sign Up</h1>
+
+      <form onSubmit={handleSubmit} className="signUpForm">
+        <label>First Name:</label>
+        <input
+          name="fname"
+          placeholder="First Name"
+          value={formData.fname}
+          onChange={handleChange}
+        />
+        {errors.fname && (
+          <span style={{ color: "red", fontSize: "0.875rem" }}>
+            {errors.fname}
+          </span>
+        )}
+
+        <label>Last Name:</label>
+        <input
+          name="lname"
+          placeholder="Last Name"
+          value={formData.lname}
+          onChange={handleChange}
+        />
+        {errors.lname && (
+          <span style={{ color: "red", fontSize: "0.875rem" }}>
+            {errors.lname}
+          </span>
+        )}
+
+        <label>Email:</label>
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+        />
+        {errors.email && (
+          <span style={{ color: "red", fontSize: "0.875rem" }}>
+            {errors.email}
+          </span>
+        )}
+
+        <label>Password:</label>
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+        />
+        {errors.password && (
+          <span style={{ color: "red", fontSize: "0.875rem" }}>
+            {errors.password}
+          </span>
+        )}
+
+        <label>Confirm Password:</label>
+        <input
+          name="confirmPassword"
+          type="password"
+          placeholder="Confirm Password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+        />
+        {errors.confirmPassword && (
+          <span style={{ color: "red", fontSize: "0.875rem" }}>
+            {errors.confirmPassword}
+          </span>
+        )}
+
+        <label>Phone Number:</label>
+        <input
+          name="number"
+          placeholder="Phone Number"
+          value={formData.number}
+          onChange={handleChange}
+        />
+        {errors.number && (
+          <span style={{ color: "red", fontSize: "0.875rem" }}>
+            {errors.number}
+          </span>
+        )}
+
+        <label>Role:</label>
+        <select name="role" value={formData.role} onChange={handleChange}>
+          <option value="">Select Role</option>
+          <option value="SFT staff">SFT staff</option>
+          <option value="School staff">School staff</option>
+          <option value="Future student">Future student</option>
+        </select>
+        {errors.role && (
+          <span style={{ color: "red", fontSize: "0.875rem" }}>
+            {errors.role}
+          </span>
+        )}
+
+        {formData.role === "School staff" && (
+          <>
+            <label>School Name:</label>
+            <input
+              name="school"
+              placeholder="School"
+              value={formData.school}
+              onChange={handleChange}
+            />
+            {errors.school && (
+              <span style={{ color: "red", fontSize: "0.875rem" }}>
+                {errors.school}
+              </span>
+            )}
+          </>
+        )}
+        <button className="registerbtn" type="submit">
+          Register
+        </button>
+      </form>
+    </div>
+  );
 };
 
 export default Register;

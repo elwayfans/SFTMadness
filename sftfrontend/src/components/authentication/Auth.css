@@ -5,12 +5,11 @@
 
 
 */
-
+/*#region Sign Up*/
 .signUp {
     display: flex;
     width: 800px;
     margin: 0 auto;
-    padding-top: ;
     text-align: center;
     align-content: center;
     flex-direction: column;
@@ -23,11 +22,12 @@
     width: 100%;
     display: flex;
     align-content: center;
+    text-align: left;
     flex-direction: column;
     margin: 0 auto;
 }
 
-.signUpForm input {
+.signUpForm input, select {
     padding: 12px 16px;
     border: none;
     border-radius: 8px;
@@ -35,7 +35,7 @@
     justify-content: center;
     resize: none;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 50px;
+    margin-bottom: 31.9px;
 }
 
 .registerbtn {
@@ -51,3 +51,68 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+/*#endregion */
+
+/*#region Login*/
+.login {
+    display: flex;
+    width: 800px;
+    height: 835px;
+    margin: 0 auto;
+    text-align: center;
+    align-content: center;
+    flex-direction: column;
+    background-color: #fbe7d6;
+}
+
+.loginForm {
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    display: flex;
+    align-content: center;
+    text-align: left;
+    flex-direction: column;
+    margin: 0 auto;
+}
+
+.loginForm input {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    justify-content: center;
+    resize: none;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.loginbtn {
+    width: 53%;
+    justify-content: center;
+    margin: 0 auto;
+    margin-top: 100px;
+    background-color: #063a5d;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.forgotpassbtn{
+    width: 40%;
+    justify-content: center;
+    margin: 0 auto;
+    background-color: #063a5d;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+/*#endregion */

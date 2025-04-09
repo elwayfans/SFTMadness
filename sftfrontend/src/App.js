@@ -10,6 +10,8 @@ import NavBar from './components/navbar/NavBar.js'
 import Info from './components/about_contact_us/Info.js'
 import Home from './components/home/Home.js'
 import Register from './components/authentication/Register.js'
+import Login from './components/authentication/Login.js'
+import ForgotPassword from './components/authentication/ForgotPassword.js'
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/aboutus" element={<Info />} />
           <Route path="/signup" element={<Register />} /> 
+          <Route path="/login" element={<Login />} /> 
+          <Route path="/forgotpassword" element={<ForgotPassword/>} />
         </Routes>
       </div>
     </Router>
