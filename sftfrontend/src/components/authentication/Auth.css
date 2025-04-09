@@ -14,7 +14,6 @@
     align-content: center;
     flex-direction: column;
     background-color: #fbe7d6;
-    height: 841px;
 }
 
 .signUpForm {
@@ -36,7 +35,7 @@
     justify-content: center;
     resize: none;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 50px;
+    margin-bottom: 31.9px;
 }
 
 .registerbtn {
