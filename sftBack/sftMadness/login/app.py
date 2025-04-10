@@ -1,4 +1,5 @@
 import json
+import base64
 import boto3
 import os
 from botocore.exceptions import ClientError
@@ -21,16 +22,21 @@ def cors_response(status_code, body, content_type="application/json"):
     }
 
 def login_handler(event, context):
+    print("FULL EVENT:", json.dumps(event, indent=2))
+
     if event['httpMethod'] == 'OPTIONS':
         return cors_response(200, "ok")
-    
-    try:
-        # Parse request body
-        try:
-            body = json.loads(event.get('body', {}))
-        except json.JSONDecodeError as e:
-            return cors_response(400, f"Invalid JSON: {str(e)}")
 
+    try:
+        # Decode and parse body once
+        raw_body = event.get("body")
+        if event.get("isBase64Encoded"):
+            decoded = base64.b64decode(raw_body).decode("utf-8")
+            body = json.loads(decoded)
+        else:
+            body = json.loads(raw_body)
+
+        # Pull values safely
         email = body.get('email')
         password = body.get('password')
 
@@ -65,9 +71,9 @@ def login_handler(event, context):
             }
 
             # Extract user attributes
-            user_attributes = {}
-            for attr in user_response['UserAttributes']:
-                user_attributes[attr['Name']] = attr['Value']
+            user_attributes = {
+                attr['Name']: attr['Value'] for attr in user_response['UserAttributes']
+            }
 
             return cors_response(200, {
                 "message": "Login successful",
@@ -84,5 +90,7 @@ def login_handler(event, context):
         except ClientError as e:
             return cors_response(500, f"Authentication error: {str(e)}")
 
+    except json.JSONDecodeError as e:
+        return cors_response(400, f"Invalid JSON: {str(e)}")
     except Exception as e:
         return cors_response(500, f"Internal server error: {str(e)}")
