@@ -66,9 +66,11 @@ const Register = () => {
     <div className="signUp">
       <h1 className="signUpTitle">Sign Up</h1>
 
+      <p className="required">* = required</p>
       <form onSubmit={handleSubmit} className="signUpForm">
-        <label>First Name:</label>
+        <label>*First Name:</label>
         <input
+          required
           name="fname"
           placeholder="First Name"
           value={formData.fname}
@@ -80,8 +82,9 @@ const Register = () => {
           </span>
         )}
 
-        <label>Last Name:</label>
+        <label>*Last Name:</label>
         <input
+          required
           name="lname"
           placeholder="Last Name"
           value={formData.lname}
@@ -93,8 +96,9 @@ const Register = () => {
           </span>
         )}
 
-        <label>Email:</label>
+        <label>*Email:</label>
         <input
+          required
           name="email"
           type="email"
           placeholder="Email"
@@ -107,8 +111,9 @@ const Register = () => {
           </span>
         )}
         
-        <label>Phone Number:</label>
+        <label>*Phone Number:</label>
         <input
+          required
           name="number"
           placeholder="Phone Number"
           value={formData.number}
@@ -122,6 +127,7 @@ const Register = () => {
 
         <label>Password:</label>
         <input
+          required
           name="password"
           type="password"
           placeholder="Password"
@@ -136,6 +142,7 @@ const Register = () => {
 
         <label>Confirm Password:</label>
         <input
+          required
           name="confirmPassword"
           type="password"
           placeholder="Confirm Password"
@@ -149,8 +156,8 @@ const Register = () => {
         )}
 
 
-        <label>Role:</label>
-        <select name="role" value={formData.role} onChange={handleChange}>
+        <label>*Role:</label>
+        <select required name="role" value={formData.role} onChange={handleChange}>
           <option value="">Select Role</option>
           <option value="SFT staff">SFT staff</option>
           <option value="School staff">School staff</option>

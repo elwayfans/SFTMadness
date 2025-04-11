@@ -51,6 +51,11 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+
+.required {
+    color: #49796b; 
+    /* hooker green */
+}
 /*#endregion */
 
 /*#region Login*/

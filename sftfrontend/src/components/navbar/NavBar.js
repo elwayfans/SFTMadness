@@ -22,11 +22,13 @@ function NavBar() {
           <Link className='flex-container' to="/aboutus">About Us</Link>
           <Link className='flex-container' to="/ai-chatbot">Chat(AI)</Link>
           <Link className='flex-container' to="/Profile">Profile</Link>
+
                 make the above link a drop down that has Settings and Sign Out
         </li>
       </ul>
     </nav>
     */
+
     <nav>
       <img src="/images/sft.png" alt="sft" className="images" />
       <ul>
