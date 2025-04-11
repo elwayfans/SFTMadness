@@ -116,3 +116,24 @@
     transition: background-color 0.3s ease;
 }
 /*#endregion */
+
+/*#region Forgot Password*/
+.forgotpassword{
+    display: flex;
+    width: 800px;
+    height: 835px;
+    margin: 0 auto;
+    text-align: center;
+    align-content: center;
+    flex-direction: column;
+    background-color: #fbe7d6;
+}
+
+.forgotpasswordForm {
+    display: flex;
+    margin: 0 auto;
+    width: 80%;
+    height: 5%;
+    margin-bottom: 30px;
+}
+/*#endregion */
