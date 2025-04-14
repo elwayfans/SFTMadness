@@ -1,0 +1,124 @@
+:root {
+    --bg-color: #f5e3d3;
+    --card-color: #2e4a94;
+    --text-color: white;
+    --accent: #aad4f5;
+}
+
+body.dark {
+    --bg-color: #1d222f;
+    --card-color: #4b2138;
+    --text-color: #fadcd5;
+    --accent: #765d67;
+}
+
+body {
+    background-color: var(--bg-color);
+    margin: 0;
+    font-family: sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+.settings-container {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-color);
+}
+
+.settings-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.settings-card {
+    background-color: var(--card-color);
+    padding: 40px;
+    border-radius: 25px;
+    width: 300px;
+    margin: 0 auto;
+}
+
+.theme-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Toggle Switch Styling */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 26px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--accent);
+}
+
+input:checked+.slider:before {
+    transform: translateX(24px);
+}
+
+.password-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.password-section input {
+    padding: 5px;
+    border-radius: 4px;
+    border: none;
+}
+
+.confirm-button {
+    background-color: var(--accent);
+    padding: 6px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.twofa-button {
+    background-color: var(--accent);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
