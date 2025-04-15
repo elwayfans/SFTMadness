@@ -59,7 +59,7 @@ below is the SchoolProfile.js styling
     flex-wrap: wrap;
     width: 800px;
     margin: 0 auto;
-    height: 777px;
+    height: 1050px;
 }
 
 .school-info {
@@ -101,6 +101,8 @@ below is the contacts section styling
     padding: 1.5rem;
     flex: 1;
     min-width: 300px;
+    height: 400px;
+    overflow-y:scroll;
 }
 
 .contacts-section h3 {
@@ -134,3 +136,42 @@ below is the contacts section styling
     height: 30px;
 }
 
+.aicustom{
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    background-color: #a3e6ff;
+    border: black solid 2px;
+    padding: 1rem;
+    width: 800px;
+    height: 530px;
+}
+
+.aicustom input, textarea{
+    margin-bottom: 10px;
+    width: 300px;
+}
+
+.MuiSlider-rail{
+    color: #2f4fb2;
+}
+
+.MuiSlider-thumb{
+    color: #2f4fb2;
+}
+
+button{
+    background-color: #2756A4;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    margin: 50px 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 150px;
+}
+
+button:hover {
+    background-color: #1e478a;
+}

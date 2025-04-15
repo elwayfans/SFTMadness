@@ -1,8 +1,5 @@
 /*
 Use the naming convention as you see below so that these routes can stay clean. 
-To do list:
-Hook up routes 
-Make navbar ----
 */
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
