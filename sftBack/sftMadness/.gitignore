@@ -237,6 +237,11 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# AWS SAM build output
+.aws-sam/
+# AWS CLI cache or credentials (if ever present)
+.aws/
+
 # Build folder
 
 */build/*
