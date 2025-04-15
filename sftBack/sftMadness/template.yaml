@@ -9,7 +9,6 @@ Globals:
   Function:
     Timeout: 60
     MemorySize: 512
-    Runtime: python3.12
     Architectures:
       - x86_64
     LoggingConfig:
@@ -24,12 +23,12 @@ Globals:
         DB_NAME: !Ref DBName
         DB_HOST: !Ref DBHost
         DB_USER: !Ref DBUser
-        DB_PASSWORD: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg:SecretString:password}}'
+        DB_PASSWORD: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-1:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg:SecretString:password}}'
         DB_PORT: !Ref DBPort
 
         #ref cognito parameters
-        COGNITO_USER_POOL_ID: !Ref UserPool
-        COGNITO_CLIENT_ID: !Ref UserPoolClient
+        COGNITO_USER_POOL_ID: PoolID
+        COGNITO_CLIENT_ID: clientID
 
         #ref s3 bucket
         S3_BUCKET_NAME: !Ref FileStorageBucket
@@ -40,10 +39,6 @@ Globals:
         SES_DOMAIN: !Ref SESDomain
         SES_REGION: !Ref SESRegion
         SES_CONFIGURATION_SET: !Ref SESConfigurationSet
-
-    #global dependencies
-    Layers:
-      - !Ref DependenciesLayer
 
     #global vpc configuration
     VpcConfig:
@@ -168,7 +163,7 @@ Resources:
                   - secretsmanager:GetSecretValue
                 #access to the rds secret
                 Resource: 
-                  - !Sub 'arn:aws:secretsmanager:us-east-2:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg'
+                  - !Sub 'arn:aws:secretsmanager:us-east-1:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg'
         - PolicyName: CognitoAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -345,9 +340,7 @@ Resources:
     Properties:
       LayerName: sftMadnessDependencies
       Description: Dependencies for sftMadness
-      ContentUri: ./
-      CompatibleRuntimes:
-        - python3.12
+      ContentUri: ./layers/
     Metadata:
       BuildMethod: python3.12
 
@@ -595,8 +588,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: email/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["email.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn
       # all endpoints in email service
       Events:
@@ -633,29 +628,32 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: send-email-lambda
 
 # Token Cleanup Function
   TokenCleanupFunction:
-      Type: AWS::Serverless::Function
-      DependsOn:
-        - PrivateSubnet1RouteTableAssociation
-        - PrivateSubnet2RouteTableAssociation
-        - PrivateSubnet3RouteTableAssociation
-        - NatGateway
-      Properties:
-        CodeUri: cleanup/
-        Handler: app.lambda_handler
-        Role: !GetAtt LambdaExecutionRole.Arn
-        Events:
-          # function is scheduled to run daily
-          # cleans expired tokens stored in the database
-          ScheduledCleanup:
-            Type: Schedule
-            Properties:
-              Schedule: rate(1 day)
-              Name: TokenCleanupSchedule
-              Description: Daily cleanup of expired tokens
-              Enabled: true
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - PrivateSubnet1RouteTableAssociation
+      - PrivateSubnet2RouteTableAssociation
+      - PrivateSubnet3RouteTableAssociation
+      - NatGateway
+    Properties:
+      CodeUri: cleanup/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ScheduledCleanup:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+            Name: TokenCleanupSchedule
+            Description: Daily cleanup of expired tokens
+            Enabled: true
 
 ##########################################
 
@@ -667,8 +665,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: users_by_cognito/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: users_by_cognito/
+      ImageConfig:
+        Command: ["users_by_cognito.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         # get user by cognito id
@@ -687,6 +687,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: users-by-cognito-lambda
 
   logIn:
     Type: AWS::Serverless::Function
@@ -696,8 +700,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: login/
-      Handler: app.login_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["login.app.login_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logIn:
@@ -716,6 +722,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: login-lambda
 
   logOut:
     Type: AWS::Serverless::Function
@@ -725,8 +735,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: logout/
-      Handler: app.logout_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["logout.app.logout_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logOut:
@@ -743,6 +755,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: logout-lambda
 
   users:
     Type: AWS::Serverless::Function
@@ -752,8 +768,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: users/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["users.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         # can never have more than one route with the same path and method
@@ -827,6 +845,10 @@ Resources:
             Method: options 
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: users-lambda
 
   AICustoms:
     Type: AWS::Serverless::Function
@@ -836,8 +858,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: ai_customs/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["ai_customs.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         setCustoms:
@@ -872,6 +896,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: customs-lambda
 
   files:
     Type: AWS::Serverless::Function
@@ -881,8 +909,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: files/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["files.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         uploadFile:
@@ -919,6 +949,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: files-lambda
 
   scrapedFiles:
     Type: AWS::Serverless::Function
@@ -928,8 +962,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: scrapedFiles/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["scrappedFiles.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         uploadFile:
@@ -966,6 +1002,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: scrapped-files-lambda
 
   schoolContact:
     Type: AWS::Serverless::Function
@@ -975,8 +1015,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: school_contact/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["school_contact.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         createContact:
@@ -1019,6 +1061,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: contact-lambda
 
   events:
     Type: AWS::Serverless::Function
@@ -1028,8 +1074,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: sftEvents/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["sftEvents.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         scheduleEvent:
@@ -1078,6 +1126,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: sft-events-lambda
 
   conversationLogs:
     Type: AWS::Serverless::Function
@@ -1087,8 +1139,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: conversation_logs/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["conversation_logs.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logConversation:
@@ -1119,6 +1173,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: conversation-logs-lambda
 
   analytics:
     Type: AWS::Serverless::Function
@@ -1128,8 +1186,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: analytics/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["analytics.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         logMetric:
@@ -1160,6 +1220,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: analyitics-lambda
 
   admins:
     Type: AWS::Serverless::Function
@@ -1169,8 +1233,10 @@ Resources:
       - PrivateSubnet3RouteTableAssociation
       - NatGateway
     Properties:
-      CodeUri: admins/
-      Handler: app.lambda_handler
+      PackageType: Image
+      ImageUri: ./src
+      ImageConfig:
+        Command: ["admins.app.lambda_handler"]
       Role: !GetAtt LambdaExecutionRole.Arn 
       Events:
         createAdmin:
@@ -1247,6 +1313,10 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./src
+      DockerTag: admins-lambda
 
   # Application Insights Resource Group
   ApplicationResourceGroup:

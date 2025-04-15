@@ -383,7 +383,7 @@ def process_incoming_email(event):
         ai_response = get_ai_response(text_content, history)
         
         # Send AI response
-        send_email(
+        sendEmail(
             from_address,
             ai_response['subject'],
             ai_response['body_text'],

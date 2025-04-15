@@ -1,5 +1,6 @@
 import json
 import os
+import base64
 import psycopg2
 from datetime import datetime, date
 import boto3
@@ -197,7 +198,15 @@ def verify_token(token):
 ####################
 #user functions
 def registerUser(event, context):
-
+    
+        # Decode and parse body once
+    raw_body = event.get("body")
+    if event.get("isBase64Encoded"):
+        decoded = base64.b64decode(raw_body).decode("utf-8")
+        body = json.loads(decoded)
+    else:
+        body = json.loads(raw_body)
+        
     conn = None
     user_pool_id = os.environ['COGNITO_USER_POOL_ID']
     cognito_client = boto3.client('cognito-idp')
