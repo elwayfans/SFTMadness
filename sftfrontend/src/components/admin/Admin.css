@@ -5,11 +5,29 @@
 
 
 */
+:root {
+    --body-color: #fff;
+    --bg-color: #f5e3d3;
+    --card-color: #2e4a94;
+    --text-color: #fff;
+    --head-color: #000;
+    --btn-color: #000;
+    --accent: #aad4f5;
+}
+
+body.dark {
+    --body-color: #000;
+    --bg-color: #dc9c63;
+    --card-color: #2e4a94;
+    --text-color: #fff;
+    --head-color: #fff;
+    --accent: #66b1ed;
+}
 
 .sft-profile-container {
     display: flex;
     justify-content: center;
-    background-color: #fbe8d3;
+    background-color: var(--bg-color);
     padding: 2rem;
     flex-wrap: wrap;
     width: 800px;
@@ -18,7 +36,7 @@
 }
 
 .sft-info {
-    background-color: #fbe8d3;
+    background-color: var(--bg-color);
     padding: 1rem;
     width: 300px;
     text-align: center;
@@ -46,7 +64,7 @@
 }
 
 .contacts-section {
-    background-color: #a3e6ff;
+    background-color: var(--accent);
     padding: 1.5rem;
     flex: 1;
     min-width: 300px;
@@ -62,7 +80,7 @@
     justify-content: space-between;
     align-items: center;
     background-color: #2f4fb2;
-    color: white;
+    color: var(--text-color);
     padding: 0.8rem 1rem;
     border: 2px solid black;
     border-radius: 5px;
