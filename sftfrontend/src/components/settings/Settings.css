@@ -2,9 +2,7 @@
     --body-color: #fff;
     --bg-color: #f5e3d3;
     --card-color: #2e4a94;
-    --text-color: #fff;
-    --head-color: #000;
-    --btn-color: #000;
+    --txt-color: #000;
     --accent: #aad4f5;
 }
 
@@ -12,8 +10,7 @@ body.dark {
     --body-color: #000;
     --bg-color: #dc9c63;
     --card-color: #2e4a94;
-    --text-color: #fff;
-    --head-color: #fff;
+    --txt-color: #fff;
     --accent: #66b1ed;
 }
 
@@ -35,14 +32,17 @@ body {
     margin: 0 auto;
     height: 770px;
     background-color: var(--bg-color);
-    color: var(--text-color);
+}
+
+.settings-container label{
+    color:#fff;
 }
 
 .settings-title {
     font-size: 2.5rem;
     font-weight: bold;
     margin-bottom: 30px;
-    color: var(--head-color);
+    color: var(--txt-color);
 }
 
 .settings-card {
@@ -123,7 +123,7 @@ input:checked+.slider:before {
 
 .confirm-button {
     background-color: var(--accent);
-    color: var(--btn-color);
+    color: var(--txt-color);
     padding: 6px 12px;
     border: none;
     border-radius: 5px;
@@ -132,7 +132,7 @@ input:checked+.slider:before {
 
 .twofa-button {
     background-color: var(--accent);
-    color: var(--btn-color);
+    color: var(--txt-color);
     border: none;
     padding: 10px 20px;
     border-radius: 5px;

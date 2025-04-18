@@ -10,9 +10,8 @@
     --body-color: #fff;
     --bg-color: #f5e3d3;
     --card-color: #2e4a94;
-    --text-color: #fff;
-    --head-color: #000;
-    --btn-color: #000;
+    --txt-color: #000;
+    --btntxt-color: #fff;
     --accent: #aad4f5;
 }
 
@@ -20,8 +19,7 @@ body.dark {
     --body-color: #000;
     --bg-color: #dc9c63;
     --card-color: #2e4a94;
-    --text-color: #fff;
-    --head-color: #fff;
+    --txt-color: #fff;
     --accent: #66b1ed;
 }
 
@@ -37,7 +35,7 @@ body.dark {
 }
 
 .signUpTitle{
-    color: var(--head-color);
+    color: var(--txt-color);
 }
 
 .signUpForm {
@@ -49,6 +47,7 @@ body.dark {
     text-align: left;
     flex-direction: column;
     margin: 0 auto;
+    color: var(--txt-color);
 }
 
 .signUpForm input, select {
@@ -67,7 +66,7 @@ body.dark {
     justify-content: center;
     margin: 0 auto;
     background-color: var(--card-color);
-    color: var(--text-color);
+    color: var(--btntxt-color);
     padding: 12px;
     font-size: 16px;
     border: none;
@@ -95,7 +94,7 @@ body.dark {
 }
 
 .loginTitle{
-    color: var(--head-color);
+    color: var(--txt-color);
 }
 
 .loginForm {
@@ -107,6 +106,7 @@ body.dark {
     text-align: left;
     flex-direction: column;
     margin: 0 auto;
+    color: var(--text-color);
 }
 
 .loginForm input {
@@ -126,7 +126,7 @@ body.dark {
     margin: 0 auto;
     margin-top: 100px;
     background-color: var(--card-color);
-    color: var(--text-color);
+    color: var(--btntxt-color);
     padding: 12px;
     font-size: 16px;
     border: none;
@@ -140,7 +140,7 @@ body.dark {
     justify-content: center;
     margin: 0 auto;
     background-color: var(--card-color);
-    color: var(--text-color);
+    color: var(--btntxt-color);
     padding: 12px;
     font-size: 16px;
     border: none;
