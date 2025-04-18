@@ -27,7 +27,7 @@ body.dark {
 .student-profile-container {
     display: flex;
     justify-content: center;
-    background-color: var(--body-color);
+    background-color: var(--bg-color);
     padding: 2rem;
     flex-wrap: wrap;
     width: 800px;
@@ -36,7 +36,7 @@ body.dark {
 }
 
 .student-info {
-    background-color: var(--body-color);
+    background-color: var(--bg-color);
     padding: 1rem;
     width: 300px;
     text-align: center;
