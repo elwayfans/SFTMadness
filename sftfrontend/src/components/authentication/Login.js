@@ -42,16 +42,50 @@ const Login = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = formValidate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-    } else {
-      setErrors({});
-      console.log("Form submitted", formData);
-      alert("Welcome!")
-      //navigate("/profile");
+      return;
+    }
+  
+    try {
+      const response = await fetch("http://localhost:3001/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("Welcome!");
+  
+        // Navigate based on role
+        const userRole = data.role;
+        if (userRole === "SFT") {
+          navigate("/sft-profile");
+        } else if (userRole === "School") {
+          navigate("/school-profile");
+        } else if (userRole === "Student") {
+          navigate("/student-profile");
+        } else {
+          console.warn("Unknown role. Redirecting to home.");
+          navigate("/");
+        }
+  
+      } else {
+        alert(data.message || "Login failed.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Something went wrong.");
     }
   };
 
