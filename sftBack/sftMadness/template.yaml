@@ -27,8 +27,8 @@ Globals:
         DB_PORT: !Ref DBPort
 
         #ref cognito parameters
-        COGNITO_USER_POOL_ID: PoolID
-        COGNITO_CLIENT_ID: clientID
+        COGNITO_USER_POOL_ID: [PoolID]
+        COGNITO_CLIENT_ID: [ClientID]
 
         #ref s3 bucket
         S3_BUCKET_NAME: !Ref FileStorageBucket
@@ -821,13 +821,19 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref sft
-            Path: /users/resetPassword/{userId}
-            Method: put
+            Path: /users/resetPassword
+            Method: post
+        resetUserPasswordConfirm:
+          Type: Api
+          Properties:
+            RestApiId: !Ref sft
+            Path: /users/confirmResetPassword
+            Method: post
         resetUserPasswordOptions:
           Type: Api
           Properties:
             RestApiId: !Ref sft
-            Path: /users/resetPassword/{userId}
+            Path: /users/resetPassword
             Method: options
             Auth:
               Authorizer: NONE
