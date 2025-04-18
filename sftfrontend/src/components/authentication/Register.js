@@ -50,15 +50,30 @@ const Register = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = formValidate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
     } else {
       setErrors({});
-      console.log("Form submitted", formData);
-      navigate("/login");
+      try {
+        const response = await fetch("http://localhost:3001/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+  
+        const data = await response.json();
+        if (response.ok) {
+          alert(data.message);
+          navigate("/login");
+        } else {
+          alert(data.error);
+        }
+      } catch (error) {
+        console.error("Error during registration:", error);
+      }
     }
   };
 
