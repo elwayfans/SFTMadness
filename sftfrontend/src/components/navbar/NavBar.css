@@ -1,7 +1,17 @@
+:root {
+    --nav-color:#95dcfb;
+    --navbtn-color:#1e3c8c;
+    --text-color: #fff;
+}
 
+body.dark {
+    --nav-color:#1a1c4c;
+    --navbtn-color:#203e91;
+    --text-color: #fff;
+}
 
 nav {
-    background-color: #95dcfb;
+    background-color: var(--nav-color);
     padding: 10px 20px;
     display: flex;
     justify-content: center;
@@ -37,8 +47,8 @@ nav li {
 
 nav a {
     display: inline-block;
-    background-color: #1e3c8c;
-    color: white;
+    background-color: var(--navbtn-color);
+    color: var(--text-color);
     text-decoration: none;
     padding: 10px 20px;
     border-radius: 5px;

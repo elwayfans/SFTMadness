@@ -15,7 +15,6 @@ Classnames for styling:
     --body-color: #fff;
     --bg-color: #f5e3d3;
     --card-color: #2e4a94;
-    --text-color: #fff;
     --head-color: #000;
     --btn-color: #000;
     --accent: #aad4f5;
@@ -25,8 +24,7 @@ body.dark {
     --body-color: #000;
     --bg-color: #dc9c63;
     --card-color: #2e4a94;
-    --text-color: #fff;
-    --head-color: #fff;
+    --head-color: #000;
     --accent: #66b1ed;
 }
 
@@ -56,7 +54,7 @@ body {
 .aboutUsBody {
     max-width: 800px;
     margin: 0 auto 60px auto;
-    color: var(--text-color);
+    color: var(--head-color);
     padding: 20px;
 }
 
@@ -108,6 +106,7 @@ body {
     justify-self: center;
     margin: 0 auto;
     background-color: #063a5d;
+    width: 131px;
     color: white;
     padding: 12px;
     font-size: 16px;

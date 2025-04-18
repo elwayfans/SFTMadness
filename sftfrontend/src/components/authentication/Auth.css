@@ -33,7 +33,11 @@ body.dark {
     text-align: center;
     align-content: center;
     flex-direction: column;
-    background-color: #fbe7d6;
+    background-color: var(--bg-color);
+}
+
+.signUpTitle{
+    color: var(--head-color);
 }
 
 .signUpForm {
@@ -62,8 +66,8 @@ body.dark {
     width: 50%;
     justify-content: center;
     margin: 0 auto;
-    background-color: #063a5d;
-    color: white;
+    background-color: var(--card-color);
+    color: var(--text-color);
     padding: 12px;
     font-size: 16px;
     border: none;
@@ -87,7 +91,11 @@ body.dark {
     text-align: center;
     align-content: center;
     flex-direction: column;
-    background-color: #fbe7d6;
+    background-color: var(--bg-color);
+}
+
+.loginTitle{
+    color: var(--head-color);
 }
 
 .loginForm {
@@ -117,8 +125,8 @@ body.dark {
     justify-content: center;
     margin: 0 auto;
     margin-top: 100px;
-    background-color: #063a5d;
-    color: white;
+    background-color: var(--card-color);
+    color: var(--text-color);
     padding: 12px;
     font-size: 16px;
     border: none;
@@ -131,8 +139,8 @@ body.dark {
     width: 40%;
     justify-content: center;
     margin: 0 auto;
-    background-color: #063a5d;
-    color: white;
+    background-color: var(--card-color);
+    color: var(--text-color);
     padding: 12px;
     font-size: 16px;
     border: none;
@@ -151,7 +159,7 @@ body.dark {
     text-align: center;
     align-content: center;
     flex-direction: column;
-    background-color: #fbe7d6;
+    background-color: var(--bg-color);
 }
 
 .forgotpasswordForm {
