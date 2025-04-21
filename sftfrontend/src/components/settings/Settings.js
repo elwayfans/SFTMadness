@@ -1,7 +1,8 @@
 /*
-
-
-
+Add functionality for the password
+Add functionality for the 2FA
+Hook up the update password with the backend
+Hook up the 2FA with the backend
 */
 import React, {useState, useEffect} from 'react'
 import './Settings.css';
@@ -38,8 +39,10 @@ const Settings = () => {
                 <hr />
 
                 <div className="password-section">
-                    <label htmlFor="password">Update Password:</label>
-                    <input type="password" id="password" />
+                    <label htmlfpr="password">Current Password:</label>
+                    <input type="password" id="password" required/>
+                    <label htmlFor="password">Updated Password:</label>
+                    <input type="password" id="password" required/>
                     <button className="confirm-button">Confirm</button>
                 </div>
 
