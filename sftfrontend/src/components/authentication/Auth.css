@@ -106,7 +106,7 @@ body.dark {
     text-align: left;
     flex-direction: column;
     margin: 0 auto;
-    color: var(--text-color);
+    color: var(--txt-color);
 }
 
 .loginForm input {
