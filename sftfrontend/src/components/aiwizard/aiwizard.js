@@ -28,9 +28,6 @@ export default function AIWizardCustomizer() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 4));
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
-
   return (
     <div className="aiwizard-container">
       <h2>Build Your AI Assistant</h2>
@@ -50,8 +47,8 @@ export default function AIWizardCustomizer() {
       {/* Step 1: Bot Info */}
       {step === 1 && (
         <div>
-          <input name="modelname" placeholder="Bot Name" value={form.modelname} onChange={handleChange} />
-          <input name="modellogo" placeholder="Logo URL" value={form.modellogo} onChange={handleChange} />
+          <input className="modelname" name="modelname" placeholder="Bot Name" value={form.modelname} onChange={handleChange} />
+          <input className="modelurl" name="modellogo" placeholder="Logo URL" value={form.modellogo} onChange={handleChange} />
         </div>
       )}
 
@@ -59,9 +56,7 @@ export default function AIWizardCustomizer() {
       {step === 2 && (
         <div>
           <textarea name="botintro" placeholder="Bot Intro Message" value={form.botintro} onChange={handleChange} />
-          <br/>
           <textarea name="botgoodbye" placeholder="Goodbye Message" value={form.botgoodbye} onChange={handleChange} />
-          <br/>
           <textarea name="botinstructions" placeholder="Special Instructions" value={form.botinstructions} onChange={handleChange} />
         </div>
       )}
@@ -85,7 +80,7 @@ export default function AIWizardCustomizer() {
       {/* Step 4: Sliders */}
       {step === 4 && (
         <div>
-          {['friendliness', 'formality', 'verbosity', 'humor', 'technicalLevel'].map((attr) => (
+          {['Friendliness', 'Formality', 'Verbosity', 'Humor', 'TechnicalLevel'].map((attr) => (
             <div key={attr}>
               <label className="capitalize">{attr}:</label>
               <input
