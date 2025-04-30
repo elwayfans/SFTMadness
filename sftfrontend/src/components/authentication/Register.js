@@ -58,10 +58,18 @@ const Register = () => {
     } else {
       setErrors({});
       try {
-        const response = await fetch("http://localhost:3001/login", {
+        const userData = {
+          ...formData,
+          name: `${formData.fname} ${formData.lname}`,
+        };
+  
+        delete userData.fname;
+        delete userData.lname;
+  
+        const response = await fetch("http://localhost:3001/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(userData),
         });
   
         const data = await response.json();
