@@ -1,42 +1,56 @@
-/*
-Use the naming convention as you see below so that this navbar can stay clean. 
-Other Routes/ nav that needs to be added:
-Profile (Student)
-Profile (School)
-Admin (SFT/ schools)
-*/
-import React from 'react';
-import './NavBar.css'
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import './NavBar.css';
 
 function NavBar() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [role, setRole] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedRole = localStorage.getItem('role');
+    setIsLoggedIn(!!token);
+    if (storedRole) {
+      setRole(storedRole);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    setIsLoggedIn(false);
+    setRole('');
+    navigate('/');
+  };
+
   return (
-    /*
-    if logged in display the following navbar and have the profile link show a drop down menu that shows settings and sign out
-
     <nav>
       <img src="/images/sft.png" alt="sft" className="images" />
       <ul>
         <li>
-          <Link className='flex-container' to="/">Home</Link>
-          <Link className='flex-container' to="/aboutus">About Us</Link>
-          <Link className='flex-container' to="/ai-chatbot">Chat(AI)</Link>
-          <Link className='flex-container' to="/Profile">Profile</Link>
+          <Link className="flex-container" to="/">Home</Link>
+          <Link className="flex-container" to="/aboutus">About Us</Link>
 
-                make the above link a drop down that has Settings and Sign Out
-        </li>
-      </ul>
-    </nav>
-    */
-
-    <nav>
-      <img src="/images/sft.png" alt="sft" className="images" />
-      <ul>
-        <li>
-          <Link className='flex-container' to="/">Home</Link>
-          <Link className='flex-container' to="/aboutus">About Us</Link>
-          <Link className='flex-container' to="/signup">Sign Up</Link>
-          <Link className='flex-container' to="/login">Login</Link>
+          {!isLoggedIn ? (
+            <>
+              <Link className="flex-container" to="/signup">Sign Up</Link>
+              <Link className="flex-container" to="/login">Login</Link>
+            </>
+          ) : (
+            <>
+              {role === 'Student' && (
+                <Link className="flex-container" to="/student-profile">Profile</Link>
+              )}
+              {role === 'School' && (
+                <Link className="flex-container" to="/school-profile">Profile</Link>
+              )}
+              {role === 'SFT' && (
+                <Link className="flex-container" to="/admin-profile">Profile</Link>
+              )}
+              <button className="flex-container" onClick={handleLogout}>Logout</button>
+            </>
+          )}
         </li>
       </ul>
     </nav>
