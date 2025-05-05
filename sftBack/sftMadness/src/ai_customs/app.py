@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import psycopg2
@@ -6,8 +7,70 @@ import boto3
 import jwt
 from botocore.exceptions import ClientError
 from psycopg2.extras import RealDictCursor
-import requests
-from jwt import algorithms
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from tokenValidation.validate import validate_token
+from urllib.parse import parse_qs
+
+# MongoDB client
+uri = os.getenv("MONGODB_URI")
+client = MongoClient(uri, server_api=ServerApi('1'))
+db = client["AICustoms"]
+collection = db["AI_Organization_Customs"]
+
+##########################
+# Constants & Field Rules
+REQUIRED_FIELDS = [
+    'modelName', 'modelLogo', 'introduction', 'friendliness', 'formality',
+    'accent', 'verbosity', 'humor', 'technicalLevel',
+    'preferredGreeting', 'signatureClosing', 'instructions'
+]
+
+RANGED_FIELDS = ['friendliness', 'formality', 'verbosity', 'humor', 'technicalLevel']
+
+##########################
+# Main Lambda Entry
+
+def lambda_handler(event, context):
+    if event['httpMethod'] == 'OPTIONS':
+        return cors_response(200, "ok")
+
+    http_method = event['httpMethod']
+    resource_path = event['resource']
+
+    # Authentication
+    try:
+        auth_header = event.get('headers', {}).get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return cors_response(401, {"error": "Unauthorized"})
+
+        token = auth_header.split(" ")[1]
+        decoded_token = validate_token(token)
+        user_sub = decoded_token.get("sub")
+        if not user_sub:
+            return cors_response(400, {"error": "Invalid token: no sub found"})
+    except Exception:
+        return cors_response(401, {"error": "Authentication failed"})
+
+    try:
+        if resource_path == '/customs':
+            if http_method == 'POST':
+                return set_customs(event, user_sub)
+            elif http_method == 'GET':
+                return get_customs(user_sub)
+            elif http_method == 'PUT':
+                return update_customs(event, user_sub)
+            elif http_method == 'DELETE':
+                return delete_customs(user_sub)
+            else:
+                return cors_response(405, {"error": "Method Not Allowed"})
+        else:
+            return cors_response(404, {"error": "Not Found"})
+    except Exception as e:
+        return cors_response(500, {"error": str(e)})
+
+##########################
+# Utilities
 
 def cors_response(status_code, body, content_type="application/json"):
     headers = {
@@ -26,390 +89,87 @@ def cors_response(status_code, body, content_type="application/json"):
         'headers': headers,
     }
 
-def lambda_handler(event, context):
-    if event['httpMethod'] == 'OPTIONS':
-        return cors_response(200, "ok")
+def parse_body(event):
+    raw_body = event.get("body")
+    if not raw_body:
+        return {}
+
+    if event.get("isBase64Encoded", False):
+        raw_body = base64.b64decode(raw_body).decode("utf-8")
+
+    content_type = event.get("headers", {}).get("Content-Type", "")
     
-    http_method = event['httpMethod']
-    resource_path = event['resource']
-    
-    try:
-        #verify token
-        auth_header = event.get('headers', {}).get('Authorization')
-        if not auth_header:
-            return cors_response(401, "Unauthorized")
-        
-        token = auth_header.split(' ')[-1]
-        verify_token(token)
+    if "application/json" in content_type:
+        return json.loads(raw_body)
+    elif "application/x-www-form-urlencoded" in content_type:
+        parsed = parse_qs(raw_body)
+        return {k: v[0] for k, v in parsed.items()}
+    else:
+        raise ValueError("Unsupported content type")
 
-    except Exception as e:
-        return cors_response(401, "Authentication failed")
-        
-    #routes with authentication
-    try:
-        if resource_path == '/customs' and http_method == 'POST':
-            return setCustoms(event, context)
-        elif resource_path == '/customs' and http_method == 'GET':
-            return getCustoms(event, context)
-        elif resource_path == '/customs' and http_method == 'PUT':
-            return updateCustoms(event, context)
-        elif resource_path == '/customs' and http_method == 'DELETE':
-            return deleteCustoms(event, context)
-        else:
-            return cors_response(404, "Not Found")
-        
-    except Exception as e:
-        return cors_response(500, str(e))
-    
-###################
-#helper functions
+def validate_fields(body):
+    missing = [field for field in REQUIRED_FIELDS if field not in body]
+    if missing:
+        return f"Missing required fields: {', '.join(missing)}"
 
-def json_serial(obj):
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
-
-def get_db_connection():
-    return psycopg2.connect(
-        dbname=os.environ['DB_NAME'],
-        host=os.environ['DB_HOST'],
-        user=os.environ['DB_USER'],
-        password=os.environ['DB_PASSWORD'],
-        port=os.environ['DB_PORT'],
-
-        connect_timeout=5)
-    
-#AUTH
-def is_token_invalidated(token_payload):
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            jti = token_payload.get('jti')
-            
-            if not jti:
-                raise Exception("Token missing jti claim")
-            
-            cur.execute("""
-                SELECT EXISTS(
-                    SELECT 1 
-                    FROM invalidated_tokens 
-                    WHERE jti = %s
-                )
-            """, (jti,))
-            
-            return cur.fetchone()[0]
-
-
-def verify_token(token):
-    # Get the JWT token from the Authorization header
-    if not token:
-        raise Exception('No token provided')
-
-    region = boto3.session.Session().region_name
-    
-    # Get the JWT kid (key ID)
-    headers = jwt.get_unverified_header(token)
-    kid = headers['kid']
-
-    # Get the public keys from Cognito
-    url = f'https://cognito-idp.{region}.amazonaws.com/{os.environ["COGNITO_USER_POOL_ID"]}/.well-known/jwks.json'
-    response = requests.get(url)
-    keys = response.json()['keys']
-
-    # Find the correct public key
-    public_key = None
-    for key in keys:
-        if key['kid'] == kid:
-            public_key = algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
-            break
-
-    if not public_key:
-        raise Exception('Public key not found')
-
-    # Verify the token
-    try:
-        payload = jwt.decode(
-            token,
-            public_key,
-            algorithms=['RS256'],
-            audience=os.environ['COGNITO_CLIENT_ID'],
-            options={"verify_exp": True}
-        )
-
-        if is_token_invalidated(payload):
-            raise Exception('Token has been invalidated')
-        
-        return payload
-    
-    except jwt.ExpiredSignatureError:
-        raise Exception('Token has expired')
-    except jwt.InvalidTokenError:
-        raise Exception('Invalid token')
-
-####################
-#customs functions
-
-def setCustoms(event, context):
-    conn = None
-    try:
-        # Parse request body
+    for field in RANGED_FIELDS:
         try:
-            body = json.loads(event.get('body', {}))
-        except json.JSONDecodeError as e:
-            return cors_response(400, f"Invalid JSON: {str(e)}")
+            value = int(body[field])
+            if not (0 <= value <= 100):
+                return f"{field.capitalize()} must be between 0 and 100"
+        except (ValueError, TypeError):
+            return f"{field.capitalize()} must be an integer between 0 and 100"
 
-        # Get requester's ID from token for authorization
-        auth_header = event.get('headers', {}).get('Authorization')
-        token = auth_header.split(' ')[-1]
-        token_payload = verify_token(token)
-        cognito_user_id = token_payload.get('sub')
+    return None
 
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT id FROM users WHERE cognito_id = %s", (cognito_user_id,))
-        db_user = cur.fetchone()
-        if not db_user:
-            return cors_response(404, "User not found")
-        user_id = db_user['id']
+##########################
+# Route Handlers
 
-        # Extract customs information
-        model_name = body.get('modelName')
-        model_logo = body.get('modelLogo')
-        introduction = body.get('introduction')
-        friendliness = body.get('friendliness')
-        formality = body.get('formality')
-        accent = body.get('accent')
-        verbosity = body.get('verbosity')
-        humor = body.get('humor')
-        technicalLevel = body.get('technicalLevel')
-        preferredGreeting = body.get('preferredGreeting')
-        signatureClosing = body.get('signatureClosing')
-        instructions = body.get('instructions')
+def set_customs(event, user_sub):
+    body = parse_body(event)
 
-        # Validate required fields
-        if not model_name:
-            return cors_response(400, "Model name is required")
+    validation_error = validate_fields(body)
+    if validation_error:
+        return cors_response(400, {"error": validation_error})
 
-        # Validate numeric ranges
-        if friendliness is not None and not (0 <= friendliness <= 100):
-            return cors_response(400, "Friendliness must be between 0 and 100")
-        if formality is not None and not (0 <= formality <= 100):
-            return cors_response(400, "Formality must be between 0 and 100")
-        if verbosity is not None and not (0 <= verbosity <= 100):
-            return cors_response(400, "Verbosity must be between 0 and 100")
-        if humor is not None and not (0 <= humor <= 100):
-            return cors_response(400, "Humor must be between 0 and 100")
-        if technicalLevel is not None and not (0 <= technicalLevel <= 100):
-            return cors_response(400, "Technical level must be between 0 and 100")
+    item = {
+        "sub": user_sub,
+        **{field: body[field] for field in REQUIRED_FIELDS}
+    }
 
-        # Check if customs already exist for this user
-        cur.execute(
-            "SELECT id FROM customs WHERE userId = %s",
-            (user_id,)
-        )
-        existing = cur.fetchone()
+    existing = collection.find_one({"sub": user_sub})
+    if existing:
+        collection.update_one({"sub": user_sub}, {"$set": item})
+        return cors_response(200, {"message": "Data updated successfully"})
+    else:
+        collection.insert_one(item)
+        return cors_response(201, {"message": "Data created successfully"})
 
-        if existing:
-            return cors_response(400, "Customs already exist for this user. Use PUT to update.")
+def get_customs(user_sub):
+    result = collection.find_one({"sub": user_sub}, {"_id": 0})
+    if not result:
+        return cors_response(404, {"error": "No data found"})
+    return cors_response(200, {"data": result})
 
-        # Insert new customs
-        insert_query = """
-            INSERT INTO customs (
-                userId, modelName, modelLogo, introduction,
-                friendliness, formality, accent, verbosity, humor, 
-                technicalLevel, preferredGreeting, signatureClosing, instructions
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING *
-        """
-        cur.execute(insert_query, (
-            user_id, model_name, model_logo, introduction,
-            friendliness, formality, accent, verbosity, humor,
-            technicalLevel, preferredGreeting, signatureClosing, instructions
-        ))
-        new_customs = cur.fetchone()
-        
-        conn.commit()
-        
-        return cors_response(201, {"customs": new_customs})
+def update_customs(event, user_sub):
+    body = parse_body(event)
+    if not body:
+        return cors_response(400, {"error": "No data provided"})
 
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        return cors_response(500, f"Error setting customs: {str(e)}")
-    finally:
-        if conn:
-            conn.close()
+    validation_error = validate_fields(body)
+    if validation_error:
+        return cors_response(400, {"error": validation_error})
 
-def getCustoms(event, context):
-    conn = None
-    try:
-        # Get requester's ID from token for authorization
-        auth_header = event.get('headers', {}).get('Authorization')
-        token = auth_header.split(' ')[-1]
-        token_payload = verify_token(token)
-        cognito_user_id = token_payload.get('sub')
+    update_fields = {field: body[field] for field in REQUIRED_FIELDS}
+    result = collection.update_one({"sub": user_sub}, {"$set": update_fields})
 
-        # Anyone can view customs, no authorization needed
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT id FROM users WHERE cognito_id = %s", (cognito_user_id,))
-        db_user = cur.fetchone()
-        if not db_user:
-            return cors_response(404, "User not found")
-        user_id = db_user['id']
+    if result.matched_count == 0:
+        return cors_response(404, {"error": "Data not found"})
 
-        # Get customs with user information
-        query = """
-            SELECT c.*, u.email, u.role, u.companyName
-            FROM customs c
-            JOIN users u ON c.userId = u.id
-            WHERE c.userId = %s
-        """
-        cur.execute(query, (user_id,))
-        customs = cur.fetchone()
+    return cors_response(200, {"message": "Data updated successfully"})
 
-        if not customs:
-            return cors_response(404, "Customs not found")
-
-        return cors_response(200, {"customs": customs})
-
-    except Exception as e:
-        return cors_response(500, f"Error retrieving customs: {str(e)}")
-    finally:
-        if conn:
-            conn.close()
-
-def updateCustoms(event, context):
-    conn = None
-    try:
-        # Parse request body
-        try:
-            body = json.loads(event.get('body', {}))
-        except json.JSONDecodeError as e:
-            return cors_response(400, f"Invalid JSON: {str(e)}")
-
-        # Get requester's ID from token for authorization
-        auth_header = event.get('headers', {}).get('Authorization')
-        token = auth_header.split(' ')[-1]
-        token_payload = verify_token(token)
-        cognito_user_id = token_payload.get('sub')
-
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT id FROM users WHERE cognito_id = %s", (cognito_user_id,))
-        db_user = cur.fetchone()
-        if not db_user:
-            return cors_response(404, "User not found")
-        user_id = db_user['id']
-
-        # Extract updateable fields
-        updateable_fields = {
-            'modelName': body.get('modelName'),
-            'modelLogo': body.get('modelLogo'),
-            'introduction': body.get('introduction'),
-            'friendliness': body.get('friendliness'),
-            'formality': body.get('formality'),
-            'accent': body.get('accent'),
-            'verbosity': body.get('verbosity'),
-            'humor': body.get('humor'),
-            'technicalLevel': body.get('technicalLevel'),
-            'preferredGreeting': body.get('preferredGreeting'),
-            'signatureClosing': body.get('signatureClosing'),
-            'instructions': body.get('instructions')
-        }
-
-        # Remove None values
-        update_fields = {k: v for k, v in updateable_fields.items() if v is not None}
-
-        if not update_fields:
-            return cors_response(400, "No valid fields to update")
-
-        # Validate numeric ranges
-        if 'friendliness' in update_fields and not (0 <= update_fields['friendliness'] <= 100):
-            return cors_response(400, "Friendliness must be between 0 and 100")
-        if 'formality' in update_fields and not (0 <= update_fields['formality'] <= 100):
-            return cors_response(400, "Formality must be between 0 and 100")
-        if 'verbosity' in update_fields and not (0 <= update_fields['verbosity'] <= 100):
-            return cors_response(400, "Verbosity must be between 0 and 100")
-        if 'humor' in update_fields and not (0 <= update_fields['humor'] <= 100):
-            return cors_response(400, "Humor must be between 0 and 100")
-        if 'technicalLevel' in update_fields and not (0 <= update_fields['technicalLevel'] <= 100):
-            return cors_response(400, "Technical level must be between 0 and 100")
-
-        # Verify customs exist
-        cur.execute(
-            "SELECT id FROM customs WHERE userId = %s",
-            (user_id,)
-        )
-        if not cur.fetchone():
-            return cors_response(404, "Customs not found")
-
-        # Construct UPDATE query dynamically
-        set_clause = ", ".join([f"{k} = %s" for k in update_fields.keys()])
-        values = list(update_fields.values()) + [user_id]
-
-        update_query = f"""
-            UPDATE customs 
-            SET {set_clause}
-            WHERE userId = %s
-            RETURNING *
-        """
-
-        cur.execute(update_query, values)
-        updated_customs = cur.fetchone()
-        
-        conn.commit()
-
-        return cors_response(200, {"customs": updated_customs})
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        return cors_response(500, f"Error updating customs: {str(e)}")
-    finally:
-        if conn:
-            conn.close()
-
-def deleteCustoms(event, context):
-    conn = None
-    try:
-        # Get requester's ID from token for authorization
-        auth_header = event.get('headers', {}).get('Authorization')
-        token = auth_header.split(' ')[-1]
-        token_payload = verify_token(token)
-        cognito_user_id = token_payload.get('sub')
-
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT id FROM users WHERE cognito_id = %s", (cognito_user_id,))
-        db_user = cur.fetchone()
-        if not db_user:
-            return cors_response(404, "User not found")
-        user_id = db_user['id']
-
-        # Delete customs
-        delete_query = """
-            DELETE FROM customs 
-            WHERE userId = %s
-            RETURNING id
-        """
-        cur.execute(delete_query, (user_id,))
-        deleted = cur.fetchone()
-
-        if not deleted:
-            return cors_response(404, "Customs not found")
-
-        conn.commit()
-
-        return cors_response(200, {
-            "message": "Customs deleted successfully",
-            "userId": user_id
-        })
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        return cors_response(500, f"Error deleting customs: {str(e)}")
-    finally:
-        if conn:
-            conn.close()
+def delete_customs(user_sub):
+    result = collection.delete_one({"sub": user_sub})
+    if result.deleted_count == 0:
+        return cors_response(404, {"error": "Data not found"})
+    return cors_response(200, {"message": "Data deleted successfully"})

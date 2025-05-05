@@ -7,6 +7,7 @@ import jwt
 from datetime import datetime, date
 from botocore.exceptions import ClientError
 from jwt import algorithms
+import tokenValidation.validate
 
 # cors_response function to return API Gateway response with CORS headers
 def cors_response(status_code, body, content_type="application/json"):
@@ -30,6 +31,7 @@ def cors_response(status_code, body, content_type="application/json"):
 def lambda_handler(event, context):
     if event['httpMethod'] == 'OPTIONS':
         return cors_response(200, "ok")
+
     try:
         raw_body = event.get("body")
         if not raw_body:
@@ -41,7 +43,6 @@ def lambda_handler(event, context):
         else:
             body = json.loads(raw_body)
 
-    
         http_method = event['httpMethod']
         resource_path = event['resource']
 
@@ -52,86 +53,30 @@ def lambda_handler(event, context):
             return initiateForgotPassword(event, body)
         elif resource_path == '/users/confirmResetPassword' and http_method == 'POST':
             return confirmForgotPassword(event, body)
-    
-        # Authenticate the request
-    
-        auth_header = event.get('headers', {}).get('Authorization')
-        if not auth_header:
-            return cors_response(401, "No authorization token provided")
-        if not auth_header.startswith('Bearer '):
-            return cors_response(401, "Invalid Authorization header format. Must start with 'Bearer '")
-        token = auth_header.replace('Bearer ', '').strip()
-        try:
-            token_payload = verify_token(token)
-            print(f"Token verified successfully: {json.dumps(token_payload)}")
-        except Exception as e:
-            print(f"Token verification failed: {str(e)}")
-            return cors_response(401, f"Authentication failed: {str(e)}")
 
-    except Exception as e:
-        return cors_response(401, "Authentication failed")
-        
-    # Routes with authentication
-    try:
-        if resource_path == '/users/{userId}' and http_method == 'GET':
-            return getUser(event, context)
-        elif resource_path == '/users/{userId}' and http_method == 'PUT':
+        # Properly handle token validation result
+        auth_error, token_payload = tokenValidation.validate.validate_token(event)
+        if auth_error is not None:
+            return auth_error
+
+        print(f"Token verified successfully: {json.dumps(token_payload)}")
+
+        # Routes with authentication
+        if resource_path == '/users/search' and http_method == 'GET':
+            return getUser(event, body)
+        elif resource_path == '/users/update' and http_method == 'PUT':
             return updateUser(event, context)
-        elif resource_path == '/users/{userId}' and http_method == 'DELETE':
-            return deleteUser(event, context)
+        elif resource_path == '/users/delete' and http_method == 'DELETE':
+            return deleteUser(event, body)
         elif resource_path == '/users/byEmail' and http_method == 'POST':
             return getUserByEmail(body)
         else:
             return cors_response(404, "Not Found")
-        
+
     except Exception as e:
-        return cors_response(500, str(e))
+        return cors_response(500, {"error": str(e)})
 
 # Verify JWT token
-def verify_token(token):
-    print("Verifying token:")
-    try:
-        region = boto3.session.Session().region_name
-
-        # Get the JWT kid (key ID)
-        headers = jwt.get_unverified_header(token)
-        kid = headers['kid']
-
-        # Get the public keys from Cognito
-        url = f'https://cognito-idp.{region}.amazonaws.com/{os.environ["COGNITO_USER_POOL_ID"]}/.well-known/jwks.json'
-        response = requests.get(url)
-        response.raise_for_status()
-        keys = response.json()['keys']
-
-        # Find the correct public key
-        public_key = None
-        for key in keys:
-            if key['kid'] == kid:
-                public_key = algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
-                break
-
-        if not public_key:
-            raise Exception('Public key not found')
-
-        # Verify the token
-        payload = jwt.decode(
-            token,
-            public_key,
-            algorithms=['RS256'],
-            options={
-                'verify_signature': True,
-                'verify_exp': True,
-                'verify_aud': True,
-                'verify_iss': True
-            },
-            audience=os.environ['COGNITO_CLIENT_ID'],
-            issuer=f'https://cognito-idp.{region}.amazonaws.com/{os.environ["COGNITO_USER_POOL_ID"]}'
-        )
-        return payload
-
-    except Exception as e:
-        print(f"Token verification failed: {str(e)}")
-        raise
 
 # User management functions using Cognito
 def registerUser(event, body):
@@ -175,9 +120,9 @@ def registerUser(event, body):
     except ClientError as e:
         return cors_response(500, {"error": f"Error creating user: {str(e)}"})
 
-def getUser(event, context):
+def getUser(event, body):
     cognito_client = boto3.client('cognito-idp')
-    user_id = event['pathParameters'].get('userId')
+    user_id = body.get('userId')
 
     if not user_id:
         return cors_response(400, "User ID is required")
@@ -193,7 +138,7 @@ def getUser(event, context):
 
 def updateUser(event, context):
     cognito_client = boto3.client('cognito-idp')
-    user_id = event['pathParameters'].get('userId')
+    user_id = body.get('userId')
     body = json.loads(event.get('body', '{}'))
 
     if not user_id:
@@ -215,12 +160,30 @@ def updateUser(event, context):
     except ClientError as e:
         return cors_response(500, {"error": f"Error updating user: {str(e)}"})
 
-def deleteUser(event, context):
-    cognito_client = boto3.client('cognito-idp')
-    user_id = event['pathParameters'].get('userId')
 
-    if not user_id:
-        return cors_response(400, "User ID is required")
+def deleteUser(event, body):
+    cognito_client = boto3.client('cognito-idp')
+
+    # Extract values from body
+    user_id = body.get('userId')
+    auth_header = body.get('Authorization')
+
+    if not user_id or not auth_header:
+        return cors_response(400, {"error": "Missing required fields: userId or Authorization"})
+
+    # Extract the token from Authorization header
+    token = auth_header.split(" ")[1] if " " in auth_header else auth_header
+
+    try:
+        # Decode token WITHOUT signature verification (not secure for prod)
+        decoded_token = jwt.decode(token, options={"verify_signature": False})
+        requester_sub = decoded_token.get('sub')
+    except Exception as e:
+        return cors_response(401, {"error": f"Invalid token: {str(e)}"})
+
+    # Make sure user is deleting themselves
+    if user_id != requester_sub:
+        return cors_response(403, {"error": "You are not authorized to delete this user"})
 
     try:
         cognito_client.admin_delete_user(
@@ -231,76 +194,10 @@ def deleteUser(event, context):
     except ClientError as e:
         return cors_response(500, {"error": f"Error deleting user: {str(e)}"})
 
-# def resetUserPassword(event, body):
-#     print("Starting resetUserPassword function")
-#     cognito_client = boto3.client('cognito-idp')
-
-#     # Auth header and manual token verification
-#     auth_header = event.get('headers', {}).get('Authorization')
-#     if not auth_header:
-#         return cors_response(401, "No authorization token provided")
-#     if not auth_header.startswith('Bearer '):
-#         return cors_response(401, "Invalid Authorization header format. Must start with 'Bearer '")
-    
-#     token = auth_header.replace('Bearer ', '').strip()
-#     try:
-#         token_payload = verify_token(token)
-#         print(f"Token verified successfully: {json.dumps(token_payload)}")
-#     except Exception as e:
-#         print(f"Token verification failed: {str(e)}")
-#         return cors_response(401, f"Authentication failed: {str(e)}")
-
-#     # Get sub from manually verified token
-#     requester_sub = token_payload.get('sub')
-#     print(f"Requester sub from token: {requester_sub}")
-
-#     requested_user_id = event['pathParameters'].get('userId')
-#     print(f"Requested userId: {requested_user_id}")
-
-#     if not requested_user_id:
-#         print("No userId provided in pathParameters")
-#         return cors_response(400, {"error": "User ID is required"})
-
-#     try:
-#         print(f"Fetching user from Cognito: {requested_user_id}")
-#         user_data = cognito_client.admin_get_user(
-#             UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
-#             Username=requested_user_id
-#         )
-#         print(f"User data retrieved: {user_data}")
-
-#         target_user_sub = next(
-#             (attr['Value'] for attr in user_data['UserAttributes'] if attr['Name'] == 'sub'),
-#             None
-#         )
-#         print(f"Target user sub: {target_user_sub}")
-
-#         if not target_user_sub:
-#             print("Target user's sub not found in attributes")
-#             return cors_response(400, {"error": "Target user 'sub' attribute not found"})
-
-#         if requester_sub != target_user_sub:
-#             print("Sub mismatch: requester is not the same as target user")
-#             return cors_response(403, {"error": "Unauthorized: You can only reset your own password"})
-
-#         print("Sub match confirmed. Sending password reset email.")
-#         cognito_client.admin_reset_user_password(
-#             UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
-#             Username=requested_user_id
-#         )
-
-#         print("Password reset email sent successfully")
-#         return cors_response(200, {"message": "Password reset email has been sent"})
-
-#     except ClientError as e:
-#         print(f"Error during password reset process: {str(e)}")
-#         return cors_response(500, {"error": f"Error processing request: {str(e)}"})
-
-
 def initiateForgotPassword(event, body):
     cognito_client = boto3.client('cognito-idp')
     
-    username = body.get("username")
+    username = body.get("email")
     if not username:
         return cors_response(400, {"error": "Username (email or username) is required"})
 
@@ -318,7 +215,7 @@ def initiateForgotPassword(event, body):
 def confirmForgotPassword(event, body):
     cognito_client = boto3.client('cognito-idp')
     
-    username = body.get("username")
+    username = body.get("email")
     code = body.get("code")
     new_password = body.get("newPassword")
 
@@ -353,8 +250,18 @@ def getUserByEmail(body):
             Filter=f'email = "{email}"'
         )
         users = response.get('Users', [])
+
         if not users:
             return cors_response(404, {"error": "User not found"})
-        return cors_response(200, {"user": users[0]})
+
+        user = users[0]
+
+        sub = next((attr['Value'] for attr in user['Attributes'] if attr['Name'] == 'sub'), None)
+
+        if not sub:
+            return cors_response(500, {"error": "User found but no sub attribute present"})
+
+        return cors_response(200, {"sub": sub})
+
     except ClientError as e:
         return cors_response(500, {"error": f"Error retrieving user: {str(e)}"})
