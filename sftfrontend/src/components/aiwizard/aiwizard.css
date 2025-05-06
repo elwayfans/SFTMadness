@@ -1,100 +1,116 @@
+/* ========================= */
+/* Global Variables          */
+/* ========================= */
 :root {
-  --body-color: #fff;
-  --bg-color: #f5e3d3;
-  --card-color: #2e4a94;
-  --text-color: #fff;
-  --head-color: #000;
-  --btn-color: #000;
-  --accent: #aad4f5;
-}
+    --body-color: #fff;
+    --bg-color: #f5e3d3;
+    --card-color: #2e4a94;
+    --text-color: #fff;
+    --head-color: #000;
+    --btn-color: #000;
+    --accent: #aad4f5;
+  }
+  
+  body.dark {
+    --body-color: #000;
+    --bg-color: #dc9c63;
+    --card-color: #2e4a94;
+    --text-color: #fff;
+    --head-color: #fff;
+    --accent: #66b1ed;
+  }
+  
+  /* ========================= */
+  /* AI Wizard Container       */
+  /* ========================= */
+  .aiwizard-container {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--accent);
+    border: 3px solid var(--btn-color);
+    margin-top: 15px;
+    padding: 20px;
+  }
+  
+  /* ========================= */
+  /* Textarea Styles           */
+  /* ========================= */
+  .aiwizard-container textarea {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    width: 720px;
+    justify-content: center;
+    resize: none;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    min-height: 50px;
+    overflow-y: scroll;
+    margin-top: 10px;
+  }
+  
+  /* ========================= */
+  /* Input Styles              */
+  /* ========================= */
+  .aiwizard-container input {
+    font-size: 16px;
+    width: 720px;
+    justify-content: center;
+    resize: none;
+    min-height: 50px;
+    margin-top: 10px;
+  }
+  
+  .modelname,
+  .modelurl {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    width: 720px;
+    justify-content: center;
+    resize: none;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    min-height: 30px;
+    margin-top: 10px;
+  }
+  
+  /* ========================= */
+  /* Paragraph Styles          */
+  /* ========================= */
+  .aiwizard-container p {
+    display: flex;
+    width: 750px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* ========================= */
+  /* Button Styles             */
+  /* ========================= */
+  .aiwizard-container button {
+    background-color: var(--card-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 16px;
+    margin-top: 10px;
+    width: 17%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .removeBtn button {
+    background-color: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: 15%;
+  }
 
-body.dark {
-  --body-color: #000;
-  --bg-color: #dc9c63;
-  --card-color: #2e4a94;
-  --text-color: #fff;
-  --head-color: #fff;
-  --accent: #66b1ed;
-}
-
-.aiwizard-container {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--accent);
-  border: 3px solid var(--btn-color);
-  margin-top: 15px;
-  padding: 20px;
-}
-
-.aiwizard-container textarea,
-input {
-  padding: 12px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  width: 720px;
-  justify-content: center;
-  resize: none;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-height: 50px;
-  overflow-y: scroll;
-  margin-top: 10px;
-}
-
-.modelname,
-.modelurl {
-  padding: 12px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  width: 720px;
-  justify-content: center;
-  resize: none;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-height: 30px;
-  overflow-y: scroll;
-  margin-top: 10px;
-}
-
-.aiwizard-container p {
-  display: flex;
-  width: 750px;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.aiwizard-container button {
-  background-color: var(--card-color);
-  color: var(--text-color);
-  border: none;
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 16px;
-  margin-top: 10px;
-  width: 17%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-ul li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-  background-color: var(--body-color);
-  border-radius: 8px;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 10px;
-  width: 50%;
-}
-
-.removeBtn button {
-  background-color: red;
-  color: white;
-  border: none;
-  cursor: pointer;
-  width: 15%;
-}
+  /* ========================= */
+  /* List Styles               */
+  /* ========================= */
+  ul {
+    list-style-type: none;
+  }

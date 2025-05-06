@@ -29,24 +29,11 @@ function NavBar() {
       <img src="/images/sft.png" alt="sft" className="images" />
       <ul>
         <li>
-          <Link className="flex-container" to="/">Home</Link>
-          <Link className="flex-container" to="/aboutus">About Us</Link>
-
-          {!isLoggedIn ? (
-            <>
-              <Link className="flex-container" to="/login">Login</Link>
-            </>
-          ) : (
-            <>
-              {role === 'School' && (
-                <Link className="flex-container" to="/school-profile">Profile</Link>
-              )}
-              {role === 'SFT' && (
-                <Link className="flex-container" to="/admin-profile">Profile</Link>
-              )}
-              <button className="flex-container" onClick={handleLogout}>Logout</button>
-            </>
-          )}
+          <Link className='flex-container' to="/">Home</Link>
+          <Link className='flex-container' to="/aboutus">About Us</Link>
+          <Link className='flex-container' to="/signup">Sign Up</Link>
+          <Link className='flex-container' to="/login">Login</Link>
+          <Link className='flex-container' to="/bot-selector">Bot Selector</Link>
         </li>
       </ul>
     </nav>

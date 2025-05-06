@@ -1,19 +1,22 @@
 /*
 Use the naming convention as you see below so that these routes can stay clean. 
 */
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
-import NavBar from './components/navbar/NavBar.js'
-import Info from './components/about_contact_us/Info.js'
-import Home from './components/home/Home.js'
-import Login from './components/authentication/Login.js'
-import ForgotPassword from './components/authentication/ForgotPassword.js'
-import School from './components/users/SchoolProfile.js'
-import Sft from './components/admin/AdminProfile.js'
-import Settings from './components/settings/Settings.js'
-import AddContacts from './components/addContacts/AddContacts.js'
+import NavBar from './components/navbar/NavBar.js';
+import Info from './components/about_contact_us/Info.js';
+import Home from './components/home/Home.js';
+import Login from './components/authentication/Login.js';
+import ForgotPassword from './components/authentication/ForgotPassword.js';
+import School from './components/users/SchoolProfile.js';
+import Sft from './components/admin/AdminProfile.js';
+import Settings from './components/settings/Settings.js';
+import ChatAi from './components/ai/chatai.js';
+import BotSelector from './components/ai/BotSelector.js';
 
 function App() {
+
   return (
     <Router>
       <NavBar />
