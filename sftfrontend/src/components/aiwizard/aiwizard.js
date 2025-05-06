@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Box from "@mui/material/Box";
+import Slider from "@mui/material/Slider";
 import "./aiwizard.css";
 
 const defaultForm = {
@@ -13,6 +15,8 @@ const defaultForm = {
   verbosity: 5,
   humor: 5,
   technicalLevel: 5,
+  websites: [],
+  files: [],
 };
 
 export default function AIWizardCustomizer() {
@@ -34,7 +38,7 @@ export default function AIWizardCustomizer() {
       websites: [...(prev.websites || []), ""],
     }));
   };
-  
+
   const handleWebsiteChange = (index, value) => {
     setForm((prev) => {
       const updatedWebsites = [...(prev.websites || [])];
@@ -42,7 +46,7 @@ export default function AIWizardCustomizer() {
       return { ...prev, websites: updatedWebsites };
     });
   };
-  
+
   const removeWebsite = (index) => {
     setForm((prev) => {
       const updatedWebsites = [...(prev.websites || [])];
@@ -50,7 +54,7 @@ export default function AIWizardCustomizer() {
       return { ...prev, websites: updatedWebsites };
     });
   };
-  
+
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
     setForm((prev) => ({
@@ -58,13 +62,40 @@ export default function AIWizardCustomizer() {
       files: [...(prev.files || []), ...files],
     }));
   };
-  
+
   const removeFile = (index) => {
     setForm((prev) => {
       const updatedFiles = [...(prev.files || [])];
       updatedFiles.splice(index, 1);
       return { ...prev, files: updatedFiles };
     });
+  };
+
+  const saveBotInfo = () => {
+    const botInfo = {
+      name: form.modelname,
+      logo: form.modellogo,
+      intro: form.botintro,
+      goodbye: form.botgoodbye,
+      instructions: form.botinstructions,
+      accent: form.accent,
+      sliders: {
+        friendliness: form.friendliness,
+        formality: form.formality,
+        verbosity: form.verbosity,
+        humor: form.humor,
+        technicalLevel: form.technicalLevel,
+      },
+      websites: form.websites,
+      files: form.files.map((file) => file.name), // Save file names only
+    };
+  
+    // Save to local storage or send to backend
+    const bots = JSON.parse(localStorage.getItem("bots")) || [];
+    bots.push(botInfo);
+    localStorage.setItem("bots", JSON.stringify(bots));
+  
+    alert("Bot information saved!");
   };
 
   return (
@@ -124,7 +155,6 @@ export default function AIWizardCustomizer() {
         </div>
       )}
 
-      {/* Step 3: Bot Messages */}
       {/* Step 3: Websites & Files for Information */}
       {step === 3 && (
         <div>
@@ -164,6 +194,7 @@ export default function AIWizardCustomizer() {
           </div>
         </div>
       )}
+
       {/* Step 4: Accent Selection */}
       {step === 4 && (
         <div>
@@ -184,23 +215,26 @@ export default function AIWizardCustomizer() {
       {step === 5 && (
         <div>
           {[
-            "Friendliness",
-            "Formality",
-            "Verbosity",
-            "Humor",
-            "TechnicalLevel",
+            "friendliness",
+            "formality",
+            "verbosity",
+            "humor",
+            "technicalLevel",
           ].map((attr) => (
-            <div key={attr}>
+            <div key={attr} className="slider-container">
               <label className="capitalize">{attr}:</label>
-              <input
-                type="range"
-                min={0}
-                max={10}
-                value={form[attr]}
-                onChange={(e) =>
-                  handleSliderChange(attr, Number(e.target.value))
-                }
-              />
+              <Box sx={{ width: 300 }}>
+                <Slider
+                  aria-label={attr}
+                  value={form[attr]}
+                  onChange={(e, value) => handleSliderChange(attr, value)}
+                  step={1}
+                  marks
+                  min={0}
+                  max={10}
+                  valueLabelDisplay="auto"
+                />
+              </Box>
               <p>Level: {form[attr]}</p>
             </div>
           ))}
@@ -209,7 +243,7 @@ export default function AIWizardCustomizer() {
 
       {/* Save/ Clear Form */}
       <div>
-        <button>Save</button>
+        <button onClick={saveBotInfo}>Save Bot Info</button>
         <button>Clear</button>
       </div>
 
