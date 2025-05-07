@@ -22,24 +22,16 @@ const AdminProfile = () => {
             <div className="contacts-section">
                 <h3>Contacts</h3>
                 <div className="contact-card">
-                    <span className="contact-name">Neumont College</span>
-                    <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
+                    <a href="mailto:admissions@neumont.edu" className="contact-card">
+                        <span className="contact-name">Neumont College</span>
+                        <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
+                    </a>
                 </div>
                 <div className="contact-card">
-                    <span className="contact-name">BYU</span>
-                    <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
-                </div>
-                <div className="contact-card">
-                    <span className="contact-name">Alexander Stokes</span>
-                    <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
-                </div>
-                <div className="contact-card">
-                    <span className="contact-name">Chelsea Bui</span>
-                    <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
-                </div>
-                <div className="contact-card">
-                    <span className="contact-name">Daniel Vallejo</span>
-                    <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
+                    <a href="mailto:byu-info@byu.edu" className="contact-card">
+                        <span className="contact-name">BYU</span>
+                        <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
+                    </a>
                 </div>
                 {/* Repeat contact-card */}
             </div>
