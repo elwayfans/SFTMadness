@@ -17,17 +17,17 @@ const BotSelector = () => {
 
   return (
     <div className="bot-selector">
-      <h2>Select a School Bot</h2>
+      <h2>Select a School to Start Chatting</h2>
       <div className="bot-list">
         {bots.map((bot, index) => (
           <button
             key={index}
             onClick={() => handleSelectBot(bot)}
             className="bot-button"
-            title={bot.name} // Add title attribute for hover text
+            title={bot.name} 
             style={{
               backgroundImage: `url(${bot.logo})`,
-              backgroundSize: "cover",
+              backgroundSize: "100% 100%",
               backgroundPosition: "center",
             }}
           >
