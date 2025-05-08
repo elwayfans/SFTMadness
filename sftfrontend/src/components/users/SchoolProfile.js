@@ -6,12 +6,26 @@ profile for school staff/administrative
 
 */
 
-import React from "react";
+import React, { useState } from "react";
 import Slider from "@mui/material/Slider";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid"
+import { useNavigate } from "react-router-dom";
+import './Profile.css'
 
 const SchoolProfile = () => {
+  const navigate = useNavigate();
+  const [contacts, setContacts] = useState([]);
+  const handleAddContactClick = () => {
+    navigate("/addcontacts");
+  };
+
+  const deleteContact = (email) => {
+    const updatedContacts = contacts.filter((contact) => contact.email !== email);
+    setContacts(updatedContacts);
+    localStorage.setItem("contacts", JSON.stringify(updatedContacts));
+  };
+
   return (
     <div className="school-profile-container">
       <div className="school-info">
@@ -23,26 +37,21 @@ const SchoolProfile = () => {
 
       <div className="contacts-section">
         <h3>Contacts</h3>
-        <div className="contact-card">
-          <a href="mailto:jedistokes26@gmail.com" className="contact-card">
-            <span className="contact-name">Alexander Stokes</span>
-            <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
-          </a>
+        <div className="add-contact">
+          <button onClick={handleAddContactClick}><p>+</p></button>
         </div>
-        <div className="contact-card">
-          <a href="mailto:chelsesabui@gmail.com" className="contact-card">
-            <span className="contact-name">Chelsea Bui</span>
-            <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
-          </a>
-        </div>
-        <div className="contact-card">
-          <a href="mailto:mattsuglyandandsucks@gmail.com" className="contact-card">
-            <span className="contact-name">Daniel Vallejo</span>
-            <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
-          </a>
-        </div>
-        {/* Repeat contact-card */}
+
+        {contacts.map((contact, idx) => (
+          <div key={idx} className="contact-card">
+            <a href={`mailto:${contact.email}`} className="contact-card">
+              <span className="contact-name">{contact.firstName} {contact.lastName}</span>
+              <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
+            </a>
+            <button onClick={() => deleteContact(contact.email)}>🗑️</button>
+          </div>
+        ))}
       </div>
+
       <div className="aicustom">
         <h3>AI Model Customization</h3>
         <p>

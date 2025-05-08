@@ -12,6 +12,7 @@ import ForgotPassword from './components/authentication/ForgotPassword.js'
 import School from './components/users/SchoolProfile.js'
 import Sft from './components/admin/AdminProfile.js'
 import Settings from './components/settings/Settings.js'
+import AddContacts from './components/addContacts/AddContacts.js'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route path="/school-profile" element={<School />} /> 
           <Route path="/sft-profile" element={<Sft />} /> 
           <Route path='/settings' element={<Settings />} />
+          <Route path='/addcontacts' element={<AddContacts />} />
         </Routes>
       </div>
     </Router>

@@ -1,0 +1,72 @@
+/* Page wrapper to center form and add pale orange background */
+.add-contact-wrapper {
+    background-color: #f9e4d1; /* pale orange */
+    min-height: 100vh;
+    max-width: 800px;
+    width: 90%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+    border-radius: 12px;
+}
+
+/* Form container/card */
+.add-contact-form {
+    background-color: #a3dcff; /* light blue */
+    padding: 2rem;
+    border: 2px solid #000;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: 4px 4px 0 #000;
+}
+
+/* Form heading */
+.add-contact-form h3 {
+    color: #000;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+/* Label styling */
+.add-contact-form label {
+    font-weight: 600;
+    color: #000;
+}
+
+/* Inputs */
+.add-contact-form input,
+.add-contact-form select {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 2px solid #000;
+    border-radius: 6px;
+    background-color: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Submit button */
+.add-contact-form button {
+    background-color: #2547a7;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    font-weight: bold;
+    border: 2px solid #000;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Hover state */
+.add-contact-form button:hover {
+    background-color: #19368f;
+}
