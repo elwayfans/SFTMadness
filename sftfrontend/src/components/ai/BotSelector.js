@@ -18,7 +18,7 @@ const BotSelector = () => {
   return (
     <div className="bot-selector">
       <h2>Select a School to Start Chatting</h2>
-      <div className="bot-list">
+      {/* <div className="bot-list">
         {bots.map((bot, index) => (
           <button
             key={index}
@@ -34,7 +34,7 @@ const BotSelector = () => {
             <p>{bot.name}</p>
           </button>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };
