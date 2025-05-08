@@ -6,8 +6,9 @@ profile for school staff/administrative
 
 */
 
-import React from "react";
+import React, {useState} from "react";
 import AIWizardCustomizer from "../aiwizard/aiwizard";
+import {useNavigate} from "react-router-dom";
 
 const SchoolProfile = () => {
   const navigate = useNavigate();

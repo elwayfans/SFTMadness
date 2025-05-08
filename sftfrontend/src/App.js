@@ -14,6 +14,7 @@ import Sft from './components/admin/AdminProfile.js';
 import Settings from './components/settings/Settings.js';
 import ChatAi from './components/ai/chatai.js';
 import BotSelector from './components/ai/BotSelector.js';
+import AddContacts from './components/addContacts/AddContacts.js';
 
 function App() {
   return (
@@ -29,6 +30,8 @@ function App() {
           <Route path="/sft-profile" element={<Sft />} /> 
           <Route path='/settings' element={<Settings />} />
           <Route path='/addcontacts' element={<AddContacts />} />
+          <Route path="/chat-ai" element={<ChatAi />} />
+          <Route path="/bot-selector" element={<BotSelector />} />
         </Routes>
       </div>
     </Router>
