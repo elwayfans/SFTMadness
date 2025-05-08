@@ -24,48 +24,7 @@ body.dark {
     --accent: #66b1ed;
 }
 
-.student-profile-container {
-    display: flex;
-    justify-content: center;
-    background-color: var(--bg-color);
-    padding: 2rem;
-    flex-wrap: wrap;
-    width: 800px;
-    margin: 0 auto;
-    height: 777px;
-}
-
-.student-info {
-    background-color: var(--bg-color);
-    padding: 1rem;
-    width: 300px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.student-info img {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 3px solid black;
-    margin-bottom: 1rem;
-}
-
-.student-info h2 {
-    font-size: 1.5rem;
-    margin: 0.5rem 0;
-}
-
-.student-info p {
-    margin: 0.25rem 0;
-}
-
-/* 
-above is the StudentProfile.js styling
------------------------- 
+/*
 below is the SchoolProfile.js styling
 */
 

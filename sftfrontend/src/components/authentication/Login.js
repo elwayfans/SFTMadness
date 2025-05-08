@@ -73,8 +73,6 @@ const Login = () => {
           navigate("/sft-profile");
         } else if (userRole === "School") {
           navigate("/school-profile");
-        } else if (userRole === "Student") {
-          navigate("/student-profile");
         } else {
           console.warn("Unknown role. Redirecting to home.");
           navigate("/");
