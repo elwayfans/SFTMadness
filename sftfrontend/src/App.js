@@ -16,7 +16,6 @@ import ChatAi from './components/ai/chatai.js';
 import BotSelector from './components/ai/BotSelector.js';
 
 function App() {
-
   return (
     <Router>
       <NavBar />

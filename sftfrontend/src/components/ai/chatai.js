@@ -6,7 +6,6 @@ const ChatAi = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const selectedBot = location.state?.bot;
-
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
