@@ -34,14 +34,10 @@ function NavBar() {
 
           {!isLoggedIn ? (
             <>
-              <Link className="flex-container" to="/signup">Sign Up</Link>
               <Link className="flex-container" to="/login">Login</Link>
             </>
           ) : (
             <>
-              {role === 'Student' && (
-                <Link className="flex-container" to="/student-profile">Profile</Link>
-              )}
               {role === 'School' && (
                 <Link className="flex-container" to="/school-profile">Profile</Link>
               )}
