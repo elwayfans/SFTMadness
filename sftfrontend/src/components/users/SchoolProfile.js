@@ -9,6 +9,7 @@ profile for school staff/administrative
 import React, {useState} from "react";
 import AIWizardCustomizer from "../aiwizard/aiwizard";
 import {useNavigate} from "react-router-dom";
+import "./Profile.css";
 
 const SchoolProfile = () => {
   const navigate = useNavigate();

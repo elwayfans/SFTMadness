@@ -23,14 +23,10 @@ body.dark {
   --studentmessage-color: #2d4f6b;
 }
 
-body, html{
-  overflow: hidden;
-}
-
 .chat-ai {
   display: flex;
   flex-direction: column;
-  height: 92vh;
+  height: 91.3vh;
 }
 
 header {
