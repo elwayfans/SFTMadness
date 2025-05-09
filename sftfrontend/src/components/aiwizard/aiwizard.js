@@ -6,6 +6,8 @@ import "./aiwizard.css";
 const defaultForm = {
   modelname: "",
   modellogo: "",
+  botTextColor: "#000000",
+  botTextboxBackgroundColor: "#ffffff",
   botintro: "",
   botgoodbye: "",
   botinstructions: "",
@@ -88,13 +90,14 @@ export default function AIWizardCustomizer() {
       },
       websites: form.websites,
       files: form.files.map((file) => file.name), // Save file names only
+      botTextColor: form.botTextColor,
+      botTextboxBackgroundColor: form.botTextboxBackgroundColor,
     };
-  
-    // Save to local storage or send to backend
+
     const bots = JSON.parse(localStorage.getItem("bots")) || [];
     bots.push(botInfo);
     localStorage.setItem("bots", JSON.stringify(bots));
-  
+
     alert("Bot information saved!");
   };
 
@@ -103,12 +106,22 @@ export default function AIWizardCustomizer() {
       <h2>Build Your AI Assistant</h2>
 
       {/* Step Navigation */}
-      <div>
-        {[1, 2, 3, 4, 5].map((s) => (
-          <button key={s} onClick={() => setStep(s)}>
-            Step {s}
-          </button>
-        ))}
+      <div className="step-navigation">
+        {[1, 2, 3, 4, 5, 6]
+          .reduce((rows, step, index) => {
+            if (index % 3 === 0) rows.push([]);
+            rows[rows.length - 1].push(step);
+            return rows;
+          }, [])
+          .map((row, rowIndex) => (
+            <div key={rowIndex} style={{ marginBottom: "10px" }}>
+              {row.map((step) => (
+                <button key={step} onClick={() => setStep(step)}>
+                  Step {step}
+                </button>
+              ))}
+            </div>
+          ))}
       </div>
 
       {/* Step 1: Bot Info */}
@@ -131,8 +144,29 @@ export default function AIWizardCustomizer() {
         </div>
       )}
 
-      {/* Step 2: Bot Messages */}
+      {/* Step 2: Bot Response Colors */}
       {step === 2 && (
+        <div>
+          <label>Bot Text Color:</label>
+          <input
+            type="color"
+            name="botTextColor"
+            value={form.botTextColor}
+            onChange={handleChange}
+          />
+          <br />
+          <label>Bot Textbox Background Color:</label>
+          <input
+            type="color"
+            name="botTextboxBackgroundColor"
+            value={form.botTextboxBackgroundColor}
+            onChange={handleChange}
+          />
+        </div>
+      )}
+
+      {/* Step 3: Bot Messages */}
+      {step === 3 && (
         <div>
           <textarea
             name="botintro"
@@ -155,8 +189,8 @@ export default function AIWizardCustomizer() {
         </div>
       )}
 
-      {/* Step 3: Websites & Files for Information */}
-      {step === 3 && (
+      {/* Step 4: Websites & Files for Information */}
+      {step === 4 && (
         <div>
           <label>Websites:</label>
           <div>
@@ -195,8 +229,8 @@ export default function AIWizardCustomizer() {
         </div>
       )}
 
-      {/* Step 4: Accent Selection */}
-      {step === 4 && (
+      {/* Step 5: Accent Selection */}
+      {step === 5 && (
         <div>
           <label>Accent:</label>
           <select name="accent" value={form.accent} onChange={handleChange}>
@@ -211,8 +245,8 @@ export default function AIWizardCustomizer() {
         </div>
       )}
 
-      {/* Step 5: Sliders */}
-      {step === 5 && (
+      {/* Step 6: Sliders */}
+      {step === 6 && (
         <div>
           {[
             "friendliness",
@@ -248,35 +282,94 @@ export default function AIWizardCustomizer() {
       </div>
 
       {/* Preview */}
+      {/* Live Preview */}
       <div>
         <h3>Live Preview</h3>
-        <p>
-          <strong>Name:</strong> {form.modelname}
-        </p>
-        <p>
-          <strong>Intro:</strong> {form.botintro}
-        </p>
-        <p>
-          <strong>Instructions:</strong> {form.botinstructions}
-        </p>
-        <p>
-          <strong>Accent:</strong> {form.accent}
-        </p>
-        <p>
-          <strong>Friendliness:</strong> {form.friendliness}
-        </p>
-        <p>
-          <strong>Formality:</strong> {form.formality}
-        </p>
-        <p>
-          <strong>Verbosity:</strong> {form.verbosity}
-        </p>
-        <p>
-          <strong>Humor:</strong> {form.humor}
-        </p>
-        <p>
-          <strong>Technical Level:</strong> {form.technicalLevel}
-        </p>
+        <dl>
+          <dt>Name: {form.modelname}</dt>
+
+          <dt>Logo: {form.modellogo}</dt>
+
+          <dt>
+            Bot Text Color: {form.botTextColor}{" "}
+            <span
+              style={{
+                display: "inline-block",
+                width: "20px",
+                height: "20px",
+                backgroundColor: form.botTextColor,
+                border: "1px solid #000",
+                marginLeft: "10px",
+              }}
+            ></span>
+          </dt>
+
+          <dt>
+            Bot Textbox Background Color: {form.botTextboxBackgroundColor}{" "}
+            <span
+              style={{
+                display: "inline-block",
+                width: "20px",
+                height: "20px",
+                backgroundColor: form.botTextboxBackgroundColor,
+                border: "1px solid #000",
+                marginLeft: "10px",
+              }}
+            ></span>
+          </dt>
+        </dl>
+
+        {/* Chat Bubble Preview */}
+        <div style={{ marginTop: "20px" }}>
+          <p>Chat Bubble Preview:</p>
+          <div
+            style={{
+              display: "inline-block",
+              padding: "10px 15px",
+              borderRadius: "15px",
+              backgroundColor: form.botTextboxBackgroundColor,
+              color: form.botTextColor,
+              maxWidth: "300px",
+              textAlign: "left",
+              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+            }}
+          >
+            Hello! This is how your bot's chat bubble will look.
+          </div>
+        </div>
+
+        {/* Websites and Files */}
+        <dl>
+          <dt>
+            Websites:
+            <ul>
+              {form.websites?.map((website, index) => (
+                <li key={index}>{website}</li>
+              ))}
+            </ul>
+          </dt>
+
+          <dt>
+            Files:
+            <ul>
+              {form.files?.map((file, index) => (
+                <li key={index}>{file.name}</li>
+              ))}
+            </ul>
+          </dt>
+        </dl>
+
+        {/* Other Bot Details */}
+        <dl>
+          <dt>Intro: {form.botintro}</dt>
+          <dt>Instructions: {form.botinstructions}</dt>
+          <dt>Accent: {form.accent}</dt>
+          <dt>Friendliness: {form.friendliness}</dt>
+          <dt>Formality: {form.formality}</dt>
+          <dt>Verbosity: {form.verbosity}</dt>
+          <dt>Humor: {form.humor}</dt>
+          <dt>Technical Level: {form.technicalLevel}</dt>
+        </dl>
       </div>
     </div>
   );
