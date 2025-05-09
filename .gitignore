@@ -1,1 +1,4 @@
 sftFront/sftmadnessfront/.env
+sftbackend/.env
+/sftbackend/src/handlers/__pycache__
+/sftbackend/src/__pycache__

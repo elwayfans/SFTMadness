@@ -1,0 +1,10 @@
+psycopg2-binary==2.9.10
+requests==2.31.0
+boto3==1.29.0
+PyJWT[crypto]==2.8.0
+cryptography==36.0.0
+python-dotenv
+pymongo
+beautifulsoup4==4.12.3
+fastapi
+uvicorn[standard]
