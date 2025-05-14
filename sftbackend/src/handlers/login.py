@@ -47,7 +47,7 @@ def login_user(
         raise HTTPException(status_code=500, detail="Missing Cognito config")
 
     try:
-        cognito_client = boto3.client('cognito-idp')
+        cognito_client = boto3.client('cognito-idp', region_name='us-east-2')
         auth_response = cognito_client.initiate_auth(
             ClientId=client_id,
             AuthFlow='USER_PASSWORD_AUTH',
