@@ -26,7 +26,6 @@ const Home = () => {
             </p>
             <div>
                 <button onClick={() => navigate('/login')}>Login</button>
-                <button onClick={() => navigate('/register')} >Register</button>
             </div>
             <p>
                 We're dedicated to making the world a better place, one student at a time.
