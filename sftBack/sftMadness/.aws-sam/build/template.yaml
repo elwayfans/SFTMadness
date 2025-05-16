@@ -1,0 +1,1590 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'sftMadness
+
+  Sample SAM Template for sftMadness
+
+  '
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 512
+    Architectures:
+    - x86_64
+    LoggingConfig:
+      LogFormat: JSON
+    Environment:
+      Variables:
+        ENV:
+          Ref: Env
+        DB_NAME:
+          Ref: DBName
+        DB_HOST:
+          Ref: DBHost
+        DB_USER:
+          Ref: DBUser
+        DB_PASSWORD:
+          Fn::Sub: '{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-1:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg:SecretString:password}}'
+        DB_PORT:
+          Ref: DBPort
+        COGNITO_USER_POOL_ID: PoolID
+        COGNITO_CLIENT_ID: clientID
+        S3_BUCKET_NAME:
+          Ref: FileStorageBucket
+        S3_SCRAPED_BUCKET_NAME:
+          Ref: ScrapedFileStorageBucket
+        SES_SENDER_EMAIL:
+          Ref: SESSenderEmail
+        SES_DOMAIN:
+          Ref: SESDomain
+        SES_REGION:
+          Ref: SESRegion
+        SES_CONFIGURATION_SET:
+          Ref: SESConfigurationSet
+    VpcConfig:
+      SecurityGroupIds:
+      - Ref: LambdaSecurityGroup
+      SubnetIds:
+      - Fn::Select:
+        - 0
+        - Fn::Split:
+          - ','
+          - Ref: PrivateSubnetIds
+      - Fn::Select:
+        - 1
+        - Fn::Split:
+          - ','
+          - Ref: PrivateSubnetIds
+      - Fn::Select:
+        - 2
+        - Fn::Split:
+          - ','
+          - Ref: PrivateSubnetIds
+Parameters:
+  Env:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - prod
+    Description: Environment
+  DBName:
+    Type: String
+    Description: Database Name
+  DBHost:
+    Type: String
+    Description: Database Host
+  DBUser:
+    Type: String
+    Description: Database User
+  DBPort:
+    Type: Number
+    Description: Database Port
+  VpcId:
+    Type: String
+    Description: VPC Id
+  InternetGatewayId:
+    Type: String
+    Description: Existing Internet Gateway Id
+  PublicSubnetIds:
+    Type: String
+    Description: Public Subnet Ids
+  PrivateSubnetIds:
+    Type: String
+    Description: Private Subnet Ids
+  SESSenderEmail:
+    Type: String
+    Description: SES Sender Email
+  SESDomain:
+    Type: String
+    Description: SES Domain
+  SESRegion:
+    Type: String
+    Description: SES Region
+  SESConfigurationSet:
+    Type: String
+    Description: SES Configuration Set
+  CreateEmailIdentity:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+    - 'true'
+    - 'false'
+    Description: Whether to create email identity
+Conditions:
+  CreateConfigSet:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: SESConfigurationSet
+      - ''
+  VerifyDomain:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: SESDomain
+      - ''
+  CreateEmailIdentity:
+    Fn::Equals:
+    - Ref: CreateEmailIdentity
+    - 'true'
+Resources:
+  sft:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      BinaryMediaTypes:
+      - '*/*'
+      - image/*
+      - application/octet-stream
+      Cors:
+        AllowMethods: '''POST, GET, OPTIONS, PUT, DELETE'''
+        AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Accept,Origin'''
+        AllowOrigin: '''*'''
+        MaxAge: '''7200'''
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn:
+              Fn::GetAtt:
+              - UserPool
+              - Arn
+            Identity:
+              Header: Authorization
+            Type: COGNITO_USER_POOLS
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: SecretsAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - secretsmanager:GetSecretValue
+            Resource:
+            - Fn::Sub: arn:aws:secretsmanager:us-east-1:908027415563:secret:rds!db-f5f6a726-1663-469e-86a2-93fe3eda392d-fxeeeg
+      - PolicyName: CognitoAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - cognito-idp:AdminCreateUser
+            - cognito-idp:AdminInitiateAuth
+            - cognito-idp:AdminSetUserPassword
+            - cognito-idp:AdminDeleteUser
+            - cognito-idp:AdminGetUser
+            - cognito-idp:AdminUpdateUserAttributes
+            - cognito-idp:DescribeUserPool
+            - cognito-idp:DescribeUserPoolClient
+            - cognito-idp:ListUsers
+            - cognito-idp:AdminUserGlobalSignOut
+            Resource:
+            - Fn::GetAtt:
+              - UserPool
+              - Arn
+            - Fn::Sub: ${UserPool.Arn}/client/*
+      - PolicyName: RDSAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - rds-db:connect
+            Resource: '*'
+      - PolicyName: NetworkAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DeleteNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:AttachNetworkInterface
+            - ec2:DescribeInstances
+            - ec2:ModifyNetworkInterfaceAttribute
+            Resource: '*'
+      - PolicyName: S3Access
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource:
+              Fn::Sub: arn:aws:s3:::${FileStorageBucket}/*
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource:
+              Fn::Sub: arn:aws:s3:::${FileStorageBucket}
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource:
+              Fn::Sub: arn:aws:s3:::${ScrapedFileStorageBucket}/*
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource:
+              Fn::Sub: arn:aws:s3:::${ScrapedFileStorageBucket}
+      - PolicyName: SESAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+            Resource:
+            - Fn::Sub: arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*
+            - Fn::If:
+              - CreateConfigSet
+              - Fn::Sub: arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${SESConfigurationSet}
+              - Ref: AWS::NoValue
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - NatGatewayEIP
+        - AllocationId
+      SubnetId:
+        Fn::Select:
+        - 0
+        - Fn::Split:
+          - ','
+          - Ref: PublicSubnetIds
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: VpcId
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId:
+        Ref: InternetGatewayId
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Fn::Select:
+        - 0
+        - Fn::Split:
+          - ','
+          - Ref: PublicSubnetIds
+      RouteTableId:
+        Ref: PublicRouteTable
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Fn::Select:
+        - 1
+        - Fn::Split:
+          - ','
+          - Ref: PublicSubnetIds
+      RouteTableId:
+        Ref: PublicRouteTable
+  PublicSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Fn::Select:
+        - 2
+        - Fn::Split:
+          - ','
+          - Ref: PublicSubnetIds
+      RouteTableId:
+        Ref: PublicRouteTable
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: VpcId
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: PrivateRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId:
+        Ref: NatGateway
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Fn::Select:
+        - 0
+        - Fn::Split:
+          - ','
+          - Ref: PrivateSubnetIds
+      RouteTableId:
+        Ref: PrivateRouteTable
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Fn::Select:
+        - 1
+        - Fn::Split:
+          - ','
+          - Ref: PrivateSubnetIds
+      RouteTableId:
+        Ref: PrivateRouteTable
+  PrivateSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Fn::Select:
+        - 2
+        - Fn::Split:
+          - ','
+          - Ref: PrivateSubnetIds
+      RouteTableId:
+        Ref: PrivateRouteTable
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda functions
+      VpcId:
+        Ref: VpcId
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        CidrIp: '0.0.0.0/0'
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: sftMadnessDependencies
+      Description: Dependencies for sftMadness
+      ContentUri: DependenciesLayer
+    Metadata:
+      BuildMethod: python3.12
+      SamResourceId: DependenciesLayer
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: sftMadnessUserPool
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      UsernameAttributes:
+      - email
+      AutoVerifiedAttributes:
+      - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+      Schema:
+      - Name: email
+        Required: true
+        Mutable: true
+        AttributeDataType: String
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: sftMadnessUserPoolClient
+      UserPoolId:
+        Ref: UserPool
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+      - ALLOW_ADMIN_USER_PASSWORD_AUTH
+      - ALLOW_USER_PASSWORD_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      - ALLOW_USER_SRP_AUTH
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+  FileStorageBucket:
+    Type: AWS::S3::Bucket
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      BucketName:
+        Fn::Sub: sftmadness-files-${AWS::Region}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders:
+          - '*'
+          AllowedMethods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          - HEAD
+          AllowedOrigins:
+          - '*'
+          MaxAge: 3600
+  FileBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: FileStorageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowPresignedUrlAccess
+          Effect: Allow
+          Principal: '*'
+          Action:
+          - s3:GetObject
+          Resource:
+            Fn::Sub: ${FileStorageBucket.Arn}/*
+          Condition:
+            StringEquals:
+              aws:PrincipalArn:
+                Ref: AWS::AccountId
+  ScrapedFileStorageBucket:
+    Type: AWS::S3::Bucket
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      BucketName:
+        Fn::Sub: sftmadness-scrapedfiles-${AWS::Region}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders:
+          - '*'
+          AllowedMethods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          - HEAD
+          AllowedOrigins:
+          - '*'
+          MaxAge: 3600
+  ScrapedFileBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: ScrapedFileStorageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowPresignedUrlAccess
+          Effect: Allow
+          Principal: '*'
+          Action:
+          - s3:GetObject
+          Resource:
+            Fn::Sub: ${ScrapedFileStorageBucket.Arn}/*
+          Condition:
+            StringEquals:
+              aws:PrincipalArn:
+                Ref: AWS::AccountId
+  EmailLoggingGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        Fn::Sub: /aws/ses/${AWS::StackName}
+      RetentionInDays: 14
+  EmailMetricsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: ses.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: CloudWatchLogging
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource:
+              Fn::GetAtt:
+              - EmailLoggingGroup
+              - Arn
+  SESDomainIdentity:
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Condition: CreateEmailIdentity
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity:
+        Ref: SESSenderEmail
+      ConfigurationSetAttributes:
+        ConfigurationSetName:
+          Fn::If:
+          - CreateConfigSet
+          - Ref: SESConfigurationSet
+          - Ref: AWS::NoValue
+      DkimAttributes:
+        SigningEnabled: true
+  SESConfigurationSetResource:
+    Type: AWS::SES::ConfigurationSet
+    Properties:
+      Name:
+        Ref: SESConfigurationSet
+      DeliveryOptions:
+        TlsPolicy: REQUIRE
+      ReputationOptions:
+        ReputationMetricsEnabled: true
+      SendingOptions:
+        SendingEnabled: true
+  SESEventDestination:
+    Type: AWS::SES::ConfigurationSetEventDestination
+    Condition: CreateConfigSet
+    DependsOn: SESConfigurationSetResource
+    Properties:
+      ConfigurationSetName:
+        Ref: SESConfigurationSet
+      EventDestination:
+        Name: EmailEventLogging
+        Enabled: true
+        MatchingEventTypes:
+        - send
+        - reject
+        - bounce
+        - complaint
+        - delivery
+        CloudWatchDestination:
+          DimensionConfigurations:
+          - DimensionName: Source
+            DimensionValueSource: messageTag
+            DefaultDimensionValue: Unknown
+  email:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: email:send-email-lambda
+      ImageConfig:
+        Command:
+        - email.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        sendEmail:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sendEmail
+            Method: post
+        sendEmailOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sendEmail
+            Method: options
+            Auth:
+              Authorizer: NONE
+        sendPassVerificationEmail:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /passVerificationEmail
+            Method: post
+        sendPassVerificationEmailOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /passVerificationEmail
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: send-email-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: email
+  TokenCleanupFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      CodeUri: TokenCleanupFunction
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        ScheduledCleanup:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+            Name: TokenCleanupSchedule
+            Description: Daily cleanup of expired tokens
+            Enabled: true
+    Metadata:
+      SamResourceId: TokenCleanupFunction
+  usersByCognito:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: usersbycognito:users-by-cognito-lambda
+      ImageConfig:
+        Command:
+        - users_by_cognito.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        getUserByCognitoId:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/cognito/{cognitoId}
+            Method: get
+        cognitoIdOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/cognito/{cognitoId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: users-by-cognito-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: usersByCognito
+  logIn:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: login:login-lambda
+      ImageConfig:
+        Command:
+        - login.app.login_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        logIn:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /login
+            Method: post
+            Auth:
+              Authorizer: NONE
+        logInOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /login
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: login-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: logIn
+  logOut:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: logout:logout-lambda
+      ImageConfig:
+        Command:
+        - logout.app.logout_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        logOut:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /logout
+            Method: post
+        logOutOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /logout
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: logout-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: logOut
+  users:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: users:users-lambda
+      ImageConfig:
+        Command:
+        - users.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        registerUser:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users
+            Method: post
+            Auth:
+              Authorizer: NONE
+        registerUserOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getUser:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/{userId}
+            Method: get
+        updateUser:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/{userId}
+            Method: put
+        deleteUser:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/{userId}
+            Method: delete
+        userOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        resetUserPassword:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/resetPassword/{userId}
+            Method: put
+        resetUserPasswordOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/resetPassword/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getUserByEmail:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/byEmail
+            Method: post
+        getUserByEmailOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /users/byEmail
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: users-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: users
+  AICustoms:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: aicustoms:customs-lambda
+      ImageConfig:
+        Command:
+        - ai_customs.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        setCustoms:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /customs
+            Method: post
+        getCustoms:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /customs
+            Method: get
+        updateCustoms:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /customs
+            Method: put
+        deleteCustoms:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /customs
+            Method: delete
+        customsOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /customs
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: customs-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: AICustoms
+  files:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: files:files-lambda
+      ImageConfig:
+        Command:
+        - files.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        uploadFile:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /files
+            Method: post
+        uploadFileOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /files
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getFile:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /files/{fileId}
+            Method: get
+        deleteFile:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /files/{fileId}
+            Method: delete
+        fileOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /files/{fileId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: files-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: files
+  scrapedFiles:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: scrapedfiles:scrapped-files-lambda
+      ImageConfig:
+        Command:
+        - scrappedFiles.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        uploadFile:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /scrapedFiles
+            Method: post
+        uploadFileOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /scrapedFiles
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getFile:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /scrapedFiles/{fileId}
+            Method: get
+        deleteFile:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /scrapedFiles/{fileId}
+            Method: delete
+        fileOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /scrapedFiles/{fileId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: scrapped-files-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: scrapedFiles
+  schoolContact:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: schoolcontact:contact-lambda
+      ImageConfig:
+        Command:
+        - school_contact.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        createContact:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /contact
+            Method: post
+        createContactOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /contact
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getContact:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /contact/{contactId}
+            Method: get
+        updateContact:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /contact/{contactId}
+            Method: put
+        deleteContact:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /contact/{contactId}
+            Method: delete
+        contactOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /contact/{contactId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: contact-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: schoolContact
+  events:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: events:sft-events-lambda
+      ImageConfig:
+        Command:
+        - sftEvents.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        scheduleEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sftEvents
+            Method: post
+        scheduleEventOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sftEvents
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getEventById:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sftEvents/{eventId}
+            Method: get
+        getEvents:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sftEvents
+            Method: get
+        updateEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sftEvents/{eventId}
+            Method: put
+        deleteEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sftEvents/{eventId}
+            Method: delete
+        eventOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /sftEvents/{eventId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: sft-events-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: events
+  conversationLogs:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: conversationlogs:conversation-logs-lambda
+      ImageConfig:
+        Command:
+        - conversation_logs.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        logConversation:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /conversation_logs
+            Method: post
+        logConversationOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /conversation_logs
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getConversationLogs:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /conversation_logs/{userId}
+            Method: get
+        conversationLogsOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /conversation_logs/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: conversation-logs-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: conversationLogs
+  analytics:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: analytics:analyitics-lambda
+      ImageConfig:
+        Command:
+        - analytics.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        logMetric:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /analytics
+            Method: post
+        logMetricOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /analytics
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getAnalytics:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /analytics/{metricId}
+            Method: get
+        analyticsOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /analytics/{metricId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: analyitics-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: analytics
+  admins:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - PrivateSubnet1RouteTableAssociation
+    - PrivateSubnet2RouteTableAssociation
+    - PrivateSubnet3RouteTableAssociation
+    - NatGateway
+    Properties:
+      PackageType: Image
+      ImageUri: admins:admins-lambda
+      ImageConfig:
+        Command:
+        - admins.app.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        createAdmin:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins
+            Method: post
+        userRoleOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins
+            Method: options
+            Auth:
+              Authorizer: NONE
+        updateUserRole:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins
+            Method: put
+        getUserById:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins/{userId}
+            Method: get
+        getUsers:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins
+            Method: get
+        deleteUser:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins/{userId}
+            Method: delete
+        adminOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        logAction:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins/log
+            Method: post
+        logActionOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins/log
+            Method: options
+            Auth:
+              Authorizer: NONE
+        getLogs:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins/log/{userId}
+            Method: get
+        logOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: sft
+            Path: /admins/log/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      DockerContext: C:\Users\cbui\Documents\GitHub\SFTMadness\sftBack\sftMadness\src
+      DockerTag: admins-lambda
+      Dockerfile: Dockerfile
+      SamResourceId: admins
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: 'true'
+Outputs:
+  sftMadnessApi:
+    Description: API Gateway endpoint URL for Prod stage for sftMadness functions
+    Value:
+      Fn::Sub: https://${sft}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ApiEndpoint
+  ServerlessRestApiId:
+    Description: API Gateway REST API ID
+    Value:
+      Ref: sft
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-RestApiId
+  ServerlessRestApiRootResourceId:
+    Description: API Gateway REST API root resource ID
+    Value:
+      Fn::GetAtt:
+      - sft
+      - RootResourceId
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-RootResourceId
+  FileStorageBucketName:
+    Description: Name of the S3 bucket for file storage
+    Value:
+      Ref: FileStorageBucket
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-BucketName
+  ScrapedFileStorageBucketName:
+    Description: Name of the S3 bucket for scraped file storage
+    Value:
+      Ref: ScrapedFileStorageBucket
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ScrapedBucketName
+  EmailLogGroupName:
+    Description: CloudWatch Log Group for Email Events
+    Value:
+      Ref: EmailLoggingGroup
+  EmailMetricsRoleArn:
+    Description: IAM Role ARN for Email Metrics
+    Value:
+      Fn::GetAtt:
+      - EmailMetricsRole
+      - Arn
+  SESConfigurationSetName:
+    Description: SES Configuration Set Name
+    Condition: CreateConfigSet
+    Value:
+      Ref: SESConfigurationSet
+  SESDomainIdentityName:
+    Description: SES Domain Identity
+    Condition: VerifyDomain
+    Value:
+      Ref: SESDomain
+  logInFunctionArn:
+    Description: logIn Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - logIn
+      - Arn
+  logOutFunctionArn:
+    Description: logOut Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - logOut
+      - Arn
+  usersFunctionArn:
+    Description: users Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - users
+      - Arn
+  AICustomsFunctionArn:
+    Description: AICustoms Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - AICustoms
+      - Arn
+  filesFunctionArn:
+    Description: files Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - files
+      - Arn
+  scrapedFilesFunctionArn:
+    Description: scrapedFiles Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - scrapedFiles
+      - Arn
+  schoolContactFunctionArn:
+    Description: schoolContact Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - schoolContact
+      - Arn
+  eventsFunctionArn:
+    Description: events Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - events
+      - Arn
+  conversationLogsFunctionArn:
+    Description: conversationLogs Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - conversationLogs
+      - Arn
+  analyticsFunctionArn:
+    Description: analytics Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - analytics
+      - Arn
+  adminsFunctionArn:
+    Description: admins Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - admins
+      - Arn
