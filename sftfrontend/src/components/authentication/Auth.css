@@ -7,108 +7,123 @@
 */
 
 :root {
-    --body-color: #fff;
-    --bg-color: #f5e3d3;
-    --card-color: #2e4a94;
-    --txt-color: #000;
-    --btntxt-color: #fff;
-    --accent: #aad4f5;
+  --body-color: #fff;
+  --bg-color: #f5e3d3;
+  --card-color: #2e4a94;
+  --txt-color: #000;
+  --btntxt-color: #fff;
+  --accent: #aad4f5;
 }
 
 body.dark {
-    --body-color: #000;
-    --bg-color: #dc9c63;
-    --card-color: #2e4a94;
-    --txt-color: #fff;
-    --accent: #66b1ed;
+  --body-color: #000;
+  --bg-color: #dc9c63;
+  --card-color: #2e4a94;
+  --txt-color: #fff;
+  --accent: #66b1ed;
 }
 
 /*#region Login*/
 .login {
-    display: flex;
-    width: 800px;
-    height: 835px;
-    margin: 0 auto;
-    text-align: center;
-    align-content: center;
-    flex-direction: column;
-    background-color: var(--bg-color);
+  display: flex;
+  width: 800px;
+  height: 834px;
+  margin: 0 auto;
+  text-align: center;
+  align-content: center;
+  flex-direction: column;
+  background-color: var(--bg-color);
 }
 
-.loginTitle{
-    color: var(--txt-color);
+.loginTitle {
+  color: var(--txt-color);
 }
 
 .loginForm {
-    padding: 30px;
-    max-width: 600px;
-    width: 100%;
-    display: flex;
-    align-content: center;
-    text-align: left;
-    flex-direction: column;
-    margin: 0 auto;
-    color: var(--text-color);
+  padding: 30px;
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  align-content: center;
+  text-align: left;
+  flex-direction: column;
+  margin: 0 auto;
+  color: var(--txt-color);
 }
 
 .loginForm input {
-    padding: 12px 16px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    justify-content: center;
-    resize: none;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+  padding: 12px 16px;
+  width: 90%;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  justify-content: center;
+  resize: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.password-container {
+  display: flex;
+  align-items: center;
+}
+
+.password-container input {
+  flex: 1;
+}
+
+.toggle-password {
+  margin-left: 10px;
+  color: #555;
 }
 
 .loginbtn {
-    width: 53%;
-    justify-content: center;
-    margin: 0 auto;
-    margin-top: 100px;
-    background-color: var(--card-color);
-    color: var(--btntxt-color);
-    padding: 12px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+  width: 53%;
+  justify-content: center;
+  margin: 0 auto;
+  margin-top: 100px;
+  background-color: var(--card-color);
+  color: var(--btntxt-color);
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.forgotpassbtn{
-    width: 40%;
-    justify-content: center;
-    margin: 0 auto;
-    background-color: var(--card-color);
-    color: var(--btntxt-color);
-    padding: 12px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+.forgotpassbtn {
+  width: 40%;
+  justify-content: center;
+  margin: 0 auto;
+  background-color: var(--card-color);
+  color: var(--btntxt-color);
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 /*#endregion */
 
 /*#region Forgot Password*/
-.forgotpassword{
-    display: flex;
-    width: 800px;
-    height: 835px;
-    margin: 0 auto;
-    text-align: center;
-    align-content: center;
-    flex-direction: column;
-    background-color: var(--bg-color);
+.forgotpassword {
+  display: flex;
+  width: 800px;
+  height: 835px;
+  margin: 0 auto;
+  text-align: center;
+  align-content: center;
+  flex-direction: column;
+  background-color: var(--bg-color);
 }
 
 .forgotpasswordForm {
-    display: flex;
-    margin: 0 auto;
-    width: 80%;
-    height: 5%;
-    margin-bottom: 30px;
+  display: flex;
+  margin: 0 auto;
+  width: 80%;
+  height: 5%;
+  margin-bottom: 30px;
 }
 /*#endregion */

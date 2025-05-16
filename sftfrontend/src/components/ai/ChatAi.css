@@ -1,0 +1,124 @@
+:root {
+  --body-color: #fff;
+  --bg-color: #f5e3d3;
+  --card-color: #2e4a94;
+  --txt-color: #000;
+  --btntxt-color: #fff;
+  --accent: #aad4f5;
+  --nav-color:#95dcfb;
+  --navbtn-color:#1e3c8c;
+  --botmessage-color: #4fd16d;
+  --studentmessage-color: #aad4f5;
+}
+
+body.dark {
+  --body-color: #000;
+  --bg-color: #dc9c63;
+  --card-color: #2e4a94;
+  --txt-color: #fff;
+  --accent: #66b1ed;
+  --nav-color:#1a1c4c;
+  --navbtn-color:#203e91;
+  --botmessage-color: #2d6b49;
+  --studentmessage-color: #2d4f6b;
+}
+
+.chat-ai {
+  display: flex;
+  flex-direction: column;
+  height: 91.3vh;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: var(--accent);
+  border-bottom: 1px solid black;
+  border-top: 1px solid black;
+}
+
+header img {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+}
+
+.chat-window {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  background-color: var(--bg-color);
+}
+
+.message {
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.message.student {
+  background-color: var(--studentmessage-color);
+  color: var(--txt-color);
+  align-self: flex-end;
+}
+
+.message.bot {
+  background-color: var(--botmessage-color);
+  color: var(--txt-color);
+  align-self: flex-start;
+}
+
+footer {
+  display: flex;
+  background-color: var( --nav-color);
+  align-items: center;
+  height: 10%;
+}
+
+footer input {
+  flex: 1;
+  padding: 10px;
+  margin-left: 10px;
+  border: 1px solid var(--bg-color);
+  border-radius: 5px;
+  height: auto; 
+}
+
+footer button {
+  background-color: var(--navbtn-color);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  height: auto; 
+}
+
+footer button:hover {
+  background-color: #0d2c4e;
+}
+
+.bot-selector {
+  padding: 20px;
+}
+
+.bot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bot-list button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.bot-list button img {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 5px;
+}
