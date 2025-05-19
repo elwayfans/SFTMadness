@@ -1,10 +1,4 @@
-/*
-CSS For 
-School profiles
-Student profiles
-Contact Section
-AI Custom Section
-*/
+/* Base styles */
 :root {
     --body-color: #fff;
     --bg-color: #f5e3d3;
@@ -24,34 +18,30 @@ body.dark {
     --accent: #66b1ed;
 }
 
-/*
-below is the SchoolProfile.js styling
-*/
-
+/* Layout container */
 .school-profile-container {
-    display: flex;
-    justify-content: center;
     background-color: var(--bg-color);
     padding: 2rem;
-    flex-wrap: wrap;
-    width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
-    height: 1050px;
-}
-
-.school-info {
-    background-color: var(--bg-color);
-    padding: 1rem;
-    width: 300px;
-    text-align: center;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 2rem;
+    border-radius: 10px;
+}
+
+/* School Info */
+.school-info {
+    background-color: var(--accent);
+    padding: 1.5rem;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .school-info img {
-    width: 200px;
-    height: 200px;
+    width: 180px;
+    height: 180px;
     object-fit: cover;
     border-radius: 50%;
     border: 3px solid black;
@@ -59,32 +49,46 @@ below is the SchoolProfile.js styling
 }
 
 .school-info h2 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    color: var(--head-color);
     margin: 0.5rem 0;
 }
 
 .school-info p {
     margin: 0.25rem 0;
+    font-weight: 500;
 }
 
-/* 
-above is the SchoolProfile.js styling
------------------------- 
-below is the contacts section styling
-*/
-
+/* Contacts */
 .contacts-section {
     background-color: var(--accent);
     padding: 1.5rem;
-    flex: 1;
-    min-width: 300px;
-    height: 400px;
-    overflow-y:scroll;
+    border-radius: 10px;
+    overflow-y: auto;
+    max-height: 400px;
 }
 
 .contacts-section h3 {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     margin-bottom: 1rem;
+}
+
+.add-contact {
+    margin-bottom: 1rem;
+}
+
+.add-contact button {
+    background-color: var(--card-color);
+    color: var(--text-color);
+    font-size: 1.5rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.add-contact button:hover {
+    background-color: #1e3a8a;
 }
 
 .contact-card {
@@ -94,63 +98,122 @@ below is the contacts section styling
     background-color: var(--card-color);
     color: var(--text-color);
     padding: 0.8rem 1rem;
-    border: 2px solid black;
-    border-radius: 5px;
+    border-radius: 8px;
     margin-bottom: 0.8rem;
+    transition: background-color 0.3s ease;
 }
 
 .contact-card:hover {
     background-color: #1e3a8a;
-    cursor: pointer;
 }
 
 .contact-card .contact-name {
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .contact-card .contact-icon {
-    width: 30px;
-    height: 30px;
+    width: 25px;
+    height: 25px;
+    margin-left: 10px;
 }
 
-/* below is the Ai custom section styling*/
+.contact-card button {
+    background-color: transparent;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    border: none;
+    cursor: pointer;
+    margin-left: 10px;
+}
 
-.aicustom{
-    display: flex;
-    flex-direction: column;
-    text-align: left;
+/* AI Customization Section */
+.aicustom {
     background-color: var(--accent);
-    border: black solid 2px;
-    padding: 1rem;
-    width: 800px;
-    height: 530px;
+    border: 2px solid black;
+    padding: 2rem;
+    border-radius: 10px;
 }
 
-.aicustom input, textarea{
+.aicustom h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.aicustom p {
+    margin-bottom: 1.5rem;
+}
+
+.aicustom form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.aicustom input,
+.aicustom textarea,
+.aicustom select {
     margin-bottom: 10px;
-    width: 300px;
+    width: 100%;
+    max-width: 300px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #333;
+    font-size: 1rem;
 }
 
-.MuiSlider-rail{
+textarea {
+    resize: vertical;
+}
+
+/* Grid section with sliders */
+.aicustom .MuiBox-root {
+    margin-bottom: 20px;
+}
+
+.MuiSlider-rail {
     color: var(--card-color);
 }
 
-.MuiSlider-thumb{
+.MuiSlider-thumb {
     color: var(--card-color);
 }
 
-button{
+/* Buttons */
+button {
     background-color: var(--card-color);
     color: var(--text-color);
     border: none;
     padding: 10px 20px;
-    margin: 50px 10px;
+    margin: 20px 10px 0 0;
     font-size: 1rem;
     cursor: pointer;
     border-radius: 4px;
+    transition: background-color 0.3s ease;
     width: 150px;
 }
 
 button:hover {
     background-color: #1e478a;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .school-profile-container {
+        padding: 1rem;
+    }
+
+    .aicustom form {
+        flex-direction: column;
+    }
+
+    .aicustom input,
+    .aicustom textarea,
+    .aicustom select {
+        max-width: 100%;
+    }
+
+    .school-info img {
+        width: 150px;
+        height: 150px;
+    }
 }
