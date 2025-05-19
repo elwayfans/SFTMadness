@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import './Admin.css'; // Reuse styles defined in your Admin.css
+import './Admin.css'; 
 
 export const AddSchool = () => {
     const [form, setForm] = useState({
