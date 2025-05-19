@@ -12,7 +12,7 @@ def verify_token(token: str):
     Verifies the token using Cognito's public keys.
     """
     try:
-        region = boto3.session.Session().region_name
+        region = os.environ['AWS_REGION']
         headers = jwt.get_unverified_header(token)
         kid = headers['kid']
 
@@ -58,31 +58,31 @@ def require_admin(decoded_token):
 
 # Dependency to validate token from Authorization header
 def validate_token(request: Request):
-    # """
-    # Dependency to check if the request has a valid token in the Authorization header.
-    # """
-    # auth_header = request.headers.get('Authorization')
-    # if not auth_header:
-    #     raise HTTPException(status_code=401, detail="No authorization token provided")
-
-    # if not auth_header.startswith('Bearer '):
-    #     raise HTTPException(status_code=401, detail="Invalid Authorization header format. Must start with 'Bearer '")
-    
-    # token = auth_header.replace('Bearer ', '').strip()
-    
-    # # Verify the token and return the decoded payload
-    # return verify_token(token)
-
     """
-    Mocked dependency that always returns a valid-looking token payload for testing.
+    Dependency to check if the request has a valid token in the Authorization header.
     """
     auth_header = request.headers.get('Authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="No authorization token provided")
+
+    if not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Invalid Authorization header format. Must start with 'Bearer '")
     
-    # Return a dummy token payload
-    return {
-        "sub": "test-user-id",
-        "email": "test@example.com",
-        "cognito:groups": ["TestGroup"]
-    }
+    token = auth_header.replace('Bearer ', '').strip()
+    
+    # Verify the token and return the decoded payload
+    return verify_token(token)
+
+    # """
+    # Mocked dependency that always returns a valid-looking token payload for testing.
+    # """
+    # auth_header = request.headers.get('Authorization')
+    # if not auth_header or not auth_header.startswith('Bearer '):
+    #     raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+    
+    # # Return a dummy token payload
+    # return {
+    #     "sub": "test-user-id",
+    #     "email": "test@example.com",
+    #     "cognito:groups": ["TestGroup"]
+    # }

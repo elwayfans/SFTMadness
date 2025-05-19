@@ -1,24 +1,27 @@
-# Use Python Alpine image
-FROM python:3.12-alpine
+FROM python:3.10
 
-# Install required system dependencies
-RUN apk add --no-cache gcc musl-dev libffi-dev openssl-dev python3-dev postgresql-dev
-
-# Set working directory
 WORKDIR /app
 
-# Copy and install Python dependencies
+# Install system packages for torch + faiss + psycopg2 + cryptography
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libopenblas-dev \
+    libomp-dev \
+    libffi-dev \
+    libssl-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 COPY requirements.txt .
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app source code
+# Copy app code
 COPY src/ ./src
 
-# Optional: clean pip cache to reduce image size
-RUN rm -rf ~/.cache/pip
-
-# Environment config
+# Env config
 ENV PYTHONUNBUFFERED=1
 
-# Run FastAPI with uvicorn
+# Run app
 CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

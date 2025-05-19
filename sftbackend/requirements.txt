@@ -8,3 +8,7 @@ pymongo
 beautifulsoup4==4.12.3
 fastapi
 uvicorn[standard]
+torch>=1.11.0
+sentence-transformers
+faiss-cpu
+openai
