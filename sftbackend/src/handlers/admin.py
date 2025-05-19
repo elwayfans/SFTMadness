@@ -1,102 +1,51 @@
-import json
 import os
-import base64
+import traceback
 import boto3
-import jwt
-from datetime import datetime, date
-import requests
+from fastapi import APIRouter, Request, HTTPException, Depends, Body
 from botocore.exceptions import ClientError
-from jwt import algorithms
-from validate import validate_token
-from validate import require_admin
+from src.validate import validate_token, require_admin
 
-def cors_response(status_code, body, content_type="application/json"):
-    headers = {
-        'Content-Type': content_type,
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-        'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE',
-    }
+router = APIRouter()
 
-    if content_type == "application/json":
-        body = json.dumps(body, default=str)
+cognito_client = boto3.client("cognito-idp", region_name='us-east-2')
+user_pool_id = os.environ["COGNITO_USER_POOL_ID"]
 
-    return {
-        'statusCode': status_code,
-        'body': body,
-        'headers': headers,
-    }
-
-def lambda_handler(event, context):
-    if event['httpMethod'] == 'OPTIONS':
-        return cors_response(200, "ok")
+# Auth helper
+def get_current_admin_user(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Missing Authorization header")
     
+    token = auth_header.split(" ")[-1]
     try:
-        # Decode Base64 body if necessary
-        raw_body = event.get("body")
-        if not raw_body:
-            return cors_response(400, "Missing request body")
-
-        if event.get("isBase64Encoded", False):
-            decoded_body = base64.b64decode(raw_body).decode("utf-8")
-            body = json.loads(decoded_body)
-        else:
-            body = json.loads(raw_body)
-
-        print("Parsed body:", json.dumps(body, indent=2))
-
-        # Verify token
-        auth_header = event.get('headers', {}).get('Authorization')
-        if not auth_header:
-            return cors_response(401, "Unauthorized")
-        
-        token = auth_header.split(' ')[-1]
-        print("Token:", token)
-        decoded_token = validate_token(token)
-        print("Decoded token:", json.dumps(decoded_token, indent=2))
+        decoded_token = validate_token(request)
+        print("Checking if Admin")
         require_admin(decoded_token)
-
+        print("Admin check passed")
+        return decoded_token
     except Exception as e:
-        return cors_response(401, "Authentication failed")
-        
-    # Routes with authentication
-    try:
-        resource_path = event['resource']
-        http_method = event['httpMethod']
+        print("Exception occurred:", str(e))
+        traceback.print_exc()  # This shows the full stack trace
+        raise HTTPException(status_code=401, detail="Invalid or unauthorized token")
 
-        if resource_path == '/admins' and http_method == 'POST':
-            return createAdmin(body)
-        elif resource_path == '/admins' and http_method == 'PUT':
-            return setAdminRole(body)
-        elif resource_path == '/admins/{userId}' and http_method == 'DELETE':
-            return deleteUser(event)
-        else:
-            return cors_response(404, "Not Found")
-        
-    except Exception as e:
-        return cors_response(500, str(e))
-
-# Create admin user in Cognito
-def createAdmin(body):
-    cognito_client = boto3.client('cognito-idp')
-    user_pool_id = os.environ['COGNITO_USER_POOL_ID']
-
-    email = body.get('email')
-    password = body.get('password')
+# Create admin user
+@router.post("/admins")
+def create_admin(request: Request, payload: dict = Body(...), user=Depends(get_current_admin_user)):
+    email = payload.get("email")
+    password = payload.get("password")
 
     if not email or not password:
-        return cors_response(400, "Email and password are required")
+        raise HTTPException(status_code=400, detail="Email and password are required")
 
     try:
-        cognito_response = cognito_client.admin_create_user(
+        response = cognito_client.admin_create_user(
             UserPoolId=user_pool_id,
             Username=email,
             UserAttributes=[
-                {'Name': 'email', 'Value': email},
-                {'Name': 'email_verified', 'Value': 'true'}
+                {"Name": "email", "Value": email},
+                {"Name": "email_verified", "Value": "true"}
             ],
             TemporaryPassword=password,
-            MessageAction='SUPPRESS'
         )
 
         cognito_client.admin_set_user_password(
@@ -105,25 +54,25 @@ def createAdmin(body):
             Password=password,
             Permanent=True
         )
+        
+        cognito_client.admin_add_user_to_group(
+            UserPoolId=user_pool_id,
+            Username=email,
+            GroupName="SFTAdmins"
+        )
 
-        return cors_response(201, {
-            "message": "Admin created successfully",
-            "cognitoUser": cognito_response['User']
-        })
-
+        return {"message": "Admin created successfully", "cognitoUser": response["User"]}
     except ClientError as e:
-        return cors_response(500, {"error": f"Error creating admin: {str(e)}"})
+        raise HTTPException(status_code=500, detail=f"Error creating admin: {str(e)}")
 
-# Update user role in Cognito
-def setAdminRole(body):
-    cognito_client = boto3.client('cognito-idp')
-    user_pool_id = os.environ['COGNITO_USER_POOL_ID']
-
-    username = body.get('username')
-    group_name = body.get('groupName')
+# Update user role
+@router.put("/admins")
+def set_admin_role(request: Request, payload: dict = Body(...), user=Depends(get_current_admin_user)):
+    username = payload.get("username")
+    group_name = payload.get("groupName")
 
     if not username or not group_name:
-        return cors_response(400, "Email and role are required")
+        raise HTTPException(status_code=400, detail="Username and groupName are required")
 
     try:
         cognito_client.admin_add_user_to_group(
@@ -131,47 +80,30 @@ def setAdminRole(body):
             Username=username,
             GroupName=group_name
         )
-
-        return cors_response(200, {"message": f"User role updated to {group_name}"})
-
+        return {"message": f"User role updated to {group_name}"}
     except ClientError as e:
-        return cors_response(500, {"error": f"Error updating user role: {str(e)}"})
+        raise HTTPException(status_code=500, detail=f"Error updating user role: {str(e)}")
 
-# Delete user from Cognito
-def deleteUser(event):
-    cognito_client = boto3.client('cognito-idp')
-    user_pool_id = os.environ['COGNITO_USER_POOL_ID']
-
-    user_id = event['pathParameters'].get('userId')
-    if not user_id:
-        return cors_response(400, "User ID is required")
-
+# Delete user
+@router.delete("/admins/{user_id}")
+def delete_user(user_id: str, request: Request, user=Depends(get_current_admin_user)):
     try:
         cognito_client.admin_delete_user(
             UserPoolId=user_pool_id,
             Username=user_id
         )
-
-        return cors_response(200, {"message": "User deleted successfully"})
-
+        return {"message": "User deleted successfully"}
     except ClientError as e:
-        return cors_response(500, {"error": f"Error deleting user: {str(e)}"})
-    
-def disableUser(event):
-    cognito_client = boto3.client('cognito-idp')
-    user_pool_id = os.environ['COGNITO_USER_POOL_ID']
+        raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
 
-    user_id = event['pathParameters'].get('userId')
-    if not user_id:
-        return cors_response(400, "User ID is required")
-
+# Disable user
+@router.put("/admins/disable/{user_id}")
+def disable_user(user_id: str, request: Request, user=Depends(get_current_admin_user)):
     try:
         cognito_client.admin_disable_user(
             UserPoolId=user_pool_id,
             Username=user_id
         )
-
-        return cors_response(200, {"message": "User disabled successfully"})
-
+        return {"message": "User disabled successfully"}
     except ClientError as e:
-        return cors_response(500, {"error": f"Error disabling user: {str(e)}"})
+        raise HTTPException(status_code=500, detail=f"Error disabling user: {str(e)}")
