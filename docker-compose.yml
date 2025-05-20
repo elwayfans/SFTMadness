@@ -1,0 +1,27 @@
+
+services:
+  backend:
+    build: ./sftbackend
+    volumes:
+      - shared_data:/app/shared_data
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./sftbackend/.env
+    networks:
+      - appnet
+
+  ai-acme:
+    build: ./ai
+    volumes:
+      - shared_data:/app/shared_data
+    networks:
+      - appnet
+    depends_on:
+      - backend
+
+volumes:
+  shared_data:
+
+networks:
+  appnet:

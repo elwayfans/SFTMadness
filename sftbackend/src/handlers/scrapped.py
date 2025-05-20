@@ -5,6 +5,7 @@ from urllib.parse import urlparse, urljoin, urldefrag
 from collections import deque
 import requests
 import json
+import os
 
 router = APIRouter()
 
@@ -14,9 +15,13 @@ def scrape_college_data(
 ):
     try:
         start_url = body.get('url')
-        pages = body.get('pages', 30)
+        pages = body.get('pages', 20)
+        company_name = body.get('companyName')
+
         if not start_url or not start_url.startswith('http'):
             raise HTTPException(status_code=400, detail="Invalid or missing URL")
+        if not company_name:
+            raise HTTPException(status_code=400, detail="Missing companyName")
 
         max_pages = min(pages, 20)
         visited = set()
@@ -84,14 +89,18 @@ def scrape_college_data(
             except Exception:
                 continue
 
-        # Save results to file
-        with open("college_knowledge.json", "w", encoding='utf-8') as f:
+        # Save results to the appropriate file
+        save_dir = os.path.join("/app/shared_data", company_name)
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, "college_knowledge.json")
+
+        with open(save_path, "w", encoding='utf-8') as f:
             json.dump(text_results, f, indent=2, ensure_ascii=False)
 
         return {
             "startUrl": start_url,
             "pagesScanned": len(visited),
-            "textResults": text_results,
+            "savedTo": save_path,
             "timestamp": datetime.utcnow().isoformat()
         }
 
