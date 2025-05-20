@@ -4,10 +4,12 @@
 
 */
 import React, {useState, useEffect} from 'react'
+import { useNavigate } from 'react-router-dom';
 import './Settings.css';
 
 const Settings = () => {
     const [darkMode, setDarkMode] = useState(false);
+    const navigate = useNavigate();
 
     // Toggle class on body for global dark/light mode
     useEffect(() => {
@@ -37,11 +39,9 @@ const Settings = () => {
 
                 <hr />
 
-                <div className="password-section">
-                    <label htmlFor="password">Update Password:</label>
-                    <input type="password" id="password" />
-                    <button className="confirm-button">Confirm</button>
-                </div>
+                <button className="confirm-button" onClick={() => navigate('/forgotpassword')}>
+                    Update Password
+                </button>
 
                 <hr />
 
