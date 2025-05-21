@@ -7,7 +7,6 @@ As each step is completed the next form or message will show.
 */
 
 import React, { useState } from 'react';
-import { resetPassword, confirmResetPassword } from 'aws-amplify/auth';
 import './Auth.css'
 
 const ForgotPassword = () => {
@@ -20,7 +19,13 @@ const ForgotPassword = () => {
 
   const requestResetCode = async () => {
     try {
-      await resetPassword({ username: email });
+      const res = await fetch('/resetpassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error sending verification code.');
       setStep(2);
       setMessage('Verification code sent to your email.');
       setError('');
@@ -31,11 +36,13 @@ const ForgotPassword = () => {
 
   const handleResetPassword = async () => {
     try {
-      await confirmResetPassword({
-        username: email,
-        confirmationCode: code,
-        newPassword,
+      const res = await fetch('/confirmresetpassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, newPassword }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error resetting password.');
       setMessage('Your password was reset, you now may login');
       setStep(1);
       setEmail('');
@@ -43,7 +50,7 @@ const ForgotPassword = () => {
       setNewPassword('');
       setError('');
     } catch (err) {
-      setError(err.message || 'Sorry there was a issue with resetting your password. Please try again!');
+      setError(err.message || 'Sorry there was an issue with resetting your password. Please try again!');
     }
   };
 

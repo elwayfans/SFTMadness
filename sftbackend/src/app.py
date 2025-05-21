@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.status import HTTP_401_UNAUTHORIZED
-from src.handlers import users, scrapped, ai_customs, database, login, logout
+from src.handlers import users, scrapped, ai_customs, database, login, logout, admin, chat
 
 app = FastAPI()
 
@@ -15,7 +15,8 @@ app.include_router(ai_customs.router, tags=["Customs"])
 app.include_router(database.router, tags=["Database"])
 app.include_router(login.router, tags=["Login"])
 app.include_router(logout.router, tags=["Logout"])
-
+app.include_router(admin.router, tags=["Admin"], include_in_schema=False)
+app.include_router(chat.router, tags=["Chat"])
 
 @app.options("/{full_path:path}")
 async def options_handler(full_path: str):

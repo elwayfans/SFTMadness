@@ -1,73 +1,82 @@
-from fastapi import APIRouter, Request, HTTPException, Depends, Body
+from fastapi import APIRouter, HTTPException, Body
 from datetime import datetime
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin, urldefrag
 from collections import deque
 import requests
-import re
-from src.validate import validate_token
+import json
+import os
 
 router = APIRouter()
 
 @router.post("/scrapeCollegeData")
 def scrape_college_data(
-    body: dict = Body(...),
-    token_payload: dict = Depends(validate_token)  # Enforces authentication
+    body: dict = Body(...)
 ):
     try:
         start_url = body.get('url')
-        pages = body.get('pages', 10)
+        pages = body.get('pages', 20)
+        company_name = body.get('companyName')
+
         if not start_url or not start_url.startswith('http'):
             raise HTTPException(status_code=400, detail="Invalid or missing URL")
+        if not company_name:
+            raise HTTPException(status_code=400, detail="Missing companyName")
 
-        max_pages = pages
+        max_pages = min(pages, 20)
         visited = set()
+        seen_links = set()
         queue = deque([start_url])
-        amount_results = []
+        text_results = []
 
         domain = urlparse(start_url).netloc
         headers = {'User-Agent': 'Mozilla/5.0'}
 
+        def clean_url(href, base_url):
+            """Join and normalize URL, remove fragments."""
+            joined = urljoin(base_url, href)
+            cleaned, _ = urldefrag(joined)
+            return cleaned
+
         while queue and len(visited) < max_pages:
             url = queue.popleft()
-            if url in visited:
+            cleaned_url = clean_url(url, start_url)
+
+            if cleaned_url in visited:
                 continue
-            visited.add(url)
+            visited.add(cleaned_url)
 
             try:
-                res = requests.get(url, headers=headers, timeout=10)
+                res = requests.get(cleaned_url, headers=headers, timeout=10)
                 if res.status_code != 200:
                     continue
 
                 soup = BeautifulSoup(res.text, 'html.parser')
+                for tag in soup(['script', 'style', 'noscript']):
+                    tag.decompose()
+
                 text = soup.get_text(separator=' ', strip=True)
+                clean_text = ' '.join(text.replace('\n', ' ').split())[:4000]
 
-                # Match $ amounts
-                dollar_matches = list(re.finditer(r'\$[0-9,]+(?:\.\d{2})?', text))
-
-                for match in dollar_matches:
-                    amount = match.group()
-                    start_idx = max(int(match.start()) - 50, 0)
-                    end_idx = min(int(match.end()) + 50, len(text))
-                    context = str(text[start_idx:end_idx])
-
-                    amount_results.append({
-                        "url": url,
-                        "amount": amount,
-                        "context": context.strip()
+                if len(clean_text) > 100:
+                    text_results.append({
+                        "url": cleaned_url,
+                        "text": clean_text
                     })
 
-                # Collect and prioritize internal links
                 internal_links = []
                 for link in soup.find_all('a', href=True):
                     href = link['href']
-                    joined_url = urljoin(url, href)
-                    parsed = urlparse(joined_url)
-                    if parsed.netloc == domain and joined_url not in visited:
-                        internal_links.append(joined_url)
+                    if href.startswith('#') or not href.strip():
+                        continue
+                    full_link = clean_url(href, cleaned_url)
+                    if (urlparse(full_link).netloc == domain and
+                            full_link not in visited and
+                            full_link not in seen_links):
+                        internal_links.append(full_link)
+                        seen_links.add(full_link)
 
-                # Prioritize tuition-related links
-                priority_keywords = ['tuition', 'cost', 'fee', 'financial-aid']
+                priority_keywords = ['admissions', 'tuition', 'cost', 'financial-aid', 'campus', 'student-life', 'housing']
                 def link_priority(link):
                     for i, keyword in enumerate(priority_keywords):
                         if keyword in link.lower():
@@ -75,16 +84,23 @@ def scrape_college_data(
                     return len(priority_keywords)
 
                 prioritized_links = sorted(internal_links, key=link_priority)
-                for link in prioritized_links:
-                    queue.append(link)
+                queue.extend(prioritized_links)
 
             except Exception:
-                continue  # Skip on error
+                continue
+
+        # Save results to the appropriate file
+        save_dir = os.path.join("/app/shared_data", company_name)
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, "college_knowledge.json")
+
+        with open(save_path, "w", encoding='utf-8') as f:
+            json.dump(text_results, f, indent=2, ensure_ascii=False)
 
         return {
             "startUrl": start_url,
             "pagesScanned": len(visited),
-            "dollarAmountsFound": amount_results,
+            "savedTo": save_path,
             "timestamp": datetime.utcnow().isoformat()
         }
 
