@@ -31,6 +31,7 @@ function NavBar() {
         <li>
           <Link className="flex-container" to="/">Home</Link>
           <Link className="flex-container" to="/aboutus">About Us</Link>
+          <Link className='flex-container' to="/bot-selector">Bot Selector</Link>
 
           {!isLoggedIn ? (
             <>
