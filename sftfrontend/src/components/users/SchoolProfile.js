@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
-import Slider from "@mui/material/Slider";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import { useNavigate } from "react-router-dom";
-import './Profile.css';
+import React, {useState, useEffect} from "react";
+import AIWizardCustomizer from "../ai/aiWizard/aiWizard";
+import {useNavigate} from "react-router-dom";
+import "./Profile.css";
+
 
 const SchoolProfile = () => {
   const navigate = useNavigate();
@@ -73,96 +72,7 @@ const SchoolProfile = () => {
           </div>
         ))}
       </div>
-
-      <div className="aicustom">
-        <h3>AI Model Customization</h3>
-        <p>
-          Here you will be able to customize how your AI model appears and behaves.
-        </p>
-        <form>
-          <Grid container spacing={8} columns={16}>
-            <Grid item xs={8}>
-              <label>Model Name:</label>
-              <input type="text" name="modelname" defaultValue={profile.modelName || ""} />
-              <br />
-
-              <label>Model Logo:</label>
-              <input type="text" name="modellogo" defaultValue={profile.modelLogo || ""} />
-              <br />
-
-              <label>Bot's Introduction:</label>
-              <br />
-              <textarea
-                name="botintro"
-                rows="3"
-                defaultValue={profile.botIntro || ""}
-              />
-              <br />
-
-              <label>Bot's Goodbye Message:</label>
-              <br />
-              <textarea
-                name="botGoodbye"
-                rows="3"
-                defaultValue={profile.botGoodbye || ""}
-              />
-              <br />
-
-              <label>Bot's Special Instructions:</label>
-              <br />
-              <textarea
-                name="botInstructions"
-                rows="3"
-                defaultValue={profile.botInstructions || ""}
-              />
-              <br />
-
-              <label>Bot's Accent:</label>
-              <br />
-              <select name="accent" defaultValue={profile.accent || ""}>
-                <option value="">No specific accent</option>
-                <option value="american">American English</option>
-                <option value="british">British English</option>
-                <option value="australian">Australian English</option>
-                <option value="canadian">Canadian English</option>
-                <option value="indian">Indian English</option>
-                <option value="japanese">Japanese English</option>
-              </select>
-            </Grid>
-
-            <Grid item xs={8}>
-              <h3>Bot's personality</h3>
-              <label>Friendliness:</label>
-              <Box width={300}>
-                <Slider value={profile.friendliness || 50} />
-              </Box>
-
-              <label>Formality:</label>
-              <Box width={300}>
-                <Slider value={profile.formality || 50} />
-              </Box>
-
-              <label>Verbosity:</label>
-              <Box width={300}>
-                <Slider value={profile.verbosity || 50} />
-              </Box>
-
-              <label>Humor:</label>
-              <Box width={300}>
-                <Slider value={profile.humor || 50} />
-              </Box>
-
-              <label>Technical Level:</label>
-              <Box width={300}>
-                <Slider value={profile.technicalLevel || 50} />
-              </Box>
-
-              <button type="submit">Save</button>
-              <button type="reset">Clear</button>
-            </Grid>
-          </Grid>
-        </form>
-      </div>
+      <AIWizardCustomizer />
     </div>
   );
 };
