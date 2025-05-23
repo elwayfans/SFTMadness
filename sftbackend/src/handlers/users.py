@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 public_router = APIRouter()
 auth_router = APIRouter()
 
-# ---------- Public Routes ----------
+# Public Routes
 
 @public_router.post("/resetPassword")
 def initiate_forgot_password(payload: dict = Body(...)):
@@ -77,7 +77,7 @@ def get_user_by_email(payload: dict = Body(...)):
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving user: {str(e)}")
 
-# ---------- Authenticated Routes ----------
+# Authenticated Routes
 
 @auth_router.put("/update")
 def update_user(payload: dict = Body(...)):
@@ -132,3 +132,21 @@ def delete_user(payload: dict = Body(...)):
         return {"message": "User deleted successfully"}
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
+    
+@auth_router.get("/get")
+def get_user(payload: dict = Body(...)):
+    cognito_client = boto3.client('cognito-idp')
+    user_id = payload.get('userId')
+
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User ID is required")
+
+    try:
+        response = cognito_client.admin_get_user(
+            UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
+            Username=user_id
+        )
+        user_attributes = {attr['Name']: attr['Value'] for attr in response['UserAttributes']}
+        return {"user": user_attributes}
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving user: {str(e)}")
