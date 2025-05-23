@@ -15,7 +15,7 @@ collection = db["SFTMadnessUserData"]
 
 SHARED_SECRET = os.getenv("SHARED_SECRET")
 
-# ---------- Dependencies ----------
+# Dependencies
 
 def verify_shared_secret(x_shared_secret: str = Header(...)):
     if not hmac.compare_digest(x_shared_secret, SHARED_SECRET or ""):
@@ -36,7 +36,7 @@ def get_user_sub(authorization: str = Header(...)) -> str:
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
-# ---------- Routes ----------
+# Routes
 
 @router.post("/database")
 def create_or_update_data(

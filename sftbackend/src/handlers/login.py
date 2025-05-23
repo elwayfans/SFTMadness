@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body, Request
+from fastapi import APIRouter, HTTPException, Body, Request, Response
 import boto3
 import os
 from botocore.exceptions import ClientError
@@ -8,29 +8,29 @@ router = APIRouter()
 @router.post("/login")
 def login_user(
     request: Request,
+    response: Response,
     payload: dict = Body(...)
 ):
-    """
-    Login with Cognito or return fake login if X-Test-Mode: true is passed in headers.
-    """
     email = payload.get("email")
     password = payload.get("password")
 
     if not email or not password:
         raise HTTPException(status_code=400, detail="Email and password are required")
 
-    # Check for test mode
     test_mode = request.headers.get("X-Test-Mode", "").lower() == "true"
     if test_mode:
-        # Fake tokens for testing
+        # Set fake cookie for test mode
+        response.set_cookie(
+            key="idToken",
+            value="test-id-token",
+            httponly=True,
+            secure=True,
+            samesite="strict",
+            max_age=3600,
+            path="/"
+        )
         return {
             "message": "Login successful (TEST MODE)",
-            "tokens": {
-                "accessToken": "test-access-token",
-                "idToken": "test-id-token",
-                "refreshToken": "test-refresh-token",
-                "expiresIn": 3600
-            },
             "user": {
                 "sub": "test-user-id",
                 "email": email,
@@ -39,7 +39,6 @@ def login_user(
             }
         }
 
-    # Production Cognito login
     user_pool_id = os.getenv("COGNITO_USER_POOL_ID")
     client_id = os.getenv("COGNITO_CLIENT_ID")
 
@@ -67,21 +66,26 @@ def login_user(
                 }
             raise HTTPException(status_code=401, detail=f"Authentication failed: {challenge or 'Unknown challenge'}")
 
-        tokens = {
-            'accessToken': auth_response['AuthenticationResult']['AccessToken'],
-            'idToken': auth_response['AuthenticationResult']['IdToken'],
-            'refreshToken': auth_response['AuthenticationResult']['RefreshToken'],
-            'expiresIn': auth_response['AuthenticationResult']['ExpiresIn']
-        }
+        tokens = auth_response['AuthenticationResult']
 
-        user_response = cognito_client.get_user(AccessToken=tokens['accessToken'])
+        # Set secure, HttpOnly cookie for ID token
+        response.set_cookie(
+            key="idToken",
+            value=tokens['IdToken'],
+            httponly=True,
+            secure=True,
+            samesite="strict",
+            max_age=tokens['ExpiresIn'],
+            path="/"
+        )
+
+        user_response = cognito_client.get_user(AccessToken=tokens['AccessToken'])
         user_attributes = {
             attr['Name']: attr['Value'] for attr in user_response.get('UserAttributes', [])
         }
 
         return {
             "message": "Login successful",
-            "tokens": tokens,
             "user": user_attributes
         }
 
