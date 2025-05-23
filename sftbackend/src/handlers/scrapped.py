@@ -89,7 +89,7 @@ def scrape_college_data(
             except Exception:
                 continue
 
-        # Save results to the appropriate file
+        # Save results to the file
         save_dir = os.path.join("/app/shared_data", company_name)
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, "college_knowledge.json")

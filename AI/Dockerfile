@@ -1,12 +1,14 @@
 FROM python:3.10
+
 WORKDIR /app
 
-# Install dependencies
+# Cache dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy code and company data
+# Install dependencies
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
 COPY . .
 
-# Build index, then run chatbot
+# Build indexes and run AI
 CMD ["bash", "run_ai.sh"]
