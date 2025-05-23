@@ -1,36 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./BotSelector.css";
 
 const BotSelector = () => {
-  const [bots, setBots] = useState([]);
+  const [bots] = useState([
+    {
+      name: "neumont",
+      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzh_LFcsVvluiFsqG_iPm07B9tQZJXnPgHng&s",
+      botTextColor: "#000000",
+      botTextboxBackgroundColor: "#FCDD09",
+    },
+    {
+      name: "byu",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Brigham_Young_University_medallion.svg/1200px-Brigham_Young_University_medallion.svg.png",
+      botTextColor: "#ffffff",
+      botTextboxBackgroundColor: "#002E5D",
+    },
+  ]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch("http://localhost:8000/bots")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setBots(data);
-        } else {
-          // TEMP: Add mock bots if none are returned
-          setBots([
-            {
-              name: "neumont",
-              logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzh_LFcsVvluiFsqG_iPm07B9tQZJXnPgHng&s",
-            },
-            { name: "byu", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Brigham_Young_University_medallion.svg/1200px-Brigham_Young_University_medallion.svg.png" },
-          ]);
-        }
-      })
-      .catch(() => {
-        // TEMP: Add mock bots if fetch fails
-        setBots([
-          { name: "Test University", logo: "https://via.placeholder.com/100" },
-          { name: "Sample College", logo: "https://via.placeholder.com/100" },
-        ]);
-      });
-  }, []);
   const handleSelectBot = (bot) => {
     navigate("/chat-ai", { state: { bot } });
   };
@@ -51,7 +39,7 @@ const BotSelector = () => {
               backgroundPosition: "center",
             }}
           >
-            <p>{bot.name}</p>
+            <p>{bot.name.toUpperCase()}</p>
           </button>
         ))}
       </div>
