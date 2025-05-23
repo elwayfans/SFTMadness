@@ -7,7 +7,6 @@
   --accent: #aad4f5;
   --nav-color:#95dcfb;
   --navbtn-color:#1e3c8c;
-  --botmessage-color: #4fd16d;
   --studentmessage-color: #aad4f5;
 }
 
@@ -69,8 +68,6 @@ header img {
 }
 
 .message.bot {
-  background-color: var(--botmessage-color);
-  color: var(--txt-color);
   align-self: flex-start;
   margin-top: 3.5%;
   max-width: 60%;

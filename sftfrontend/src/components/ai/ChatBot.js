@@ -62,7 +62,7 @@ const ChatAi = () => {
     <div className="chat-ai">
       <header>
         <img src={selectedBot.logo} alt={`${selectedBot.name} logo`} />
-        <h1>{selectedBot.name}</h1>
+        <h1>{selectedBot.name.toUpperCase()}</h1>
       </header>
       <div className="chat-window">
         {messages.map((msg, index) => (
@@ -71,6 +71,14 @@ const ChatAi = () => {
             className={`message ${
               msg.sender === "student" ? "student" : "bot"
             }`}
+            style={
+              msg.sender === "bot"
+                ? {
+                    backgroundColor: selectedBot.botTextboxBackgroundColor,
+                    color: selectedBot.botTextColor,
+                  }
+                : {}
+            }
           >
             {msg.text}
           </div>
