@@ -61,12 +61,22 @@ header img {
   background-color: var(--studentmessage-color);
   color: var(--txt-color);
   align-self: flex-end;
+  float: right;
+  max-width: 60%;
+  min-width: 10%;
+  width: fit-content;
+  word-break: break-word;
 }
 
 .message.bot {
   background-color: var(--botmessage-color);
   color: var(--txt-color);
   align-self: flex-start;
+  margin-top: 3.5%;
+  max-width: 60%;
+  min-width: 10%;
+  width: fit-content;
+  word-break: break-word;
 }
 
 footer {
@@ -80,9 +90,10 @@ footer input {
   flex: 1;
   padding: 10px;
   margin-left: 10px;
+  margin-right: 50px;
   border: 1px solid var(--bg-color);
   border-radius: 5px;
-  height: auto; 
+  height: auto;
 }
 
 footer button {
@@ -92,6 +103,7 @@ footer button {
   border-radius: 5px;
   cursor: pointer;
   height: auto; 
+  margin-bottom: 1.1%;
 }
 
 footer button:hover {

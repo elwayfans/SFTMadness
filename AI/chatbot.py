@@ -11,6 +11,7 @@ from typing import List
 
 app = FastAPI()
 
+
 openai.api_key = "lm-studio"
 # openai.api_base = "http://localhost:8888/v1"
 openai.api_base = "http://host.docker.internal:8888/v1"
@@ -139,3 +140,11 @@ def chat(query: Query):
         print("Unhandled exception:")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
+@app.get("/chat")
+def get_chat():
+
+    url = "http://host.docker.internal:8888/v1/models"
+    resp = requests.get(url)
+    resp.raise_for_status()
+    return resp.json()
