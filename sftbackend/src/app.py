@@ -1,8 +1,18 @@
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import JSONResponse
-from src.handlers import users, scrapped, ai_customs, database, login, logout, admin, chat, contacts
+from starlette.status import HTTP_401_UNAUTHORIZED
+from src.handlers import users, scrapped, ai_customs, database, login, logout, admin, chat
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],
+     allow_headers=["*"],
+)
 
 # Public routes
 app.include_router(users.public_router, prefix="/users", tags=["Users"])
