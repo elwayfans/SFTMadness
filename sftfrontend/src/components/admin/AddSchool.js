@@ -7,6 +7,7 @@ export const AddSchool = () => {
         logo: null,
         phone: "",
         email: "",
+        password: ""
     });
 
     const handleChange = (e) => {
@@ -25,6 +26,7 @@ export const AddSchool = () => {
         if (form.logo) formData.append("logo", form.logo);
         formData.append("phone", form.phone);
         formData.append("email", form.email);
+        formData.append("password", form.password);
 
         try {
             const response = await fetch("/api/schools", {
@@ -83,6 +85,17 @@ export const AddSchool = () => {
                     name="email"
                     id="email"
                     value={form.email}
+                    onChange={handleChange}
+                    required
+                />
+            </div>
+            <div>
+                <label htmlFor="email">Temporary Password:</label>
+                <input
+                    type="password"
+                    name="password"
+                    id="passord"
+                    value={form.password}
                     onChange={handleChange}
                     required
                 />

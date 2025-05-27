@@ -1,9 +1,5 @@
 /*
 this is the profile that source for training staff/employees will see
-
-
-
-
 */
 
 import React, { useState, useEffect } from "react";
@@ -13,7 +9,7 @@ import { AddSchool } from './AddSchool';
 
 const AdminProfile = () => {
     const navigate = useNavigate();
-    // const [profile, setProfile] = useState(null);
+    const [profile, setProfile] = useState(null);
     const [contacts, setContacts] = useState([]);
 
     useEffect(() => {
@@ -28,7 +24,7 @@ const AdminProfile = () => {
             ]
         };
 
-        // setProfile(mockData);
+        setProfile(mockData);
         setContacts(mockData.contacts);
     }, []);
 
@@ -40,14 +36,16 @@ const AdminProfile = () => {
         const updatedContacts = contacts.filter((contact) => contact.email !== email);
         setContacts(updatedContacts);
     };
-    return (
 
+    if (!profile) return null;
+
+    return (
         <div className="sft-profile-container">
             <div className="sft-info">
-                <img src="/images/daniel.png" alt="sft_staff" />
-                <h2>Daniel Lapan</h2>
-                <p>Dan@sourcefortraining.com</p>
-                <p>(000) 000-0000</p>
+                <img src={profile.LogoUrl} alt="sft_staff" />
+                <h2>{profile.sftName}</h2>
+                <p>{profile.email}</p>
+                <p>{profile.phone}</p>
             </div>
 
             <div className="contacts-section">
@@ -68,7 +66,8 @@ const AdminProfile = () => {
             </div>
             <AddSchool />
         </div>
-    )
-}
+    );
+};
 
-export default AdminProfile
+export default AdminProfile;
+;
