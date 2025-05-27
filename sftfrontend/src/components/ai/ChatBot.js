@@ -58,6 +58,32 @@ const ChatAi = () => {
     }
   };
 
+  function formatMessageWithBreaks(text) {
+    // Split by sentence-ending punctuation followed by a space or end of string
+    const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g) || [text];
+    const chunks = [];
+    for (let i = 0; i < sentences.length; i += 5) {
+      chunks.push(
+        sentences
+          .slice(i, i + 5)
+          .join("")
+          .trim()
+      );
+    }
+    // Return as an array with <br /> between each chunk
+    return chunks.map((chunk, idx) =>
+      idx < chunks.length - 1 ? (
+        <React.Fragment key={idx}>
+          {chunk}
+          <br />
+          <br />
+        </React.Fragment>
+      ) : (
+        chunk
+      )
+    );
+  }
+
   return (
     <div className="chat-ai">
       <header>
@@ -80,7 +106,7 @@ const ChatAi = () => {
                 : {}
             }
           >
-            {msg.text}
+            {formatMessageWithBreaks(msg.text)}
           </div>
         ))}
       </div>

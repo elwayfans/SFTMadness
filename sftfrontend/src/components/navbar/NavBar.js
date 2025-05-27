@@ -9,18 +9,13 @@ function NavBar() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const storedRole = localStorage.getItem('role');
     setIsLoggedIn(!!token);
-    if (storedRole) {
-      setRole(storedRole);
-    }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     setIsLoggedIn(false);
-    setRole('');
     navigate('/');
   };
 
@@ -33,18 +28,11 @@ function NavBar() {
           <Link className="flex-container" to="/aboutus">About Us</Link>
           <Link className='flex-container' to="/bot-selector">Bot Selector</Link>
 
-          {!isLoggedIn ? (
-            <>
-              <Link className="flex-container" to="/login">Login</Link>
-            </>
+           {!isLoggedIn ? (
+            <Link className="flex-container" to="/login">Login</Link>
           ) : (
             <>
-              {role === 'School' && (
-                <Link className="flex-container" to="/school-profile">Profile</Link>
-              )}
-              {role === 'SFT' && (
-                <Link className="flex-container" to="/admin-profile">Profile</Link>
-              )}
+              <Link className="flex-container" to="/profile">Profile</Link>
               <button className="flex-container" onClick={handleLogout}>Logout</button>
             </>
           )}
