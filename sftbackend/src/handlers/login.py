@@ -24,7 +24,7 @@ def login_user(
             key="idToken",
             value="test-id-token",
             httponly=True,
-            secure=True,
+            secure=False,
             samesite="strict",
             max_age=3600,
             path="/"
@@ -73,7 +73,7 @@ def login_user(
             key="idToken",
             value=tokens['IdToken'],
             httponly=True,
-            secure=True,
+            secure=False,
             samesite="strict",
             max_age=tokens['ExpiresIn'],
             path="/"
