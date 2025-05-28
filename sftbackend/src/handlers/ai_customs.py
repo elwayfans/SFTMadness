@@ -40,20 +40,20 @@ def validate_fields(data: dict):
 
 @router.post("/customs")
 def set_customs(data: dict = Body(...), token_payload: dict = Depends(validate_token)):
-    user_sub = token_payload.get("sub")
-    if not user_sub:
-        raise HTTPException(status_code=400, detail="Token does not contain a sub claim")
+    company = token_payload.get("custom:Company")
+    if not company:
+        raise HTTPException(status_code=400, detail="Token does not contain a company claim")
 
     validate_fields(data)
 
     item = {
-        "sub": user_sub,
+        "company": company,
         **{field: data[field] for field in REQUIRED_FIELDS}
     }
 
-    existing = collection.find_one({"sub": user_sub})
+    existing = collection.find_one({"company": company})
     if existing:
-        collection.update_one({"sub": user_sub}, {"$set": item})
+        collection.update_one({"company": company}, {"$set": item})
         return {"message": "Data updated successfully"}
     else:
         collection.insert_one(item)
@@ -61,24 +61,27 @@ def set_customs(data: dict = Body(...), token_payload: dict = Depends(validate_t
 
 
 @router.get("/customs")
-def get_customs(token_payload: dict = Depends(validate_token)):
-    user_sub = token_payload.get("sub")
-    result = collection.find_one({"sub": user_sub}, {"_id": 0})
-    if not result:
-        raise HTTPException(status_code=404, detail="No data found")
-    return {"data": result}
+def get_customs(payload: dict = Body(...)):
+    company = payload.get("company")
+    if not company:
+        raise HTTPException(status_code=400, detail="Request body must include a 'company' field")
 
+    result = collection.find_one({"company": company}, {"_id": 0})
+    if not result:
+        raise HTTPException(status_code=404, detail="No data found for the specified company")
+
+    return {"data": result}
 
 @router.put("/customs")
 def update_customs(data: dict = Body(...), token_payload: dict = Depends(validate_token)):
-    user_sub = token_payload.get("sub")
-    if not user_sub:
-        raise HTTPException(status_code=400, detail="Token missing sub claim")
+    company = token_payload.get("custom:Company")
+    if not company:
+        raise HTTPException(status_code=400, detail="Token does not contain a company claim")
 
     validate_fields(data)
     update_fields = {field: data[field] for field in REQUIRED_FIELDS}
 
-    result = collection.update_one({"sub": user_sub}, {"$set": update_fields})
+    result = collection.update_one({"company": company}, {"$set": update_fields})
 
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Data not found")
@@ -88,8 +91,11 @@ def update_customs(data: dict = Body(...), token_payload: dict = Depends(validat
 
 @router.delete("/customs")
 def delete_customs(token_payload: dict = Depends(validate_token)):
-    user_sub = token_payload.get("sub")
-    result = collection.delete_one({"sub": user_sub})
+    company = token_payload.get("custom:Company")
+    if not company:
+        raise HTTPException(status_code=400, detail="Token does not contain a company claim")
+
+    result = collection.delete_one({"company": company})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Data not found")
     return {"message": "Data deleted successfully"}
