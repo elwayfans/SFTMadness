@@ -3,8 +3,7 @@ import json
 import boto3
 import jwt
 from jwt import algorithms
-from fastapi import HTTPException, Request, Depends
-from fastapi.responses import JSONResponse
+from fastapi import HTTPException, Request
 import requests
 
 def verify_token(token: str):
@@ -48,6 +47,7 @@ def verify_token(token: str):
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
 
+
 def require_admin(decoded_token):
     """
     Ensures the user is in the 'SFTAdmins' group.
@@ -56,33 +56,14 @@ def require_admin(decoded_token):
     if 'SFTAdmins' not in groups:
         raise HTTPException(status_code=403, detail="Forbidden: Admin access required")
 
-# Dependency to validate token from Authorization header
+
+# Validate token from HttpOnly cookie
 def validate_token(request: Request):
     """
-    Dependency to check if the request has a valid token in the Authorization header.
+    Dependency to check if the request has a valid token from HttpOnly cookie.
     """
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        raise HTTPException(status_code=401, detail="No authorization token provided")
-
-    if not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Invalid Authorization header format. Must start with 'Bearer '")
+    token = request.cookies.get('idToken')
+    if not token:
+        raise HTTPException(status_code=401, detail="No auth token cookie provided")
     
-    token = auth_header.replace('Bearer ', '').strip()
-    
-    # Verify the token and return the decoded payload
     return verify_token(token)
-
-    # """
-    # Mocked dependency that always returns a valid-looking token payload for testing.
-    # """
-    # auth_header = request.headers.get('Authorization')
-    # if not auth_header or not auth_header.startswith('Bearer '):
-    #     raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
-    
-    # # Return a dummy token payload
-    # return {
-    #     "sub": "test-user-id",
-    #     "email": "test@example.com",
-    #     "cognito:groups": ["TestGroup"]
-    # }

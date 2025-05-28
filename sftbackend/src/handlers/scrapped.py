@@ -7,12 +7,18 @@ import requests
 import json
 import os
 
+from src.validate import validate_token
+
 router = APIRouter()
 
 @router.post("/scrapeCollegeData")
 def scrape_college_data(
     body: dict = Body(...)
 ):
+    token = requests.request.cookies.get("idToken")
+    validate_token(token)
+    if not token:
+        raise HTTPException(status_code=401, detail="Access Denied: No token found")
     try:
         start_url = body.get('url')
         pages = body.get('pages', 20)

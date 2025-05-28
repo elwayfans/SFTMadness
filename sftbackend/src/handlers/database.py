@@ -28,7 +28,7 @@ def get_user_sub(authorization: str = Header(...)) -> str:
 
     token = authorization.split(" ")[1]
     try:
-        decoded = jwt.decode(token, options={"verify_signature": False})  # NOTE: no signature check
+        decoded = jwt.decode(token, options={"verify_signature": False})
         user_sub = decoded.get("sub")
         if not user_sub:
             raise HTTPException(status_code=400, detail="Invalid token: no sub found")
