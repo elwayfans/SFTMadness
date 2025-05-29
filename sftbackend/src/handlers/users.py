@@ -11,7 +11,7 @@ auth_router = APIRouter()
 
 @public_router.post("/resetPassword")
 def initiate_forgot_password(payload: dict = Body(...)):
-    cognito_client = boto3.client('cognito-idp')
+    cognito_client = boto3.client('cognito-idp', region_name=os.environ['AWS_REGION'])
     username = payload.get("email")
     
     if not username:
@@ -28,7 +28,7 @@ def initiate_forgot_password(payload: dict = Body(...)):
 
 @public_router.post("/confirmResetPassword")
 def confirm_forgot_password(payload: dict = Body(...)):
-    cognito_client = boto3.client('cognito-idp')
+    cognito_client = boto3.client('cognito-idp', region_name='us-east-2')
     
     username = payload.get("email")
     code = payload.get("code")
@@ -51,7 +51,7 @@ def confirm_forgot_password(payload: dict = Body(...)):
 
 @public_router.post("/byEmail")
 def get_user_by_email(payload: dict = Body(...)):
-    cognito_client = boto3.client('cognito-idp')
+    cognito_client = boto3.client('cognito-idp', region_name=os.environ['AWS_REGION'])
     email = payload.get('email')
 
     if not email:
@@ -81,7 +81,7 @@ def get_user_by_email(payload: dict = Body(...)):
 
 @auth_router.put("/update")
 def update_user(payload: dict = Body(...)):
-    cognito_client = boto3.client('cognito-idp')
+    cognito_client = boto3.client('cognito-idp', region_name=os.environ['AWS_REGION'])
     user_id = payload.get('userId')
 
     if not user_id:
@@ -106,7 +106,7 @@ def update_user(payload: dict = Body(...)):
 
 @auth_router.delete("/delete")
 def delete_user(payload: dict = Body(...)):
-    cognito_client = boto3.client('cognito-idp')
+    cognito_client = boto3.client('cognito-idp', region_name=os.environ['AWS_REGION'])
     user_id = payload.get('userId')
     auth_header = payload.get('Authorization')
 
@@ -135,7 +135,7 @@ def delete_user(payload: dict = Body(...)):
     
 @auth_router.get("/get")
 def get_user(payload: dict = Body(...)):
-    cognito_client = boto3.client('cognito-idp')
+    cognito_client = boto3.client('cognito-idp', region_name=os.environ['AWS_REGION'])
     user_id = payload.get('userId')
 
     if not user_id:

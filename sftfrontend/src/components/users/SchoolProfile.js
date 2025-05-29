@@ -1,8 +1,7 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import AIWizardCustomizer from "../ai/aiWizard/aiWizard";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Profile.css";
-
 
 const SchoolProfile = () => {
   const navigate = useNavigate();
@@ -10,31 +9,37 @@ const SchoolProfile = () => {
   const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
-    const mockData = {
-      schoolName: "Neumont College of Computer Science",
-      schoolLogoUrl: "/images/neumont-college.png",
-      email: "admissions@neumont.edu",
-      phone: "(801) 302-2800",
-      contacts: [
-        { firstName: "Jane", lastName: "Doe", email: "jane@neumont.edu" },
-        { firstName: "John", lastName: "Smith", email: "john@neumont.edu" }
-      ],
-      modelName: "AdmissionsBot",
-      modelLogo: "/images/bot-logo.png",
-      botIntro: "Hello, I’m here to help!",
-      botGoodbye: "Thank you for chatting!",
-      botInstructions: "Be polite and informative",
-      accent: "american",
-      friendliness: 80,
-      formality: 60,
-      verbosity: 70,
-      humor: 50,
-      technicalLevel: 40
-    };
+    // Get idToken from cookie (not localStorage)
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    }
+    const idToken = getCookie("idToken");
+    if (!idToken) {
+      navigate("/login");
+      return;
+    }
 
-    setProfile(mockData);
-    setContacts(mockData.contacts);
-  }, []);
+    fetch("http://localhost:8000/school/profile", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${idToken}`,
+        "Content-Type": "application/json"
+      },
+      credentials: "include"
+    })
+      .then(res => res.json())
+      .then(data => {
+        setProfile(data);
+        setContacts(data.contacts || []);
+      })
+      .catch(() => {
+        setProfile(null);
+        setContacts([]);
+      });
+  }, [navigate]);
 
   const handleAddContactClick = () => {
     navigate("/addcontacts");

@@ -23,7 +23,7 @@ def login_user(
         response.set_cookie(
             key="idToken",
             value="test-id-token",
-            httponly=True,
+            httponly=False,
             secure=False,
             samesite="strict",
             max_age=3600,
@@ -72,7 +72,7 @@ def login_user(
         response.set_cookie(
             key="idToken",
             value=tokens['IdToken'],
-            httponly=True,
+            httponly=False,
             secure=False,
             samesite="strict",
             max_age=tokens['ExpiresIn'],

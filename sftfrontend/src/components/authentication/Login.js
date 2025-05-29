@@ -42,7 +42,7 @@ const Login = () => {
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = formValidate();
     if (Object.keys(validationErrors).length > 0) {
@@ -53,7 +53,6 @@ const Login = () => {
     try {
       const response = await fetch("http://localhost:8000/login", {
         method: "POST",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -61,21 +60,14 @@ const Login = () => {
           email: formData.email,
           password: formData.password,
         }),
+        credentials: "include", // important for cookies!
       });
   
       const data = await response.json();
   
       if (response.ok) {
         alert("Welcome!");
-  
-        // Navigate based on role
-        const userRole = data.role;
-        if (userRole === "SFT") {
-          navigate("/profile");
-        } else {
-          navigate("/profile");
-        }
-  
+        navigate("/profile");
       } else {
         alert(data.message || "Login failed.");
       }
@@ -90,7 +82,6 @@ const Login = () => {
       <h1 className="loginTitle">Login</h1>
 
       <form onSubmit={handleSubmit} className="loginForm">
-
         <label>Email:</label>
         <input
           required
@@ -125,7 +116,12 @@ const Login = () => {
           Login
         </button>
       </form>
-          <button className="forgotpassbtn" onClick={() => navigate("/forgotpassword")}>Forgot Password?</button>
+      <button
+        className="forgotpassbtn"
+        onClick={() => navigate("/forgotpassword")}
+      >
+        Forgot Password?
+      </button>
     </div>
   );
 };
