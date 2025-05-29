@@ -14,7 +14,7 @@ router = APIRouter()
 # MongoDB setup
 uri = os.getenv("MONGODB_URI")
 client = MongoClient(uri, server_api=ServerApi('1'))
-db = client["SFTMadnessUserData"]
+db = client["UserContacts"]
 contacts_collection = db["Contacts"]
 
 SHARED_SECRET = os.getenv("SHARED_SECRET")

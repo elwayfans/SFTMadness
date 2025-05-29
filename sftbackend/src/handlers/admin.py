@@ -12,11 +12,6 @@ user_pool_id = os.environ["COGNITO_USER_POOL_ID"]
 
 # Auth helper
 def get_current_admin_user(request: Request):
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        raise HTTPException(status_code=401, detail="Missing Authorization header")
-    
-    token = auth_header.split(" ")[-1]
     try:
         decoded_token = validate_token(request)
         print("Checking if Admin")
@@ -25,7 +20,7 @@ def get_current_admin_user(request: Request):
         return decoded_token
     except Exception as e:
         print("Exception occurred:", str(e))
-        traceback.print_exc()  # This shows the full stack trace
+        traceback.print_exc()
         raise HTTPException(status_code=401, detail="Invalid or unauthorized token")
 
 # Create admin user
