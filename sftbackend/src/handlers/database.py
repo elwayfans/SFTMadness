@@ -2,8 +2,10 @@ from fastapi import APIRouter, Request, Header, HTTPException, Body, Depends
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import os
-import jwt
 import hmac
+
+# Import validate_token
+from src.validate import validate_token
 
 router = APIRouter()
 
@@ -17,29 +19,23 @@ SHARED_SECRET = os.getenv("SHARED_SECRET")
 
 # Dependencies
 
-def verify_shared_secret(x_shared_secret: str = Header(...)):
-    if not hmac.compare_digest(x_shared_secret, SHARED_SECRET or ""):
+def verify_shared_secret(x_shared_secret: str = Depends(lambda request: request.headers.get("x-shared-secret"))):
+    if not hmac.compare_digest(x_shared_secret or "", SHARED_SECRET or ""):
         raise HTTPException(status_code=403, detail="Unauthorized access")
 
 
-def get_user_sub(authorization: str = Header(...)) -> str:
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid Authorization header")
-
-    token = authorization.split(" ")[1]
-    try:
-        decoded = jwt.decode(token, options={"verify_signature": False})
-        user_sub = decoded.get("sub")
-        if not user_sub:
-            raise HTTPException(status_code=400, detail="Invalid token: no sub found")
-        return user_sub
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+def get_user_sub(request: Request) -> str:
+    payload = validate_token(request)
+    user_sub = payload.get("sub")
+    if not user_sub:
+        raise HTTPException(status_code=400, detail="Invalid token: no sub found")
+    return user_sub
 
 # Routes
 
 @router.post("/database")
 def create_or_update_data(
+    request: Request,
     body: dict = Body(...),
     user_sub: str = Depends(get_user_sub),
     _: str = Depends(verify_shared_secret),
@@ -72,6 +68,7 @@ def get_all_data(_: str = Depends(verify_shared_secret)):
 
 @router.delete("/database")
 def delete_user_data(
+    request: Request,
     body: dict = Body(...),
     user_sub: str = Depends(get_user_sub),
     _: str = Depends(verify_shared_secret),
