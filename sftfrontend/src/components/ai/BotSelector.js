@@ -16,6 +16,12 @@ const BotSelector = () => {
       botTextColor: "#ffffff",
       botTextboxBackgroundColor: "#002E5D",
     },
+    {
+      name: "SFT",
+      logo: "https://static.wixstatic.com/media/56690b_526e611e737c48f78a0008080df040aa~mv2.png/v1/fill/w_309,h_140,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/SFT2023.png",
+      botTextColor: "#ffffff",
+      botTextboxBackgroundColor: "#000000",
+    },
   ]);
   const navigate = useNavigate();
 
