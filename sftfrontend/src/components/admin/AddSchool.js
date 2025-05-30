@@ -29,9 +29,10 @@ export const AddSchool = () => {
         formData.append("password", form.password);
 
         try {
-            const response = await fetch("/api/schools", {
+            const response = await fetch("http://localhost:8000/admin/schools", {
                 method: "POST",
                 body: formData,
+                credentials: "include",
             });
             if (response.ok) {
                 alert("School added successfully!");

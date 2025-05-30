@@ -6,8 +6,8 @@ import "./aiWizard.css";
 const defaultForm = {
   modelname: "",
   modellogo: "",
-  botTextColor: "#000000",
-  botTextboxBackgroundColor: "#ffffff",
+  botHexTextColor: "#000000",
+  botHexBackgroundColor: "#ffffff",
   botintro: "",
   botgoodbye: "",
   botinstructions: "",
@@ -73,7 +73,9 @@ export default function AIWizardCustomizer() {
     });
   };
 
-  const saveBotInfo = () => {
+  const saveBotInfo = async () => {
+    const idToken = localStorage.getItem("idToken");
+    // Prepares the bot info without files
     const botInfo = {
       name: form.modelname,
       logo: form.modellogo,
@@ -89,16 +91,38 @@ export default function AIWizardCustomizer() {
         technicalLevel: form.technicalLevel,
       },
       websites: form.websites,
-      files: form.files.map((file) => file.name), // Save file names only
-      botTextColor: form.botTextColor,
-      botTextboxBackgroundColor: form.botTextboxBackgroundColor,
+      botHexTextColor: form.botHexTextColor,
+      botHexBackgroundColor: form.botHexBackgroundColor,
     };
 
-    const bots = JSON.parse(localStorage.getItem("bots")) || [];
-    bots.push(botInfo);
-    localStorage.setItem("bots", JSON.stringify(bots));
+    // Create FormData and append bot info as JSON
+    const formData = new FormData();
+    formData.append("botInfo", JSON.stringify(botInfo));
+    // Append each file
+    (form.files || []).forEach((file) => {
+      formData.append("files", file);
+    });
+
+    
+  try {
+    const response = await fetch("/customs", {
+      method: "POST",
+      body: formData,
+      credentials: "include", // send cookies for authentication
+      headers: {
+        "Authorization": `Bearer ${idToken}`,
+        // Do NOT set Content-Type when sending FormData; browser will set it
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to save bot info.");
+    }
 
     alert("Bot information saved!");
+  } catch (error) {
+    alert("Error saving bot info: " + error.message);
+  }
   };
 
   return (
@@ -150,16 +174,16 @@ export default function AIWizardCustomizer() {
           <label>Bot Text Color:</label>
           <input
             type="color"
-            name="botTextColor"
-            value={form.botTextColor}
+            name="botHexTextColor"
+            value={form.botHexTextColor}
             onChange={handleChange}
           />
           <br />
           <label>Bot Textbox Background Color:</label>
           <input
             type="color"
-            name="botTextboxBackgroundColor"
-            value={form.botTextboxBackgroundColor}
+            name="botHexBackgroundColor"
+            value={form.botHexBackgroundColor}
             onChange={handleChange}
           />
         </div>
@@ -291,13 +315,13 @@ export default function AIWizardCustomizer() {
           <dt>Logo: {form.modellogo}</dt>
 
           <dt>
-            Bot Text Color: {form.botTextColor}{" "}
+            Bot Text Color: {form.botHexTextColor}{" "}
             <span
               style={{
                 display: "inline-block",
                 width: "20px",
                 height: "20px",
-                backgroundColor: form.botTextColor,
+                backgroundColor: form.botHexTextColor,
                 border: "1px solid #000",
                 marginLeft: "10px",
               }}
@@ -305,13 +329,13 @@ export default function AIWizardCustomizer() {
           </dt>
 
           <dt>
-            Bot Textbox Background Color: {form.botTextboxBackgroundColor}{" "}
+            Bot Textbox Background Color: {form.botHexBackgroundColor}{" "}
             <span
               style={{
                 display: "inline-block",
                 width: "20px",
                 height: "20px",
-                backgroundColor: form.botTextboxBackgroundColor,
+                backgroundColor: form.botHexBackgroundColor,
                 border: "1px solid #000",
                 marginLeft: "10px",
               }}
@@ -327,8 +351,8 @@ export default function AIWizardCustomizer() {
               display: "inline-block",
               padding: "10px 15px",
               borderRadius: "15px",
-              backgroundColor: form.botTextboxBackgroundColor,
-              color: form.botTextColor,
+              backgroundColor: form.botHexBackgroundColor,
+              color: form.botHexTextColor,
               maxWidth: "300px",
               textAlign: "left",
               boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",

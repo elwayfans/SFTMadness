@@ -18,7 +18,7 @@ collection = db["AI_Organization_Customs"]
 REQUIRED_FIELDS = [
     'modelName', 'modelLogo', 'introduction', 'friendliness', 'formality',
     'accent', 'verbosity', 'humor', 'technicalLevel',
-    'preferredGreeting', 'signatureClosing', 'instructions'
+    'preferredGreeting', 'signatureClosing', 'instructions','botHexBackgroundColor', 'botHexTextColor',
 ]
 
 RANGED_FIELDS = ['friendliness', 'formality', 'verbosity', 'humor', 'technicalLevel']

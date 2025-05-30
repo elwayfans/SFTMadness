@@ -12,15 +12,51 @@ import AddContacts from './components/addContacts/AddContacts.js';
 import ChatAi from './components/ai/ChatBot.js';
 import BotSelector from './components/ai/BotSelector.js';
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+// Helper to decode JWT and extract payload
+function parseJwt(token) {
+  if (!token) return null;
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 function RequireAuth({ children }) {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+  const token = getCookie('idToken');
+  console.log("RequireAuth token (cookie):", token);
+  return token ? children : <Navigate to="/profile" />;
 }
 
 function ProfileRouter() {
-  const role = localStorage.getItem('role');
-  if (role === '') return <School />;
-  if (role === 'SFT') return <Sft />;
+  const idToken = getCookie('idToken');
+  const payload = parseJwt(idToken);
+  console.log("Full JWT payload:", payload);
+  const groups = payload && (payload['cognito:groups'] || []);
+  console.log("Groups from token:", groups);
+  const role = Array.isArray(groups) && groups.length > 0 ? groups[0] : null;
+  console.log("ProfileRouter role (from token):", role);
+
+  // Admins
+  if (role && role.toLowerCase().includes('sftadmin')) return <Sft />;
+  // Schools: no role/group or empty string
+  if (!role || role === "") return <School />;
+  // Fallback
   return <Navigate to="/login" />;
 }
 
