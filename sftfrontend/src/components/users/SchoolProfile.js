@@ -9,11 +9,10 @@ const SchoolProfile = () => {
   const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
-    // Get idToken from cookie (not localStorage)
     function getCookie(name) {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
+      if (parts.length === 2) return parts.pop().split(";").shift();
       return null;
     }
     const idToken = getCookie("idToken");
@@ -25,13 +24,13 @@ const SchoolProfile = () => {
     fetch("http://localhost:8000/school/profile", {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${idToken}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
       },
-      credentials: "include"
+      credentials: "include",
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setProfile(data);
         setContacts(data.contacts || []);
       })
@@ -46,8 +45,32 @@ const SchoolProfile = () => {
   };
 
   const deleteContact = (email) => {
-    const updatedContacts = contacts.filter((contact) => contact.email !== email);
-    setContacts(updatedContacts);
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    }
+    const idToken = getCookie("idToken");
+    fetch("http://localhost:8000/contacts", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ email }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete contact");
+        // Remove from UI if successful
+        setContacts((prev) =>
+          prev.filter((contact) => contact.email !== email)
+        );
+      })
+      .catch((err) => {
+        alert("Error deleting contact: " + err.message);
+      });
   };
 
   if (!profile) return <div>Loading...</div>;
@@ -55,7 +78,10 @@ const SchoolProfile = () => {
   return (
     <div className="school-profile-container">
       <div className="school-info">
-        <img src={profile.schoolLogoUrl || "/images/default-school.png"} alt="school" />
+        <img
+          src={profile.schoolLogoUrl || "/images/default-school.png"}
+          alt="school"
+        />
         <h2>{profile.schoolName}</h2>
         <p>{profile.email}</p>
         <p>{profile.phone}</p>
@@ -64,14 +90,22 @@ const SchoolProfile = () => {
       <div className="contacts-section">
         <h3>Contacts</h3>
         <div className="add-contact">
-          <button onClick={handleAddContactClick}><p>+</p></button>
+          <button onClick={handleAddContactClick}>
+            <p>+</p>
+          </button>
         </div>
 
         {contacts.map((contact, idx) => (
           <div key={idx} className="contact-card">
             <a href={`mailto:${contact.email}`} className="contact-card">
-              <span className="contact-name">{contact.firstName} {contact.lastName}</span>
-              <img src="/images/mail-icon.png" alt="mail" className="contact-icon" />
+              <span className="contact-name">
+                {contact.firstName} {contact.lastName}
+              </span>
+              <img
+                src="/images/mail-icon.png"
+                alt="mail"
+                className="contact-icon"
+              />
             </a>
             <button onClick={() => deleteContact(contact.email)}>🗑️</button>
           </div>

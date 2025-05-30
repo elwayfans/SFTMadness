@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.status import HTTP_401_UNAUTHORIZED
-from src.handlers import users, scrapped, ai_customs, database, login, logout, admin, chat
+from src.handlers import users, scrapped, ai_customs, database, login, logout, admin, chat, contacts
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()

@@ -25,6 +25,7 @@ const AdminProfile = () => {
       return;
     }
 
+    // Fetch admin profile as before
     fetch("http://localhost:8000/admin/profile", {
       method: "GET",
       headers: {
@@ -36,10 +37,25 @@ const AdminProfile = () => {
       .then((res) => res.json())
       .then((data) => {
         setProfile(data);
-        setContacts(data.contacts || []);
       })
       .catch(() => {
         setProfile(null);
+      });
+
+    // Fetch contacts for the logged-in user
+    fetch("http://localhost:8000/contacts", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setContacts(data.contacts || []);
+      })
+      .catch(() => {
         setContacts([]);
       });
   }, [navigate]);
@@ -49,10 +65,32 @@ const AdminProfile = () => {
   };
 
   const deleteContact = (email) => {
-    const updatedContacts = contacts.filter(
-      (contact) => contact.email !== email
-    );
-    setContacts(updatedContacts);
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    }
+    const idToken = getCookie("idToken");
+    fetch("http://localhost:8000/contacts", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ email }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete contact");
+        // Remove from UI if successful
+        setContacts((prev) =>
+          prev.filter((contact) => contact.email !== email)
+        );
+      })
+      .catch((err) => {
+        alert("Error deleting contact: " + err.message);
+      });
   };
 
   if (!profile) return null;

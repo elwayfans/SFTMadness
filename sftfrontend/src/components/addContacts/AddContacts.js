@@ -31,7 +31,6 @@ const AddContacts = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
         },
         credentials: "include",
         body: JSON.stringify(contact),
