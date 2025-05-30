@@ -93,6 +93,14 @@ const AdminProfile = () => {
       });
   };
 
+  const handleLogout = async () => {
+    await fetch("http://localhost:8000/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    navigate("/login");
+  };
+
   if (!profile) return null;
 
   return (
@@ -102,6 +110,7 @@ const AdminProfile = () => {
         <h2>{profile.sftName}</h2>
         <p>{profile.email}</p>
         <p>{profile.phone}</p>
+        <button onClick={handleLogout}>Log out</button>
       </div>
 
       <div className="contacts-section">
