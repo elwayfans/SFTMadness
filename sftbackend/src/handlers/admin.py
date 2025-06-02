@@ -102,3 +102,52 @@ def disable_user(user_id: str, request: Request, user=Depends(get_current_admin_
         return {"message": "User disabled successfully"}
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error disabling user: {str(e)}")
+    
+@router.get("/admin/profile")
+def get_admin_profile(request: Request, user=Depends(get_current_admin_user)):
+    try:
+        decoded_token = validate_token(request)
+        return {
+            "sub": decoded_token.get("sub"),
+            "email": decoded_token.get("email"),
+            "role": decoded_token.get("custom:role", "user")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Error retrieving profile: {str(e)}")
+
+@router.post("/admin/schools")
+def create_school(request: Request, payload: dict = Body(...), user=Depends(get_current_admin_user)):
+    email = payload.get("email")
+    name = payload.get("name")
+    phone = payload.get("phone")
+    password = payload.get("password")
+    company = payload.get("company")
+   
+ 
+    if not email or not password or not name or not phone:
+        raise HTTPException(status_code=400, detail="Email and password are required along with name and phone")
+ 
+    try:
+        response = cognito_client.admin_create_user(
+            UserPoolId=user_pool_id,
+            Username=email,
+            UserAttributes=[
+                {"Name": "email", "Value": email},
+                {"Name": "email_verified", "Value": "true"},
+                {"Name": "name", "Value": name},
+                {"Name": "phone_number", "Value": phone},
+                {"Name": "custom:Company", "Value": company}
+            ],
+            TemporaryPassword=password,
+        )
+ 
+        cognito_client.admin_set_user_password(
+            UserPoolId=user_pool_id,
+            Username=email,
+            Password=password,
+            Permanent=True
+        )
+ 
+        return {"message": "School created successfully", "cognitoUser": response["User"]}
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Error creating admin: {str(e)}")    
