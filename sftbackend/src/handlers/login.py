@@ -99,3 +99,67 @@ def login_user(
         raise HTTPException(status_code=500, detail=f"Cognito error: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+@router.post("/complete-new-password")
+def complete_new_password(
+    response: Response,
+    payload: dict = Body(...)
+):
+    email = payload.get("email")
+    new_password = payload.get("new_password")
+    session = payload.get("session")
+
+    if not email or not new_password or not session:
+        raise HTTPException(status_code=400, detail="Email, new password, and session are required")
+
+    user_pool_id = os.getenv("COGNITO_USER_POOL_ID")
+    client_id = os.getenv("COGNITO_CLIENT_ID")
+    if not user_pool_id or not client_id:
+        raise HTTPException(status_code=500, detail="Missing Cognito config")
+
+    try:
+        cognito_client = boto3.client('cognito-idp', region_name='us-east-2')
+
+        response_data = cognito_client.respond_to_auth_challenge(
+            ClientId=client_id,
+            ChallengeName='NEW_PASSWORD_REQUIRED',
+            Session=session,
+            ChallengeResponses={
+                'USERNAME': email,
+                'NEW_PASSWORD': new_password
+            }
+        )
+
+        if 'AuthenticationResult' not in response_data:
+            raise HTTPException(status_code=401, detail="Failed to set new password")
+
+        tokens = response_data['AuthenticationResult']
+
+        user_response = cognito_client.get_user(AccessToken=tokens['AccessToken'])
+        user_attributes = {
+            attr['Name']: attr['Value'] for attr in user_response.get('UserAttributes', [])
+        }
+
+        response.set_cookie(
+            key="idToken",
+            value=tokens['IdToken'],
+            httponly=False,
+            secure=False,
+            samesite="strict",
+            max_age=tokens['ExpiresIn'],
+            path="/"
+        )
+
+        return {
+            "message": "Password changed and login successful",
+            "user": user_attributes
+        }
+
+    except cognito_client.exceptions.NotAuthorizedException:
+        raise HTTPException(status_code=401, detail="Invalid credentials or session expired")
+    except cognito_client.exceptions.InvalidPasswordException as e:
+        raise HTTPException(status_code=400, detail=f"Invalid password: {str(e)}")
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Cognito error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
