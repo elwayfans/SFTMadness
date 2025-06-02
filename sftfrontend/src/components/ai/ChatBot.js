@@ -15,6 +15,13 @@ const ChatAi = () => {
     return null;
   }
 
+  // Helper: fallback for bot fields
+  const botLogo = selectedBot.modelLogo || selectedBot.logo || "";
+  const botName = selectedBot.company || selectedBot.name || "Unknown Bot";
+  const botTextColor = selectedBot.botHexTextColor || selectedBot.botTextColor || "#000";
+  const botTextboxBackgroundColor = selectedBot.botHexBackgroundColor || selectedBot.botTextboxBackgroundColor || "#fff";
+  const companyKey = selectedBot.company || selectedBot.name || "";
+
   const handleSendMessage = async () => {
     if (input.trim()) {
       const userMessage = { sender: "student", text: input };
@@ -23,17 +30,13 @@ const ChatAi = () => {
       setInput("");
 
       try {
-        // Send user message and conversation history to backend
+        // Send user message to backend (history is optional, backend expects prompt and company)
         const response = await fetch("http://localhost:8000/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: input,
-            company: selectedBot.name,
-            history: newMessages.map((msg) => ({
-              role: msg.sender === "student" ? "user" : "assistant",
-              content: msg.text,
-            })),
+            company: companyKey
           }),
         });
 
@@ -87,8 +90,8 @@ const ChatAi = () => {
   return (
     <div className="chat-ai">
       <header>
-        <img src={selectedBot.logo} alt={`${selectedBot.name} logo`} />
-        <h1>{selectedBot.name.toUpperCase()}</h1>
+        <img src={botLogo} alt={`${botName} logo`} />
+        <h1>{botName}</h1>
       </header>
       <div className="chat-window">
         {messages.map((msg, index) => (
@@ -100,8 +103,8 @@ const ChatAi = () => {
             style={
               msg.sender === "bot"
                 ? {
-                    backgroundColor: selectedBot.botTextboxBackgroundColor,
-                    color: selectedBot.botTextColor,
+                    backgroundColor: botTextboxBackgroundColor,
+                    color: botTextColor,
                   }
                 : {}
             }

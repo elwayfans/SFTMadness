@@ -13,15 +13,15 @@ const defaultForm = {
   forbidden_terms: "",
   botHexTextColor: "#000000",
   botHexBackgroundColor: "#ffffff",
-  botintro: "",
-  botgoodbye: "",
+  preferredGreeting: "",
+  signatureClosing: "",
   instructions: "",
   accent: "",
-  friendliness: 5,
-  formality: 5,
-  verbosity: 5,
-  humor: 5,
-  technicalLevel: 5,
+  friendliness: 100,
+  formality: 100,
+  verbosity: 100,
+  humor: 100,
+  technicalLevel: 100,
   websites: [],
   files: [],
 };
@@ -80,59 +80,60 @@ export default function AIWizardCustomizer() {
 
   const saveBotInfo = async () => {
     const idToken = localStorage.getItem("idToken");
-    // Prepares the bot info without files
-    const botInfo = {
-      name: form.modelname,
-      logo: form.modellogo,
-      company: form.company,
-      fullName: form.full_name,
-      shortName: form.short_name,
-      type: form.type,
-      forbiddenTerms: form.forbidden_terms,
-      intro: form.botintro,
-      goodbye: form.botgoodbye,
-      instructions: form.instructions,
+
+    // Prepare the bot info in the requested format
+    const payload = {
+      modelName: form.modelname,
+      modelLogo: form.modellogo,
+      introduction: form.preferredGreeting,
+      friendliness: form.friendliness,
+      formality: form.formality,
       accent: form.accent,
-      sliders: {
-        friendliness: form.friendliness,
-        formality: form.formality,
-        verbosity: form.verbosity,
-        humor: form.humor,
-        technicalLevel: form.technicalLevel,
-      },
-      websites: form.websites,
-      botHexTextColor: form.botHexTextColor,
+      verbosity: form.verbosity,
+      humor: form.humor,
+      technicalLevel: form.technicalLevel,
+      preferredGreeting: form.preferredGreeting,
+      signatureClosing: form.signatureClosing,
+      instructions: form.instructions,
       botHexBackgroundColor: form.botHexBackgroundColor,
+      botHexTextColor: form.botHexTextColor,
+      full_name: form.full_name,
+      short_name: form.short_name,
+      type: form.type,
+      forbidden_terms: form.forbidden_terms
+        ? form.forbidden_terms.split(",").map((t) => t.trim()).filter(Boolean)
+        : [],
     };
 
-    // Create FormData and append bot info as JSON
+    // If you want to send files/websites, you can append them as needed
     const formData = new FormData();
-    formData.append("botInfo", JSON.stringify(botInfo));
-    // Append each file
+    // Flattened: append each key/value directly
+    Object.entries(payload).forEach(([key, value]) => {
+      formData.append(key, typeof value === "object" ? JSON.stringify(value) : value);
+    });
     (form.files || []).forEach((file) => {
       formData.append("files", file);
     });
 
-    
-  try {
-    const response = await fetch("/customs", {
-      method: "POST",
-      body: formData,
-      credentials: "include", // send cookies for authentication
-      headers: {
-        "Authorization": `Bearer ${idToken}`,
-        // Do NOT set Content-Type when sending FormData; browser will set it
-      },
-    });
+    try {
+      const response = await fetch("http://localhost:8000/customs", {
+        method: "POST",
+        body: JSON.stringify(payload),
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error("Failed to save bot info.");
+      if (!response.ok) {
+        throw new Error("Failed to save bot info.");
+      }
+
+      alert("Bot information saved!");
+    } catch (error) {
+      alert("Error saving bot info: " + error.message);
     }
-
-    alert("Bot information saved!");
-  } catch (error) {
-    alert("Error saving bot info: " + error.message);
-  }
   };
 
   return (
@@ -169,11 +170,11 @@ export default function AIWizardCustomizer() {
             onChange={handleChange}
           />
           <input
-          className="company"
-          name="company"
-          placeholder="Name of establishment"
-          value={form.company}
-          onChange={handleChange}
+            className="company"
+            name="company"
+            placeholder="Name of establishment"
+            value={form.company}
+            onChange={handleChange}
           />
           <input
             className="full_name"
@@ -231,15 +232,15 @@ export default function AIWizardCustomizer() {
       {step === 3 && (
         <div>
           <textarea
-            name="botintro"
+            name="preferredGreeting"
             placeholder="Bot Intro Message"
-            value={form.botintro}
+            value={form.preferredGreeting}
             onChange={handleChange}
           />
           <textarea
-            name="botgoodbye"
+            name="signatureClosing"
             placeholder="Goodbye Message"
-            value={form.botgoodbye}
+            value={form.signatureClosing}
             onChange={handleChange}
           />
           <textarea
@@ -333,7 +334,7 @@ export default function AIWizardCustomizer() {
                   step={1}
                   marks
                   min={0}
-                  max={10}
+                  max={100}
                   valueLabelDisplay="auto"
                 />
               </Box>
@@ -350,16 +351,15 @@ export default function AIWizardCustomizer() {
       </div>
 
       {/* Preview */}
-      {/* Live Preview */}
       <div>
         <h3>Live Preview</h3>
         <dl>
           <dt>Name: {form.modelname}</dt>
-
+          <dt>Full Name: {form.full_name}</dt>
+          <dt>Short Name: {form.short_name}</dt>
+          <dt>Type: {form.type}</dt>
           <dt>Logo: {form.modellogo}</dt>
-
           <dt>Company: {form.company}</dt>
-
           <dt>
             Bot Text Color: {form.botHexTextColor}{" "}
             <span
@@ -373,7 +373,6 @@ export default function AIWizardCustomizer() {
               }}
             ></span>
           </dt>
-
           <dt>
             Bot Textbox Background Color: {form.botHexBackgroundColor}{" "}
             <span
@@ -431,7 +430,9 @@ export default function AIWizardCustomizer() {
 
         {/* Other Bot Details */}
         <dl>
-          <dt>Intro: {form.botintro}</dt>
+          <dt>Intro: {form.preferredGreeting}</dt>
+          <dt>Goodbye: {form.signatureClosing}</dt>
+          <dt>Forbidden Terms: {form.forbidden_terms}</dt>
           <dt>Instructions: {form.instructions}</dt>
           <dt>Accent: {form.accent}</dt>
           <dt>Friendliness: {form.friendliness}</dt>
