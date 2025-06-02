@@ -6,11 +6,16 @@ import "./aiWizard.css";
 const defaultForm = {
   modelname: "",
   modellogo: "",
+  company: "",
+  full_name: "",
+  short_name: "",
+  type: "",
+  forbidden_terms: "",
   botHexTextColor: "#000000",
   botHexBackgroundColor: "#ffffff",
   botintro: "",
   botgoodbye: "",
-  botinstructions: "",
+  instructions: "",
   accent: "",
   friendliness: 5,
   formality: 5,
@@ -79,9 +84,14 @@ export default function AIWizardCustomizer() {
     const botInfo = {
       name: form.modelname,
       logo: form.modellogo,
+      company: form.company,
+      fullName: form.full_name,
+      shortName: form.short_name,
+      type: form.type,
+      forbiddenTerms: form.forbidden_terms,
       intro: form.botintro,
       goodbye: form.botgoodbye,
-      instructions: form.botinstructions,
+      instructions: form.instructions,
       accent: form.accent,
       sliders: {
         friendliness: form.friendliness,
@@ -159,6 +169,34 @@ export default function AIWizardCustomizer() {
             onChange={handleChange}
           />
           <input
+          className="company"
+          name="company"
+          placeholder="Name of establishment"
+          value={form.company}
+          onChange={handleChange}
+          />
+          <input
+            className="full_name"
+            name="full_name"
+            placeholder="Full Name of Establishment"
+            value={form.full_name}
+            onChange={handleChange}
+          />
+          <input 
+            className="short_name"
+            name="short_name"
+            placeholder="Short Name of Establishment"
+            value={form.short_name}
+            onChange={handleChange}
+          />
+          <input 
+            className="type"
+            name="type"
+            placeholder="Type of Establishment"
+            value={form.type}
+            onChange={handleChange}
+          />
+          <input
             className="modelurl"
             name="modellogo"
             placeholder="Logo URL"
@@ -205,9 +243,15 @@ export default function AIWizardCustomizer() {
             onChange={handleChange}
           />
           <textarea
-            name="botinstructions"
+            name="instructions"
             placeholder="Special Instructions"
-            value={form.botinstructions}
+            value={form.instructions}
+            onChange={handleChange}
+          />
+          <textarea
+            name="forbidden_terms"
+            placeholder="Forbidden Terms (comma-separated)"
+            value={form.forbidden_terms}
             onChange={handleChange}
           />
         </div>
@@ -314,6 +358,8 @@ export default function AIWizardCustomizer() {
 
           <dt>Logo: {form.modellogo}</dt>
 
+          <dt>Company: {form.company}</dt>
+
           <dt>
             Bot Text Color: {form.botHexTextColor}{" "}
             <span
@@ -386,7 +432,7 @@ export default function AIWizardCustomizer() {
         {/* Other Bot Details */}
         <dl>
           <dt>Intro: {form.botintro}</dt>
-          <dt>Instructions: {form.botinstructions}</dt>
+          <dt>Instructions: {form.instructions}</dt>
           <dt>Accent: {form.accent}</dt>
           <dt>Friendliness: {form.friendliness}</dt>
           <dt>Formality: {form.formality}</dt>
