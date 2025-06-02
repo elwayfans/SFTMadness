@@ -18,11 +18,12 @@ collection = db["AI_Organization_Customs"]
 REQUIRED_FIELDS = [
     'modelName', 'modelLogo', 'introduction', 'friendliness', 'formality',
     'accent', 'verbosity', 'humor', 'technicalLevel',
-    'preferredGreeting', 'signatureClosing', 'instructions','botHexBackgroundColor', 'botHexTextColor',
+    'preferredGreeting', 'signatureClosing', 'instructions',
+    'botHexBackgroundColor', 'botHexTextColor',
+    'full_name', 'short_name', 'type', 'forbidden_terms'
 ]
 
 RANGED_FIELDS = ['friendliness', 'formality', 'verbosity', 'humor', 'technicalLevel']
-
 
 def validate_fields(data: dict):
     missing = [field for field in REQUIRED_FIELDS if field not in data]
@@ -37,6 +38,9 @@ def validate_fields(data: dict):
         except (ValueError, TypeError):
             raise HTTPException(status_code=400, detail=f"{field.capitalize()} must be an integer between 0 and 100")
 
+    # Ensure forbidden_terms is a list (can be empty list)
+    if not isinstance(data.get("forbidden_terms"), list):
+        raise HTTPException(status_code=400, detail="forbidden_terms must be a list")
 
 @router.post("/customs")
 def set_customs(data: dict = Body(...), token_payload: dict = Depends(validate_token)):
@@ -58,7 +62,6 @@ def set_customs(data: dict = Body(...), token_payload: dict = Depends(validate_t
     else:
         collection.insert_one(item)
         return {"message": "Data created successfully"}
-
 
 @router.get("/customs")
 def get_customs(payload: dict = Body(...)):
@@ -87,7 +90,6 @@ def update_customs(data: dict = Body(...), token_payload: dict = Depends(validat
         raise HTTPException(status_code=404, detail="Data not found")
 
     return {"message": "Data updated successfully"}
-
 
 @router.delete("/customs")
 def delete_customs(token_payload: dict = Depends(validate_token)):
