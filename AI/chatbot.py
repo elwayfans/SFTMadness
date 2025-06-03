@@ -6,7 +6,7 @@ import traceback
 from collections import defaultdict
 from sentence_transformers import SentenceTransformer
 import openai
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 from typing import List
 from threading import Lock
@@ -30,7 +30,7 @@ queue_counts = defaultdict(int)
 queue_lock = Lock()
 
 # Input format
-class Query(BaseModel):
+class QueryModel(BaseModel):
     prompt: str
     company: str
 
@@ -113,7 +113,7 @@ def ask_bot(question, embed_model, index, texts, urls, company_key):
     # Fetch identity data from backend
     try:
         response = requests.get(
-            "http://backend-1:8000/customs",
+            "http://host.docker.internal:8000/customs",
             params={"company": company_key}
         )
         response.raise_for_status()
@@ -192,7 +192,7 @@ def ask_bot(question, embed_model, index, texts, urls, company_key):
 
 # FastAPI endpoints
 @app.post("/chat")
-def chat(query: Query):
+def chat(query: QueryModel):
     try:
         index, texts, urls = load_company_data(query.company)
         answer = ask_bot(query.prompt, model, index, texts, urls, query.company)
@@ -213,3 +213,21 @@ def get_chat():
     resp = requests.get(url)
     resp.raise_for_status()
     return resp.json()
+
+# --- NEW /customs endpoint for query param support ---
+@app.get("/customs")
+def get_custom(company: str = Query(...)):
+    """
+    Returns the knowledge data for a given company.
+    """
+    
+    identity_path = f"/app/shared_data/{company}/college_knowledge.json"
+    if not os.path.isfile(identity_path):
+        raise HTTPException(status_code=404, detail="Company knowledge not found")
+    try:
+        with open(identity_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return {"data": data}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Failed to load company knowledge")

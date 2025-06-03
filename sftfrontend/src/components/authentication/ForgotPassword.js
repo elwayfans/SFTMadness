@@ -6,20 +6,34 @@ Will be doing a 4 step method
 As each step is completed the next form or message will show.
 */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './Auth.css'
 
 const ForgotPassword = () => {
+  const location = useLocation();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [session, setSession] = useState(null);
+
+  // On mount, check if session/email were passed from login
+  useEffect(() => {
+    if (location.state) {
+      if (location.state.email) setEmail(location.state.email);
+      if (location.state.session) {
+        setSession(location.state.session);
+        setStep(2); // Go directly to password reset step
+      }
+    }
+  }, [location.state]);
 
   const requestResetCode = async () => {
     try {
-      const res = await fetch('/resetpassword', {
+      const res = await fetch('http://localhost:8000/resetpassword', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -36,10 +50,21 @@ const ForgotPassword = () => {
 
   const handleResetPassword = async () => {
     try {
-      const res = await fetch('/confirmresetpassword', {
+      let body;
+      let endpoint;
+      if (session) {
+        // Use session to reset password (no code required)
+        endpoint = 'http://localhost:8000/complete-new-password';
+        body = JSON.stringify({ email, new_password: newPassword, session });
+      } else {
+        // Use code to reset password
+        endpoint = 'http://localhost:8000/confirmresetpassword';
+        body = JSON.stringify({ email, code, newPassword });
+      }
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code, newPassword }),
+        body,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error resetting password.');
@@ -48,6 +73,7 @@ const ForgotPassword = () => {
       setEmail('');
       setCode('');
       setNewPassword('');
+      setSession(null);
       setError('');
     } catch (err) {
       setError(err.message || 'Sorry there was an issue with resetting your password. Please try again!');
@@ -56,9 +82,10 @@ const ForgotPassword = () => {
 
   return (
     <div className="forgotpassword">
-      <h2 className="forgotpassTitle">Forgot Password</h2>
+      <h2 className="forgotpassTitle">Change Password</h2>
 
-      {step === 1 && (
+      {/* Step 1: Enter email, unless session is present */}
+      {step === 1 && !session && (
         <>
           <input
             type="email"
@@ -76,15 +103,18 @@ const ForgotPassword = () => {
         </>
       )}
 
+      {/* Step 2: If session, only ask for new password. Otherwise, ask for code and new password */}
       {step === 2 && (
         <>
-          <input
-            type="text"
-            placeholder="Enter verification code"
-            className="forgotpassform"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-          />
+          {!session && (
+            <input
+              type="text"
+              placeholder="Enter verification code"
+              className="forgotpassform"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+          )}
           <input
             type="password"
             placeholder="Enter new password"
@@ -96,7 +126,7 @@ const ForgotPassword = () => {
             className="forgotpassbtn"
             onClick={handleResetPassword}
           >
-            Reset Password
+            Change Password
           </button>
         </>
       )}
