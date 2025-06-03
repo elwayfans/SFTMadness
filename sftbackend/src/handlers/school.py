@@ -25,7 +25,8 @@ def get_school_profile(request: Request, user=Depends(get_current_user)):
         return {
             "sub": decoded_token.get("sub"),
             "email": decoded_token.get("email"),
-            "role": decoded_token.get("custom:role", "school")
+            "role": decoded_token.get("custom:role", "school"),
+            "phone_number": decoded_token.get("phone_number"),
         }
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Error retrieving profile: {str(e)}")
