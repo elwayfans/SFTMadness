@@ -110,7 +110,8 @@ def get_admin_profile(request: Request, user=Depends(get_current_admin_user)):
         return {
             "sub": decoded_token.get("sub"),
             "email": decoded_token.get("email"),
-            "role": decoded_token.get("custom:role", "user")
+            "role": decoded_token.get("custom:role", "user"),
+            "phone_number": decoded_token.get("phone_number"),
         }
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Error retrieving profile: {str(e)}")
@@ -122,7 +123,6 @@ def create_school(request: Request, payload: dict = Body(...), user=Depends(get_
     phone = payload.get("phone")
     password = payload.get("password")
     company = payload.get("company")
-   
  
     if not email or not password or not name or not phone:
         raise HTTPException(status_code=400, detail="Email and password are required along with name and phone")
