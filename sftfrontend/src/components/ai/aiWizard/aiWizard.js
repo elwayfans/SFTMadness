@@ -211,14 +211,18 @@ export default function AIWizardCustomizer() {
       {step === 2 && (
         <div>
           <label>Bot Text Color:</label>
+          <br/>
           <input
             type="color"
             name="botHexTextColor"
             value={form.botHexTextColor}
             onChange={handleChange}
           />
+
           <br />
+
           <label>Bot Textbox Background Color:</label>
+          <br/>
           <input
             type="color"
             name="botHexBackgroundColor"
@@ -325,8 +329,8 @@ export default function AIWizardCustomizer() {
             "technicalLevel",
           ].map((attr) => (
             <div key={attr} className="slider-container">
-              <label className="capitalize">{attr}:</label>
-              <Box sx={{ width: 300 }}>
+              <label className="capitalize">{attr.toUpperCase()} - {form[attr]}</label>
+              <Box sx={{ width: 600 }}>
                 <Slider
                   aria-label={attr}
                   value={form[attr]}
@@ -338,7 +342,7 @@ export default function AIWizardCustomizer() {
                   valueLabelDisplay="auto"
                 />
               </Box>
-              <p>Level: {form[attr]}</p>
+              
             </div>
           ))}
         </div>

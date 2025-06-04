@@ -106,7 +106,9 @@ const AdminProfile = () => {
   return (
     <div className="sft-profile-container">
       <div className="sft-info">
-        <img src={profile.LogoUrl} alt="sft_staff" />
+        <img src={profile.LogoUrl || 
+          "/images/TempPFP.png"
+        } alt="sft_staff" />
         <h2>{profile.sftName}</h2>
         <p>{profile.email}</p>
         <p>
@@ -114,6 +116,9 @@ const AdminProfile = () => {
             profile.phoneNumber ||
             "No phone number on file"}
         </p>
+
+        <button onClick={() => navigate("/settings")}>Settings</button>
+
         <button onClick={handleLogout}>Log out</button>
       </div>
 

@@ -48,28 +48,32 @@ header img {
   overflow-y: auto;
   padding: 10px;
   background-color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .message {
   margin: 5px 0;
   padding: 10px;
   border-radius: 5px;
+  clear: both;
 }
 
 .message.student {
   background-color: var(--studentmessage-color);
   color: var(--txt-color);
   align-self: flex-end;
-  float: right;
+  
   max-width: 60%;
   min-width: 10%;
   width: fit-content;
   word-break: break-word;
+  margin-left: 40%; 
 }
 
 .message.bot {
   align-self: flex-start;
-  margin-top: 3.5%;
+  margin-top: 0.5%;
   max-width: 60%;
   min-width: 10%;
   width: fit-content;

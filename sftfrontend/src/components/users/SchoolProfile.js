@@ -103,7 +103,7 @@ const SchoolProfile = () => {
     <div className="school-profile-container">
       <div className="school-info">
         <img
-          src={profile.schoolLogoUrl || "/images/default-school.png"}
+          src={profile.schoolLogoUrl || "/images/TempPFP.png"}
           alt="school"
         />
         <h2>{profile.schoolName}</h2>
@@ -113,6 +113,9 @@ const SchoolProfile = () => {
             profile.phoneNumber ||
             "No phone number on file"}
         </p>
+
+        <button onClick={() => navigate("/settings")}>Settings</button>
+
         <button onClick={handleLogout}>Log out</button>
       </div>
 

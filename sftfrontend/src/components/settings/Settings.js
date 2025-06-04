@@ -1,14 +1,13 @@
-/*
-
-
-
-*/
 import React, {useState, useEffect} from 'react'
 import { useNavigate } from 'react-router-dom';
 import './Settings.css';
 
 const Settings = () => {
-    const [darkMode, setDarkMode] = useState(false);
+    // Initialize from localStorage, default to false (light mode)
+    const [darkMode, setDarkMode] = useState(() => {
+        const saved = localStorage.getItem('darkMode');
+        return saved === null ? false : JSON.parse(saved);
+    });
     const navigate = useNavigate();
 
     // Toggle class on body for global dark/light mode
@@ -18,6 +17,8 @@ const Settings = () => {
         } else {
             document.body.classList.remove('dark');
         }
+        // Save preference
+        localStorage.setItem('darkMode', JSON.stringify(darkMode));
     }, [darkMode]);
 
     const toggleTheme = () => {

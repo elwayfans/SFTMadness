@@ -108,7 +108,7 @@ export const AddSchool = () => {
         <input
           type="password"
           name="password"
-          id="passord"
+          id="password"
           value={form.password}
           onChange={handleChange}
           required

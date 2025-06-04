@@ -1,22 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './NavBar.css';
 
 function NavBar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [role, setRole] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    // Check login state on every route change
+    const token = localStorage.getItem('token') || document.cookie.includes('idToken');
     setIsLoggedIn(!!token);
-  }, []);
+  }, [location]); // <-- rerun when route changes
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     setIsLoggedIn(false);
-    navigate('/');
+
+    await fetch("http://localhost:8000/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    document.cookie = "idToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    navigate('/login');
   };
 
   return (
@@ -28,12 +36,12 @@ function NavBar() {
           <Link className="flex-container" to="/aboutus">About Us</Link>
           <Link className='flex-container' to="/bot-selector">Bot Selector</Link>
 
-           {!isLoggedIn ? (
+          {!isLoggedIn ? (
             <Link className="flex-container" to="/login">Login</Link>
           ) : (
             <>
               <Link className="flex-container" to="/profile">Profile</Link>
-              <button className="flex-container" onClick={handleLogout}>Logout</button>
+              <Link className="flex-container" onClick={handleLogout}>Log out</Link>
             </>
           )}
         </li>
