@@ -32,6 +32,22 @@ const SchoolProfile = () => {
       .then((res) => res.json())
       .then((data) => {
         setProfile(data);
+      })
+      .catch(() => {
+        setProfile(null);
+      });
+
+    // Fetch contacts for the logged-in user
+    fetch("http://localhost:8000/contacts", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
         setContacts(data.contacts || []);
       })
       .catch(() => {
@@ -73,6 +89,14 @@ const SchoolProfile = () => {
       });
   };
 
+  const handleLogout = async () => {
+    await fetch("http://localhost:8000/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    navigate("/login");
+  };
+
   if (!profile) return <div>Loading...</div>;
 
   return (
@@ -84,7 +108,12 @@ const SchoolProfile = () => {
         />
         <h2>{profile.schoolName}</h2>
         <p>{profile.email}</p>
-        <p>{profile.phone}</p>
+        <p>
+          {profile.phone_number ||
+            profile.phoneNumber ||
+            "No phone number on file"}
+        </p>
+        <button onClick={handleLogout}>Log out</button>
       </div>
 
       <div className="contacts-section">

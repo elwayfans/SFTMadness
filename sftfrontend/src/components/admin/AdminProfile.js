@@ -109,7 +109,11 @@ const AdminProfile = () => {
         <img src={profile.LogoUrl} alt="sft_staff" />
         <h2>{profile.sftName}</h2>
         <p>{profile.email}</p>
-        <p>{profile.phone}</p>
+        <p>
+          {profile.phone_number ||
+            profile.phoneNumber ||
+            "No phone number on file"}
+        </p>
         <button onClick={handleLogout}>Log out</button>
       </div>
 
