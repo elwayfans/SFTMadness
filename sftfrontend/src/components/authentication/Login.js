@@ -16,14 +16,8 @@ const Login = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    fname: "",
-    lname: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    number: "",
-    role: "",
-    school: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -42,14 +36,14 @@ const Login = () => {
     return newErrors;
   };
 
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = formValidate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-  
+
     try {
       const response = await fetch("http://localhost:8000/login", {
         method: "POST",
@@ -61,14 +55,31 @@ const Login = () => {
           email: formData.email,
           password: formData.password,
         }),
-        credentials: "include", // important for cookies!
       });
-  
+
       const data = await response.json();
-  
-      if (response.ok) {
+
+      // Check for NEW_PASSWORD_REQUIRED before response.ok
+      if (
+        data.challenge === "NEW_PASSWORD_REQUIRED" &&
+        data.session
+      ) {
+        // User must set a new password, redirect with session
+        navigate("/forgotpassword", {
+          state: { email: formData.email, session: data.session },
+        });
+      } else if (response.ok) {
         alert("Welcome!");
         navigate("/profile");
+      } else if (data.message && data.message.toLowerCase().includes("not found")) {
+        // User not found, send reset code and redirect
+        await fetch("http://localhost:8000/complete-new-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email }),
+        });
+        alert("Account not found. A code has been sent to your email to set your password.");
+        navigate("/forgotpassword", { state: { email: formData.email } });
       } else {
         alert(data.message || "Login failed.");
       }
