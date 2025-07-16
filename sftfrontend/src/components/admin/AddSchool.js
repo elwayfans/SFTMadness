@@ -114,7 +114,7 @@ export const AddSchool = () => {
           required
         />
       </div>
-      <button type="submit">Add School</button>
+      <button className="addSchool" type="submit">Add School</button>
     </form>
   );
 };

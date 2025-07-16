@@ -106,9 +106,7 @@ const AdminProfile = () => {
   return (
     <div className="sft-profile-container">
       <div className="sft-info">
-        <img src={profile.LogoUrl || 
-          "/images/TempPFP.png"
-        } alt="sft_staff" />
+        <img src={profile.LogoUrl || "/images/TempPFP.png"} alt="sft_staff" />
         <h2>{profile.sftName}</h2>
         <p>{profile.email}</p>
         <p>
@@ -117,35 +115,55 @@ const AdminProfile = () => {
             "No phone number on file"}
         </p>
 
-        <button onClick={() => navigate("/settings")}>Settings</button>
+        <div className="admin-buttons">
+          <button
+            className="admin-button"
+            onClick={() => navigate("/forgotpassword")}
+          >
+            Update Password
+          </button>
 
-        <button onClick={handleLogout}>Log out</button>
+          <button className="admin-button">2 Factor Authentication</button>
+
+          <button className="admin-button" onClick={handleLogout}>
+            Log out
+          </button>
+        </div>
       </div>
 
       <div className="contacts-section">
         <h3>Contacts</h3>
-        <div className="add-contact">
-          <button onClick={handleAddContactClick}>
-            <p>+</p>
-          </button>
-        </div>
+        <button className="add-contact-btn" onClick={handleAddContactClick}>
+          Add Contact
+        </button>
 
         {contacts.map((contact, idx) => (
-          <div key={idx} className="contact-card">
-            <a href={`mailto:${contact.email}`} className="contact-card">
-              <span className="contact-name">
-                {contact.firstName} {contact.lastName}
-              </span>
-              <img
-                src="/images/mail-icon.png"
-                alt="mail"
-                className="contact-icon"
-              />
-            </a>
-            <button onClick={() => deleteContact(contact.email)}>🗑️</button>
+          <div
+            href={`mailto:${contact.email}`}
+            key={idx}
+            className="contact-card"
+          >
+            <p className="contact-icon">✉️</p>
+            <span className="contact-name">
+              {contact.firstName} {contact.lastName}
+            </span>
+            <button
+              className="delete-btn"
+              onClick={() => deleteContact(contact.email)}
+            >
+              🗑️
+            </button>
           </div>
         ))}
       </div>
+
+      <div className="botSelectorContainer">
+        <button className="botSelectorbtn" onClick={() => navigate("/bot-selector")}>
+          Bot Selector
+        </button>
+      </div>
+      
+
       <AddSchool />
     </div>
   );

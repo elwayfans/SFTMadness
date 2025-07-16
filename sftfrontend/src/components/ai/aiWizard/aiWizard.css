@@ -1,145 +1,148 @@
-/* ========================= */
-/* Global Variables          */
-/* ========================= */
-:root {
-  --body-color: #fff;
-  --bg-color: #f5e3d3;
-  --card-color: #2e4a94;
-  --active-color: #203264;
-  --text-color: #fff;
-  --head-color: #000;
-  --btn-color: #000;
-  --accent: #aad4f5;
-}
-
-body.dark {
-  --body-color: #000;
-  --bg-color: #dc9c63;
-  --card-color: #2e4a94;
-  --text-color: #fff;
-  --head-color: #fff;
-  --accent: #66b1ed;
-}
-
-/* ========================= */
-/* AI Wizard Container       */
-/* ========================= */
 .aiwizard-container {
+  background-color: #C5C6D0;
+  border: 2px solid #b2b2b2;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 2rem 1.5rem;
+  width: 1000px;
+  margin: 2rem auto;
   display: flex;
   flex-direction: column;
-  background-color: var(--accent);
-  border: 3px solid var(--btn-color);
-  margin-top: 15px;
-  padding: 20px;
+  color: #000;
+  gap: 1.2rem;
 }
 
-/* ========================= */
-/* Step Nav Styles           */
-/* ========================= */
-.step-navigation {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.aiwizard-container h2, .aiwizard-container h3 {
+  color: #000;
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
-.step-navigation div {
-  display: flex;
-  justify-content: center;
+.aiwizard-container label {
+  font-weight: 500;
+  color: #2d2233;
+  margin-bottom: 0.3rem;
+  text-align: center;
+  width: 100%;
+  display: block;
 }
 
-/* ========================= */
-/* Textarea Styles           */
-/* ========================= */
+.aiwizard-container input[type="text"],
+.aiwizard-container input[type="email"],
+.aiwizard-container input[type="url"],
+.aiwizard-container input[type="file"],
+.aiwizard-container input[type="password"],
+.aiwizard-container select,
 .aiwizard-container textarea {
-  padding: 12px 16px;
-  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #000;
+  width: 80%;
+  border: 2px solid #2d2233;
+  background: #f7f7fa;
+  margin-bottom: 0.5rem;
+  outline: none;
+  transition: border-color 0.2s;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.aiwizard-container input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #2d2233;
   border-radius: 8px;
-  font-size: 16px;
-  width: 720px;
-  justify-content: center;
-  resize: none;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 0.5rem auto;
+  display: block;
+}
+
+.aiwizard-container textarea {
   min-height: 50px;
-  overflow-y: scroll;
-  margin-top: 10px;
+  resize: vertical;
 }
 
-/* ========================= */
-/* Input Styles              */
-/* ========================= */
-.aiwizard-container input {
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  width: 720px;
-  justify-content: center;
-  resize: none;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-height: 50px;
-  margin-top: 10px;
-}
-
-/* ========================= */
-/* Paragraph Styles          */
-/* ========================= */
-.aiwizard-container p {
-  display: flex;
-  width: 750px;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-/* ========================= */
-/* Button Styles             */
-/* ========================= */
-.step-navigation button {
-  background-color: var(--card-color);
-  color: var(--text-color);
-  border: 2px solid var(--btn-color);
+.step-navigation button,
+.aiwizard-container button {
+  background-color: #6E5A7A;
+  color: #fff;
+  border: 2px solid #b2b2b2;
   border-radius: 8px;
   padding: 10px 20px;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  margin: 0.3rem;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
-.step-navigation button:hover {
-  background-color: var(--active-color);
-  transform: scale(1.05); 
-}
-
-.step-navigation button:active {
-  background-color: var(--active-color);
-  transform: scale(0.95); 
-}
-
-.step-navigation button:focus {
-  background-color: var(--active-color);
-  outline: none;
+.step-navigation button:hover,
+.aiwizard-container button:hover {
+  background-color: #5b4a64;
 }
 
 .removeBtn button {
-  background-color: red;
-  color: white;
+  background-color: #ff4d4d;
+  color: #fff;
   border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
   cursor: pointer;
-  width: 15%;
+  margin-left: 0.5rem;
 }
 
-/* ========================= */
-/* List Styles               */
-/* ========================= */
-ul {
-  list-style-type: none;
+.slider-container label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  display: block;
 }
-
-/* ========================= */
-/* Slider Styles            */
-/* ========================= */
 
 .slider-container {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-top: 20px;
+  margin-bottom: 1rem;
+}
+
+.aiwizard-container ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.aiwizard-container li {
+  margin-bottom: 0.3rem;
+  text-align: left;
+}
+
+input {
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #000;
+  width: 50%;
+  border: 2px solid #2d2233; 
+  background: #f7f7fa;
+  margin-bottom: 0.5rem;
+  outline: none;
+}
+
+.live-preview {
+  width: 45%;
+  margin-right: 2rem;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 700px) {
+  .aiwizard-container {
+    max-width: 98vw;
+    padding: 1rem 0.5rem;
+  }
+  .aiwizard-container input,
+  .aiwizard-container textarea,
+  .aiwizard-container select {
+    width: 98%;
+  }
 }

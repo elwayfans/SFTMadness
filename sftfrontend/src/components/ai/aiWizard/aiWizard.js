@@ -355,7 +355,7 @@ export default function AIWizardCustomizer() {
       </div>
 
       {/* Preview */}
-      <div>
+      <div className="live-preview">
         <h3>Live Preview</h3>
         <dl>
           <dt>Name: {form.modelname}</dt>

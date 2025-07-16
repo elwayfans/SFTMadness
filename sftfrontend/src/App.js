@@ -1,8 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import NavBar from './components/navbar/NavBar.js';
-import Info from './components/about_contact_us/Info.js';
-import Home from './components/home/Home.js';
 import Login from './components/authentication/Login.js';
 import ForgotPassword from './components/authentication/ForgotPassword.js';
 import School from './components/users/SchoolProfile.js';
@@ -43,6 +40,16 @@ function RequireAuth({ children }) {
   return token ? children : <Navigate to="/profile" />;
 }
 
+function RequireAdmin({ children }) {
+  const idToken = getCookie('idToken');
+  const payload = parseJwt(idToken);
+  const groups = payload && (payload['cognito:groups'] || []);
+  const role = Array.isArray(groups) && groups.length > 0 ? groups[0] : null;
+  return role && role.toLowerCase().includes('sftadmin')
+    ? children
+    : <Navigate to="/login" />;
+}
+
 function ProfileRouter() {
   const idToken = getCookie('idToken');
   const payload = parseJwt(idToken);
@@ -63,11 +70,9 @@ function ProfileRouter() {
 function App() {
   return (
     <Router>
-      <NavBar />
       <div>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/aboutus" element={<Info />} />
+          <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/profile" element={
@@ -78,7 +83,11 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/addcontacts" element={<AddContacts />} />
           <Route path="/chat-ai" element={<ChatAi />} />
-          <Route path="/bot-selector" element={<BotSelector />} />
+          <Route path="/bot-selector" element={
+            <RequireAdmin>
+              <BotSelector />
+            </RequireAdmin>
+          } />
         </Routes>
       </div>
     </Router>

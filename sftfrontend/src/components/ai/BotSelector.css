@@ -1,13 +1,5 @@
-:root {
-  --txt-color: #000;
-}
-
-body.dark {
-  --txt-color: #fff;
-}
-
 h2{
-  color: var(--txt-color)
+  color: #fff;
 }
 
 .bot-selector {
@@ -32,7 +24,7 @@ h2{
   color: white;
   font-weight: bold;
   text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
-  background-color: #ccc; /* Fallback color */
+  background-color: #ccc; 
   overflow: hidden;
 }
 
