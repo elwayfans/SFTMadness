@@ -20,7 +20,7 @@ REQUIRED_FIELDS = [
     'modelName', 'modelLogo', 'introduction', 'friendliness', 'formality',
     'accent', 'verbosity', 'humor', 'technicalLevel',
     'preferredGreeting', 'signatureClosing', 'instructions',
-    'botHexBackgroundColor', 'botHexTextColor',
+    'botHexBackgroundColor', 'botHexTextColor', 'buttonHexTextColor', 'buttonHexBackgroundColor', 'backgroundHexColor',
     'full_name', 'short_name', 'type', 'forbidden_terms'
 ]
 
@@ -108,7 +108,7 @@ def delete_customs(token_payload: dict = Depends(validate_token)):
 
 @router.get("/customs/all")
 def list_all_bots():
-    bots = list(collection.find({}, {"_id": 0, "company": 1, "modelLogo": 1, "botHexTextColor": 1, "botHexBackgroundColor": 1}))
+    bots = list(collection.find({}, {"_id": 0}))
     # Ensure shared_data exists for each bot
     base_path = "/app/shared_data"
     for bot in bots:

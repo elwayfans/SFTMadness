@@ -1,6 +1,6 @@
 /* Page wrapper to center form and add pale orange background */
 .add-contact-wrapper {
-    background-color: #f9e4d1; /* pale orange */
+    background-color: #6E5A7A;
     min-height: 100vh;
     max-width: 800px;
     width: 90%;
@@ -10,12 +10,11 @@
     align-items: center;
     padding: 2rem 1rem;
     box-sizing: border-box;
-    border-radius: 12px;
 }
 
 /* Form container/card */
 .add-contact-form {
-    background-color: #a3dcff; /* light blue */
+    background-color: #C5C6D0; 
     padding: 2rem;
     border: 2px solid #000;
     border-radius: 12px;
@@ -56,9 +55,10 @@
 
 /* Submit button */
 .add-contact-form button {
-    background-color: #2547a7;
+    background-color: #6E5A7A;
     color: #fff;
     padding: 0.6rem 1.2rem;
+    margin-left: 60px;
     font-weight: bold;
     border: 2px solid #000;
     border-radius: 6px;
@@ -68,5 +68,5 @@
 
 /* Hover state */
 .add-contact-form button:hover {
-    background-color: #19368f;
+    background-color: #5b4a64;
 }

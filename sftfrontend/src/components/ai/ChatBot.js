@@ -6,21 +6,38 @@ const ChatAi = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const selectedBot = location.state?.bot;
+  const fromPath = location.state?.from || "/"; // Default fallback if no previous path found
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
   if (!selectedBot) {
-    // Redirect back to bot selector if no bot is selected
     navigate("/bot-selector");
     return null;
   }
 
-  // Helper: fallback for bot fields
   const botLogo = selectedBot.modelLogo || selectedBot.logo || "";
   const botName = selectedBot.company || selectedBot.name || "Unknown Bot";
-  const botTextColor = selectedBot.botHexTextColor || selectedBot.botTextColor || "#000";
-  const botTextboxBackgroundColor = selectedBot.botHexBackgroundColor || selectedBot.botTextboxBackgroundColor || "#fff";
+  const botTextColor =
+    selectedBot.botHexTextColor || selectedBot.botTextColor || "#000";
+  const botTextboxBackgroundColor =
+    selectedBot.botHexBackgroundColor ||
+    selectedBot.botTextboxBackgroundColor ||
+    "#fff";
   const companyKey = selectedBot.company || selectedBot.name || "";
+  const backgroundHexColor = selectedBot.backgroundHexColor;
+  const buttonHexTextColor = selectedBot.buttonHexTextColor || "#000";
+  const buttonHexBackgroundColor =
+    selectedBot.buttonHexBackgroundColor || "#fff";
+
+  function isDarkColor(hex) {
+    if (!hex || typeof hex !== "string" || !hex.startsWith("#")) return false;
+    const r = parseInt(hex.substr(1, 2), 16);
+    const g = parseInt(hex.substr(3, 2), 16);
+    const b = parseInt(hex.substr(5, 2), 16);
+    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    return luminance < 128;
+  }
 
   const handleSendMessage = async () => {
     if (input.trim()) {
@@ -30,13 +47,12 @@ const ChatAi = () => {
       setInput("");
 
       try {
-        // Send user message to backend (history is optional, backend expects prompt and company)
         const response = await fetch("http://localhost:8000/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: input,
-            company: companyKey
+            company: companyKey,
           }),
         });
 
@@ -62,7 +78,6 @@ const ChatAi = () => {
   };
 
   function formatMessageWithBreaks(text) {
-    // Split by sentence-ending punctuation followed by a space or end of string
     const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g) || [text];
     const chunks = [];
     for (let i = 0; i < sentences.length; i += 5) {
@@ -73,7 +88,6 @@ const ChatAi = () => {
           .trim()
       );
     }
-    // Return as an array with <br /> between each chunk
     return chunks.map((chunk, idx) =>
       idx < chunks.length - 1 ? (
         <React.Fragment key={idx}>
@@ -88,11 +102,27 @@ const ChatAi = () => {
   }
 
   return (
-    <div className="chat-ai">
-      <header>
+    <div className="chat-ai" style={{ backgroundColor: backgroundHexColor }}>
+      <header
+        style={{
+          backgroundColor: backgroundHexColor,
+          color: isDarkColor(backgroundHexColor) ? "#fff" : "#000",
+        }}
+      >
         <img src={botLogo} alt={`${botName} logo`} />
         <h1>{botName}</h1>
+        <button
+          type="button"
+          onClick={() => navigate(fromPath)}
+          style={{
+            backgroundColor: buttonHexBackgroundColor,
+            color: buttonHexTextColor,
+          }}
+        >
+          Go Back
+        </button>
       </header>
+
       <div className="chat-window">
         {messages.map((msg, index) => (
           <div
@@ -113,6 +143,7 @@ const ChatAi = () => {
           </div>
         ))}
       </div>
+
       <footer>
         <input
           type="text"
@@ -125,7 +156,15 @@ const ChatAi = () => {
             }
           }}
         />
-        <button onClick={handleSendMessage}>Send</button>
+        <button
+          onClick={handleSendMessage}
+          style={{
+            backgroundColor: buttonHexBackgroundColor,
+            color: buttonHexTextColor,
+          }}
+        >
+          Send
+        </button>
       </footer>
     </div>
   );

@@ -137,7 +137,7 @@
     justify-content: center;
 }
 
-.botSelectorContainer {
+.bot-list{
     width: 100%;
     display: flex;
     justify-content: center;
@@ -155,9 +155,4 @@
     font-size: 1.1rem;
     font-weight: 500;
     box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-}
-
-.botSelectorbtn:hover {
-    background-color: rgb(154, 155, 164);
-    color: #000;
 }

@@ -2,16 +2,16 @@
 .login {
     display: flex;
     width: 800px;
-    height: 835px;
+    height: 911px;
     margin: 0 auto;
     text-align: center;
     align-content: center;
     flex-direction: column;
-    background-color: var(--bg-color);
+    background-color: #6E5A7A;
 }
 
 .loginTitle{
-    color: var(--txt-color);
+    color: #FFFFFF;
 }
 
 .loginForm {
@@ -23,7 +23,7 @@
     text-align: left;
     flex-direction: column;
     margin: 0 auto;
-    color: var(--txt-color);
+    color: #FFFFFF;
 }
 
 .loginForm input {
@@ -38,12 +38,12 @@
 }
 
 .loginbtn {
-    width: 53%;
+    width: 30%;
     justify-content: center;
     margin: 0 auto;
     margin-top: 100px;
-    background-color: var(--card-color);
-    color: var(--btntxt-color);
+    background-color: #C5C6D0;
+    color: #000;
     padding: 12px;
     font-size: 16px;
     border: none;
@@ -53,11 +53,11 @@
 }
 
 .forgotpassbtn{
-    width: 40%;
+    width: 30%;
     justify-content: center;
     margin: 0 auto;
-    background-color: var(--card-color);
-    color: var(--btntxt-color);
+    background-color: #C5C6D0;
+    color: #000;
     padding: 12px;
     font-size: 16px;
     border: none;
@@ -76,7 +76,7 @@
     text-align: center;
     align-content: center;
     flex-direction: column;
-    background-color: var(--bg-color);
+    background-color: #6E5A7A;
 }
 
 .forgotpasswordForm {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Slider from "@mui/material/Slider";
 import "./aiWizard.css";
@@ -13,6 +13,9 @@ const defaultForm = {
   forbidden_terms: "",
   botHexTextColor: "#000000",
   botHexBackgroundColor: "#ffffff",
+  buttonHexTextColor: "#000000",
+  buttonHexBackgroundColor: "#ffffff",
+  backgroundHexColor: "#ffffff",
   preferredGreeting: "",
   signatureClosing: "",
   instructions: "",
@@ -26,7 +29,7 @@ const defaultForm = {
   files: [],
 };
 
-export default function AIWizardCustomizer() {
+export default function AIWizardCustomizer({ bots }) {
   const [form, setForm] = useState(defaultForm);
   const [step, setStep] = useState(1);
 
@@ -37,6 +40,11 @@ export default function AIWizardCustomizer() {
 
   const handleSliderChange = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleClear = () => {
+    setForm(defaultForm);
+    setStep(1);
   };
 
   const addWebsite = () => {
@@ -97,11 +105,17 @@ export default function AIWizardCustomizer() {
       instructions: form.instructions,
       botHexBackgroundColor: form.botHexBackgroundColor,
       botHexTextColor: form.botHexTextColor,
+      buttonHexTextColor: form.buttonHexTextColor,
+      buttonHexBackgroundColor: form.buttonHexBackgroundColor,
+      backgroundHexColor: form.backgroundHexColor,
       full_name: form.full_name,
       short_name: form.short_name,
       type: form.type,
       forbidden_terms: form.forbidden_terms
-        ? form.forbidden_terms.split(",").map((t) => t.trim()).filter(Boolean)
+        ? form.forbidden_terms
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
         : [],
     };
 
@@ -109,7 +123,10 @@ export default function AIWizardCustomizer() {
     const formData = new FormData();
     // Flattened: append each key/value directly
     Object.entries(payload).forEach(([key, value]) => {
-      formData.append(key, typeof value === "object" ? JSON.stringify(value) : value);
+      formData.append(
+        key,
+        typeof value === "object" ? JSON.stringify(value) : value
+      );
     });
     (form.files || []).forEach((file) => {
       formData.append("files", file);
@@ -121,7 +138,7 @@ export default function AIWizardCustomizer() {
         body: JSON.stringify(payload),
         credentials: "include",
         headers: {
-          "Authorization": `Bearer ${idToken}`,
+          Authorization: `Bearer ${idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -135,6 +152,41 @@ export default function AIWizardCustomizer() {
       alert("Error saving bot info: " + error.message);
     }
   };
+
+  useEffect(() => {
+    if (bots && bots.length > 0) {
+      const bot = bots[0];
+      // Map the bot properties to your form structure
+      setForm((prev) => ({
+        ...prev,
+        modelname: bot.modelName || "",
+        modellogo: bot.modelLogo || "",
+        company: bot.company || "",
+        full_name: bot.full_name || "",
+        short_name: bot.short_name || "",
+        type: bot.type || "",
+        forbidden_terms: bot.forbidden_terms
+          ? bot.forbidden_terms.join(", ")
+          : "",
+        botHexTextColor: bot.botHexTextColor || "#000000",
+        botHexBackgroundColor: bot.botHexBackgroundColor || "#ffffff",
+        buttonHexTextColor: bot.buttonHexTextColor || "#000000",
+        buttonHexBackgroundColor: bot.buttonHexBackgroundColor || "#ffffff",
+        backgroundHexColor: bot.backgroundHexColor || "#ffffff",
+        preferredGreeting: bot.preferredGreeting || "",
+        signatureClosing: bot.signatureClosing || "",
+        instructions: bot.instructions || "",
+        accent: bot.accent || "",
+        friendliness: bot.friendliness ?? 100,
+        formality: bot.formality ?? 100,
+        verbosity: bot.verbosity ?? 100,
+        humor: bot.humor ?? 100,
+        technicalLevel: bot.technicalLevel ?? 100,
+        websites: bot.websites || [],
+        files: [], // you probably want to keep empty unless you want to load them
+      }));
+    }
+  }, [bots]);
 
   return (
     <div className="aiwizard-container">
@@ -183,14 +235,14 @@ export default function AIWizardCustomizer() {
             value={form.full_name}
             onChange={handleChange}
           />
-          <input 
+          <input
             className="short_name"
             name="short_name"
             placeholder="Short Name of Establishment"
             value={form.short_name}
             onChange={handleChange}
           />
-          <input 
+          <input
             className="type"
             name="type"
             placeholder="Type of Establishment"
@@ -211,7 +263,7 @@ export default function AIWizardCustomizer() {
       {step === 2 && (
         <div>
           <label>Bot Text Color:</label>
-          <br/>
+          <br />
           <input
             type="color"
             name="botHexTextColor"
@@ -222,11 +274,42 @@ export default function AIWizardCustomizer() {
           <br />
 
           <label>Bot Textbox Background Color:</label>
-          <br/>
+          <br />
           <input
             type="color"
             name="botHexBackgroundColor"
             value={form.botHexBackgroundColor}
+            onChange={handleChange}
+          />
+
+          <br />
+          <label>Background Color:</label>
+          <br />
+          <input
+            type="color"
+            name="backgroundHexColor"
+            value={form.backgroundHexColor}
+            onChange={handleChange}
+          />
+
+          <br />
+
+          <label>Button Background Color:</label>
+          <br />
+          <input
+            type="color"
+            name="buttonHexBackgroundColor"
+            value={form.buttonHexBackgroundColor}
+            onChange={handleChange}
+          />
+
+          <br />
+          <label>Button Text Color:</label>
+          <br />
+          <input
+            type="color"
+            name="buttonHexTextColor"
+            value={form.buttonHexTextColor}
             onChange={handleChange}
           />
         </div>
@@ -329,7 +412,9 @@ export default function AIWizardCustomizer() {
             "technicalLevel",
           ].map((attr) => (
             <div key={attr} className="slider-container">
-              <label className="capitalize">{attr.toUpperCase()} - {form[attr]}</label>
+              <label className="capitalize">
+                {attr.toUpperCase()} - {form[attr]}
+              </label>
               <Box sx={{ width: 600 }}>
                 <Slider
                   aria-label={attr}
@@ -342,16 +427,15 @@ export default function AIWizardCustomizer() {
                   valueLabelDisplay="auto"
                 />
               </Box>
-              
             </div>
           ))}
         </div>
       )}
 
       {/* Save/ Clear Form */}
-      <div>
+      <div className="aiwizard-btn">
         <button onClick={saveBotInfo}>Save Bot Info</button>
-        <button>Clear</button>
+        <button onClick={handleClear}>Clear</button>
       </div>
 
       {/* Preview */}
@@ -362,7 +446,9 @@ export default function AIWizardCustomizer() {
           <dt>Full Name: {form.full_name}</dt>
           <dt>Short Name: {form.short_name}</dt>
           <dt>Type: {form.type}</dt>
-          <dt>Logo: {form.modellogo}</dt>
+          <dt>
+            Logo: <br /> <img src={form.modellogo} alt="Model Logo" />
+          </dt>
           <dt>Company: {form.company}</dt>
           <dt>
             Bot Text Color: {form.botHexTextColor}{" "}
@@ -408,6 +494,14 @@ export default function AIWizardCustomizer() {
             }}
           >
             Hello! This is how your bot's chat bubble will look.
+          </div>
+        </div>
+
+        {/*Chat background and button colors*/}
+        <div>
+          <p>Chat background and button color</p>
+          <div style={{backgroundColor: form.backgroundHexColor, padding: "10px", borderRadius: "10px", marginTop: "10px",}}>
+            <button style={{ backgroundColor: form.buttonHexBackgroundColor, color: form.buttonHexTextColor }}>Button</button>
           </div>
         </div>
 

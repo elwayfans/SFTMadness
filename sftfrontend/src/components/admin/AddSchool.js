@@ -83,6 +83,7 @@ export const AddSchool = () => {
       </div>
       <div>
         <label htmlFor="phone">Admissions Phone:</label>
+        <label>Format: +11234567890</label>
         <input
           type="tel"
           name="phone"

@@ -1,5 +1,5 @@
 h2{
-  color: #fff;
+  color: #000;
 }
 
 .bot-selector {
@@ -39,4 +39,15 @@ h2{
 .bot-button:hover {
   transform: scale(1.05);
   transition: transform 0.2s ease-in-out;
+}
+
+.backbtn {
+  background-color: #6E5A7A;
+  color: #fff;
+  border: 2px solid #b2b2b2;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: background-color 0.3s, transform 0.2s;
 }

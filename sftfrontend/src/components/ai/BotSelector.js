@@ -10,18 +10,22 @@ const BotSelector = () => {
     fetch("http://localhost:8000/customs/all")
       .then((res) => res.json())
       .then((data) => {
-        console.log(data.bots); // <-- Add this
+        console.log(data.bots);
         setBots(data.bots || []);
       });
   }, []);
 
   const handleSelectBot = (bot) => {
-    navigate("/chat-ai", { state: { bot } });
+    console.log("Bot being passed to chat:", bot);
+    navigate("/chat-ai", { state: { bot, from: "/bot-selector" } });
   };
 
   return (
     <div className="bot-selector">
       <h2>Select a School to Start Chatting</h2>
+      <button className="backbtn" onClick={() => navigate("/profile")}>
+        Back
+      </button>
       <div className="bot-list">
         {bots.map((bot, index) => (
           <button

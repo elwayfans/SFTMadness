@@ -79,6 +79,9 @@ const AddContacts = () => {
           />
 
           <button type="submit">Save Contact</button>
+          <button type="button" onClick={() => navigate("/profile")}>
+            Cancel
+          </button>
         </form>
       </div>
     </div>

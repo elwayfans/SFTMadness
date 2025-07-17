@@ -1,14 +1,14 @@
 .chat-ai {
   display: flex;
   flex-direction: column;
-  height: 91.3vh;
+  height: 100vh;
 }
 
 header {
+  color: #fff;
   display: flex;
   align-items: center;
   padding: 10px;
-  background-color: var(--accent);
   border-bottom: 1px solid black;
   border-top: 1px solid black;
 }
@@ -19,11 +19,21 @@ header img {
   margin-right: 10px;
 }
 
+header button {
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  height: auto; 
+  margin-bottom: 0.7%;  
+  margin-left: 2.5%;
+  width: 120px;
+  height: 40px;
+}
+
 .chat-window {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
-  background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
 }
@@ -36,8 +46,8 @@ header img {
 }
 
 .message.student {
-  background-color: var(--studentmessage-color);
-  color: var(--txt-color);
+  background-color: #fff;
+  color: #000;
   align-self: flex-end;
   
   max-width: 60%;
@@ -58,7 +68,6 @@ header img {
 
 footer {
   display: flex;
-  background-color: var( --nav-color);
   align-items: center;
   height: 10%;
 }
@@ -68,46 +77,17 @@ footer input {
   padding: 10px;
   margin-left: 10px;
   margin-right: 50px;
-  border: 1px solid var(--bg-color);
   border-radius: 5px;
   height: auto;
 }
 
 footer button {
-  background-color: var(--navbtn-color);
-  color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   height: auto; 
-  margin-bottom: 1.1%;
-}
-
-footer button:hover {
-  background-color: #0d2c4e;
-}
-
-.bot-selector {
-  padding: 20px;
-}
-
-.bot-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.bot-list button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.bot-list button img {
-  width: 50px;
-  height: 50px;
-  margin-bottom: 5px;
+  margin-bottom: 0.7%;  
+  margin-right: 2.5%;
+  width: 120px;
+  height: 40px;
 }

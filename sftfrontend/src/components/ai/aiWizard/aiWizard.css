@@ -23,7 +23,6 @@
   font-weight: 500;
   color: #2d2233;
   margin-bottom: 0.3rem;
-  text-align: center;
   width: 100%;
   display: block;
 }
@@ -33,8 +32,7 @@
 .aiwizard-container input[type="url"],
 .aiwizard-container input[type="file"],
 .aiwizard-container input[type="password"],
-.aiwizard-container select,
-.aiwizard-container textarea {
+.aiwizard-container select{
   padding: 0.5rem;
   border-radius: 4px;
   font-size: 1rem;
@@ -48,20 +46,44 @@
   display: block;
   margin-left: auto;
   margin-right: auto;
+  float: left;
 }
 
 .aiwizard-container input[type="color"] {
-  width: 40px;
+  width: 500px;
   height: 40px;
   border: 2px solid #2d2233;
   border-radius: 8px;
-  margin: 0.5rem auto;
   display: block;
 }
 
 .aiwizard-container textarea {
-  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
+  max-height: 300px;
+  width: 450px;
+  margin-bottom: 0.5rem;
+  overflow-y: auto;
   resize: vertical;
+}
+
+.step-navigation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.step-navigation > div {
+  display: flex;
+  justify-content: center;
+}
+
+.aiwizard-btn{
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
 }
 
 .step-navigation button,
@@ -128,7 +150,7 @@ input {
 }
 
 .live-preview {
-  width: 45%;
+  width: 100%;
   margin-right: 2rem;
   border-radius: 12px;
   padding: 1rem;

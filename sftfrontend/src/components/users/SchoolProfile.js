@@ -7,6 +7,8 @@ const SchoolProfile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [contacts, setContacts] = useState([]);
+  const [bots, setBots] = useState([]);
+  const [company, setCompany] = useState("");
 
   useEffect(() => {
     function getCookie(name) {
@@ -15,12 +17,14 @@ const SchoolProfile = () => {
       if (parts.length === 2) return parts.pop().split(";").shift();
       return null;
     }
+
     const idToken = getCookie("idToken");
     if (!idToken) {
       navigate("/login");
       return;
     }
 
+    // Fetch profile
     fetch("http://localhost:8000/school/profile", {
       method: "GET",
       headers: {
@@ -37,7 +41,7 @@ const SchoolProfile = () => {
         setProfile(null);
       });
 
-    // Fetch contacts for the logged-in user
+    // Fetch contacts
     fetch("http://localhost:8000/contacts", {
       method: "GET",
       headers: {
@@ -56,6 +60,59 @@ const SchoolProfile = () => {
       });
   }, [navigate]);
 
+  // Fetch Bot data and set company based on JWT token
+  useEffect(() => {
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    }
+
+    const idToken = getCookie("idToken");
+    if (!idToken) return;
+
+    // Decode JWT payload (naively)
+    try {
+      const payload = JSON.parse(atob(idToken.split(".")[1]));
+      console.log("Full JWT payload:", payload);
+
+      const companyFromToken = payload["custom:Company"];
+      if (!companyFromToken) {
+        console.warn("No company found in token");
+        return;
+      }
+
+      setCompany(companyFromToken.toLowerCase());
+
+      fetch(`http://localhost:8000/customs?company=${companyFromToken.toLowerCase()}`)
+        .then((res) => res.json())
+        .then((response) => {
+          const bot = response.data;
+          if (bot && bot.company) {
+            setBots([bot]);
+          } else {
+            setBots([]);
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching bot:", err);
+          setBots([]);
+        });
+    } catch (error) {
+      console.error("Failed to decode JWT token:", error);
+    }
+  }, []);
+
+const handleSelectBot = (bot) => {
+  navigate("/chat-ai", {
+    state: {
+      bot,
+      from: "/profile", 
+    },
+  });
+};
+
   const handleAddContactClick = () => {
     navigate("/addcontacts");
   };
@@ -67,6 +124,7 @@ const SchoolProfile = () => {
       if (parts.length === 2) return parts.pop().split(";").shift();
       return null;
     }
+
     const idToken = getCookie("idToken");
     fetch("http://localhost:8000/contacts", {
       method: "DELETE",
@@ -79,7 +137,6 @@ const SchoolProfile = () => {
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to delete contact");
-        // Remove from UI if successful
         setContacts((prev) =>
           prev.filter((contact) => contact.email !== email)
         );
@@ -132,22 +189,51 @@ const SchoolProfile = () => {
 
       <div className="contacts-section">
         <h3>Contacts</h3>
-        <button className="add-contact-btn" onClick={handleAddContactClick}>Add Contact</button>
+        <button className="add-contact-btn" onClick={handleAddContactClick}>
+          Add Contact
+        </button>
 
         {contacts.map((contact, idx) => (
-          <div href={`mailto:${contact.email}`} key={idx} className="contact-card">
-            <p className="contact-icon">✉️</p>  
+          <div key={idx} className="contact-card">
+            <p className="contact-icon">✉️</p>
             <span className="contact-name">
               {contact.firstName} {contact.lastName}
             </span>
-            <button className="delete-btn" onClick={() => deleteContact(contact.email)}>🗑️</button>
+            <button
+              className="delete-btn"
+              onClick={() => deleteContact(contact.email)}
+            >
+              🗑️
+            </button>
           </div>
         ))}
       </div>
-      <AIWizardCustomizer />
+
+      {/* AI Bot Demo */}
+      <div className="bot-list">
+        {bots.length === 0 && <p>No bots found for this company.</p>}
+        {bots.map((bot, index) => {
+          return (
+            <button
+              key={index}
+              onClick={() => handleSelectBot(bot)}
+              className="bot-button"
+              title={bot.company || ""}
+              style={{
+                backgroundImage: `url(${bot.modelLogo || ""})`,
+                backgroundSize: "100% 100%",
+                backgroundPosition: "center",
+              }}
+            >
+              <p>{bot.company || "Unknown"}</p>
+            </button>
+          );
+        })}
+      </div>
+    
+      <AIWizardCustomizer bots={bots} />
     </div>
   );
 };
 
 export default SchoolProfile;
-
