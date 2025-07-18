@@ -172,18 +172,11 @@ const handleSelectBot = (bot) => {
         </p>
 
         <div className="school-buttons">
-          <button
-            className="school-button"
-            onClick={() => navigate("/forgotpassword")}
-          >
-            Update Password
-          </button>
+          <button className="school-button" onClick={() => navigate("/updatepassword")}>Update Password</button>
 
           <button className="school-button">2 Factor Authentication</button>
 
-          <button className="school-button" onClick={handleLogout}>
-            Log out
-          </button>
+          <button className="school-button" onClick={handleLogout}>Log out</button>
         </div>
       </div>
 

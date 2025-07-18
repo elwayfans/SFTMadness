@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './App.css';
 import Login from './components/authentication/Login.js';
 import ForgotPassword from './components/authentication/ForgotPassword.js';
+import UpdatePassword from './components/authentication/UpdatePassword.js';
 import School from './components/users/SchoolProfile.js';
 import Sft from './components/admin/AdminProfile.js';
 import AddContacts from './components/addContacts/AddContacts.js';
@@ -74,6 +75,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
+          <Route path="/updatepassword" element={<UpdatePassword />} />
           <Route path="/profile" element={
             <RequireAuth>
               <ProfileRouter />

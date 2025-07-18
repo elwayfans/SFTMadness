@@ -8,10 +8,12 @@ As each step is completed the next form or message will show.
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Auth.css'
 
 const ForgotPassword = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -33,56 +35,58 @@ const ForgotPassword = () => {
 
   const requestResetCode = async () => {
     try {
-      const res = await fetch('http://localhost:8000/resetpassword', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("http://localhost:8000/users/resetPassword", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error sending verification code.');
+      if (!res.ok)
+        throw new Error(data.error || "Error sending verification code.");
       setStep(2);
-      setMessage('Verification code sent to your email.');
-      setError('');
+      setMessage("Verification code sent to your email.");
+      setError("");
     } catch (err) {
-      setError(err.message || 'Error sending verification code.');
+      setError(err.message || "Error sending verification code.");
     }
   };
 
   const handleResetPassword = async () => {
     try {
-      let body;
-      let endpoint;
-      if (session) {
-        // Use session to reset password (no code required)
-        endpoint = 'http://localhost:8000/complete-new-password';
-        body = JSON.stringify({ email, new_password: newPassword, session });
-      } else {
-        // Use code to reset password
-        endpoint = 'http://localhost:8000/confirmresetpassword';
-        body = JSON.stringify({ email, code, newPassword });
-      }
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
+      const res = await fetch(
+        "http://localhost:8000/users/confirmResetPassword",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code, newPassword }),
+        }
+      );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error resetting password.');
-      setMessage('Your password was reset, you now may login');
+      if (!res.ok) throw new Error(data.error || "Error resetting password.");
+      setMessage("Your password was reset, you now may login");
       setStep(1);
-      setEmail('');
-      setCode('');
-      setNewPassword('');
+      setEmail("");
+      setCode("");
+      setNewPassword("");
       setSession(null);
-      setError('');
+      setError("");
     } catch (err) {
-      setError(err.message || 'Sorry there was an issue with resetting your password. Please try again!');
+      setError(
+        err.message ||
+          "Sorry there was an issue with resetting your password. Please try again!"
+      );
     }
   };
 
   return (
     <div className="forgotpassword">
       <h2 className="forgotpassTitle">Change Password</h2>
+      <button className="forgotpassbtn" onClick={() => navigate("/login")}>
+        Go Back
+      </button>
+
+      <br />
 
       {/* Step 1: Enter email, unless session is present */}
       {step === 1 && !session && (
@@ -94,10 +98,7 @@ const ForgotPassword = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <button
-            className="forgotpassbtn"
-            onClick={requestResetCode}
-          >
+          <button className="forgotpassbtn" onClick={requestResetCode}>
             Send Reset Code
           </button>
         </>
@@ -122,10 +123,7 @@ const ForgotPassword = () => {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
-          <button
-            className="forgotpassbtn"
-            onClick={handleResetPassword}
-          >
+          <button className="forgotpassbtn" onClick={handleResetPassword}>
             Change Password
           </button>
         </>
