@@ -60,10 +60,7 @@ const Login = () => {
       const data = await response.json();
 
       // Check for NEW_PASSWORD_REQUIRED before response.ok
-      if (
-        data.challenge === "NEW_PASSWORD_REQUIRED" &&
-        data.session
-      ) {
+      if (data.challenge === "NEW_PASSWORD_REQUIRED" && data.session) {
         // User must set a new password, redirect with session
         navigate("/forgotpassword", {
           state: { email: formData.email, session: data.session },
@@ -71,14 +68,19 @@ const Login = () => {
       } else if (response.ok) {
         alert("Welcome!");
         navigate("/profile");
-      } else if (data.message && data.message.toLowerCase().includes("not found")) {
+      } else if (
+        data.message &&
+        data.message.toLowerCase().includes("not found")
+      ) {
         // User not found, send reset code and redirect
         await fetch("http://localhost:8000/complete-new-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: formData.email }),
         });
-        alert("Account not found. A code has been sent to your email to set your password.");
+        alert(
+          "Account not found. A code has been sent to your email to set your password."
+        );
         navigate("/forgotpassword", { state: { email: formData.email } });
       } else {
         alert(data.message || "Login failed.");
@@ -91,15 +93,18 @@ const Login = () => {
 
   return (
     <div className="login">
-      <h1 className="loginTitle">Login</h1>
-
       <form onSubmit={handleSubmit} className="loginForm">
-        <label>Email:</label>
+        <img src="images/AxisLogo.png" alt="Axis Logo" className="logo" />
+
+        <h1 className="loginTitle">LOGIN</h1>
+
+        <label for="email">EMAIL:</label>
         <input
           required
           name="email"
           type="email"
           placeholder="Email"
+          id="email"
           value={formData.email}
           onChange={handleChange}
         />
@@ -109,12 +114,13 @@ const Login = () => {
           </span>
         )}
 
-        <label>Password:</label>
+        <label for="password">PASSWORD:</label>
         <input
           required
           name="password"
           type="password"
           placeholder="Password"
+          id="password"
           value={formData.password}
           onChange={handleChange}
         />
@@ -127,13 +133,16 @@ const Login = () => {
         <button className="loginbtn" type="submit">
           Login
         </button>
+
+        <br />
+
+        <button
+          className="forgotpassbtn"
+          onClick={() => navigate("/forgotpassword")}
+        >
+          Forgot Password?
+        </button>
       </form>
-      <button
-        className="forgotpassbtn"
-        onClick={() => navigate("/forgotpassword")}
-      >
-        Forgot Password?
-      </button>
     </div>
   );
 };
